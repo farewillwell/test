@@ -1,2 +1,5 @@
 venv/
 openpi/pi_env
+cache/
+.git/
+*_runs/
