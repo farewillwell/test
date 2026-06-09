@@ -3,3 +3,5 @@ openpi/pi_env
 cache/
 .git/
 *_runs/
+openpi/wandb/
+openpi/.venv/
