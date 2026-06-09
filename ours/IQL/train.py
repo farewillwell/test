@@ -1,40 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Train a lightweight IQL critic for pi0-style LIBERO LeRobot data.
+Strict-schema IQL trainer for collected LIBERO LeRobot data.
 
-This script is intentionally independent from OpenPI's training stack.
-It assumes a LIBERO LeRobot dataset with frame fields:
-    image, wrist_image, state, actions, task
-and constructs pi0-style observation batches:
-    observation = {
-        image: {
-            base_0_rgb,
-            left_wrist_0_rgb,
-            right_wrist_0_rgb,
-        },
-        image_mask: {...},
-        state,
-        tokenized_prompt,
-        tokenized_prompt_mask,
-    }
+Input dataset: collector output, and ONLY this schema is accepted:
+    image
+    wrist_image
+    state
+    actions
+    reward
+    done
+    success
+    task
+    episode_index
 
-The model is expected to consume:
-    batch["observation"], batch["next_observation"],
-    batch["actions"], batch["rewards"], batch["is_terminal"], batch["from_success"].
+No alias/fallback names are allowed. This is intentional to prevent silent
+schema drift.
 
-The action chunk length is fixed by --horizon. For your current setting,
-use --horizon 5, matching pi0 action_horizon == replan_steps.
+The loader constructs:
+    observation, next_observation, actions[H], rewards[H], is_terminal[H],
+    from_success[H]
+
+Use --horizon 5 for:
+    pi0 action_horizon == replan_steps == IQL chunk_size.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import random
-import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -51,40 +47,32 @@ from transformers import CLIPProcessor
 try:
     from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 except Exception as exc:
-    raise ImportError(
-        "Could not import LeRobotDataset. Run this script in the openpi/lerobot environment."
-    ) from exc
+    raise ImportError("Could not import LeRobotDataset. Run in the OpenPI/LeRobot env.") from exc
 
-# train.py is expected to live in ours/IQL/.
-# Import the local model.py, not OpenPI.
 try:
     from model import LightIQLCritic
 except ImportError:
     try:
         from model import LightVLValueModel as LightIQLCritic
     except ImportError as exc:
-        raise ImportError(
-            "Could not import LightIQLCritic or LightVLValueModel from local model.py."
-        ) from exc
+        raise ImportError("Could not import LightIQLCritic/LightVLValueModel from local model.py.") from exc
 
 
-IMAGE_KEYS = ("image", "observation/image")
-WRIST_IMAGE_KEYS = ("wrist_image", "observation/wrist_image")
-STATE_KEYS = ("state", "observation/state")
-ACTION_KEYS = ("actions", "action")
-TASK_KEYS = ("task", "prompt", "language_instruction")
-EPISODE_KEYS = ("episode_index", "episode")
-FRAME_KEYS = ("frame_index", "index")
-REWARD_KEYS = ("reward", "rewards")
-DONE_KEYS = ("done", "is_terminal", "terminal")
-SUCCESS_KEYS = ("success", "episode_success", "from_success")
+IMAGE_KEY = "image"
+WRIST_IMAGE_KEY = "wrist_image"
+STATE_KEY = "state"
+ACTION_KEY = "actions"
+TASK_KEY = "task"
+EPISODE_KEY = "episode_index"
+REWARD_KEY = "reward"
+DONE_KEY = "done"
+SUCCESS_KEY = "success"
 
 
 @dataclass
 class TrainArgs:
     repo_id: str
     output_dir: str
-
     root: str = ""
     encoder_name: str = "openai/clip-vit-base-patch32"
 
@@ -108,11 +96,6 @@ class TrainArgs:
     dropout: float = 0.1
     q_l2_coef: float = 1e-4
 
-    step_reward: float = 0.0
-    success_terminal_reward: float = 1.0
-    failure_terminal_reward: float = 0.0
-    default_episode_success: str = "success"
-
     use_wrist_image: bool = True
     use_q_aug: bool = False
 
@@ -121,15 +104,14 @@ class TrainArgs:
     save_every: int = 1000
     seed: int = 7
     device: str = "cuda"
-
     resume: str = ""
 
 
 def parse_args() -> TrainArgs:
     p = argparse.ArgumentParser()
-    p.add_argument("--repo-id", required=True, help="Local or HF LeRobot repo id.")
+    p.add_argument("--repo-id", required=True)
     p.add_argument("--output-dir", required=True)
-    p.add_argument("--root", default="", help="Optional local root for LeRobotDataset.")
+    p.add_argument("--root", default="")
     p.add_argument("--encoder-name", default="openai/clip-vit-base-patch32")
 
     p.add_argument("--horizon", type=int, default=5)
@@ -152,11 +134,6 @@ def parse_args() -> TrainArgs:
     p.add_argument("--dropout", type=float, default=0.1)
     p.add_argument("--q-l2-coef", type=float, default=1e-4)
 
-    p.add_argument("--step-reward", type=float, default=0.0)
-    p.add_argument("--success-terminal-reward", type=float, default=1.0)
-    p.add_argument("--failure-terminal-reward", type=float, default=0.0)
-    p.add_argument("--default-episode-success", choices=("success", "failure"), default="success")
-
     p.add_argument("--use-wrist-image", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--use-q-aug", action="store_true")
 
@@ -165,9 +142,14 @@ def parse_args() -> TrainArgs:
     p.add_argument("--save-every", type=int, default=1000)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--device", default="cuda")
-
     p.add_argument("--resume", default="")
     return TrainArgs(**vars(p.parse_args()))
+
+
+def require_key(sample: dict[str, Any], key: str) -> Any:
+    if key not in sample:
+        raise KeyError(f"Required key `{key}` not found. Available keys: {sorted(sample.keys())}")
+    return sample[key]
 
 
 def set_seed(seed: int) -> None:
@@ -177,18 +159,16 @@ def set_seed(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
-def first_present(sample: dict[str, Any], keys: tuple[str, ...], required: bool = True) -> Any:
-    for key in keys:
-        if key in sample:
-            return sample[key]
-    if required:
-        raise KeyError(f"None of keys {keys} found. Available keys: {sorted(sample.keys())}")
-    return None
+def make_lerobot_dataset(repo_id: str, root: str = "") -> LeRobotDataset:
+    if root:
+        try:
+            return LeRobotDataset(repo_id, root=Path(root))
+        except TypeError:
+            return LeRobotDataset(repo_id, Path(root))
+    return LeRobotDataset(repo_id)
 
 
-def to_scalar(x: Any, default: int | float | bool | None = None) -> Any:
-    if x is None:
-        return default
+def to_scalar(x: Any) -> Any:
     if isinstance(x, (int, float, bool, str)):
         return x
     if torch.is_tensor(x):
@@ -203,177 +183,109 @@ def to_scalar(x: Any, default: int | float | bool | None = None) -> Any:
     return arr
 
 
-def to_numpy(x: Any, dtype: np.dtype | None = None) -> np.ndarray:
+def to_numpy(x: Any) -> np.ndarray:
     if torch.is_tensor(x):
-        x = x.detach().cpu().numpy()
-    elif isinstance(x, Image.Image):
-        x = np.asarray(x)
-    else:
-        x = np.asarray(x)
-    if dtype is not None:
-        x = x.astype(dtype)
-    return x
+        return x.detach().cpu().numpy()
+    if isinstance(x, Image.Image):
+        return np.asarray(x)
+    return np.asarray(x)
 
 
 def to_float_array(x: Any) -> np.ndarray:
-    arr = to_numpy(x).astype(np.float32)
-    return arr
+    return to_numpy(x).astype(np.float32)
 
 
-def to_pil_rgb(x: Any) -> Image.Image:
-    if isinstance(x, Image.Image):
-        return x.convert("RGB")
-
-    arr = to_numpy(x)
-    if arr.ndim != 3:
-        raise ValueError(f"Expected image with 3 dims, got shape={arr.shape}")
-
-    # Accept CHW from LeRobot and convert to HWC.
-    if arr.shape[0] == 3 and arr.shape[-1] != 3:
-        arr = np.transpose(arr, (1, 2, 0))
-
-    if arr.shape[-1] != 3:
-        raise ValueError(f"Expected RGB image, got shape={arr.shape}")
-
-    if arr.dtype != np.uint8:
-        if np.issubdtype(arr.dtype, np.floating) and float(np.nanmax(arr)) <= 1.0:
-            arr = arr * 255.0
-        arr = np.clip(arr, 0, 255).astype(np.uint8)
-
-    return Image.fromarray(np.ascontiguousarray(arr)).convert("RGB")
-
-
-def decode_prompt(x: Any) -> str:
-    if x is None:
-        return ""
+def decode_task(x: Any) -> str:
     if isinstance(x, bytes):
         return x.decode("utf-8")
     if isinstance(x, str):
         return x
     if torch.is_tensor(x):
         if x.numel() == 1:
-            return decode_prompt(x.detach().cpu().item())
+            return decode_task(x.detach().cpu().item())
         return str(x.detach().cpu().numpy())
-    if isinstance(x, np.ndarray):
-        if x.shape == ():
-            return decode_prompt(x.item())
-        if x.size == 1:
-            return decode_prompt(x.reshape(-1)[0])
+    arr = np.asarray(x)
+    if arr.shape == ():
+        return decode_task(arr.item())
+    if arr.size == 1:
+        return decode_task(arr.reshape(-1)[0])
     return str(x)
 
 
-def make_lerobot_dataset(repo_id: str, root: str = "") -> LeRobotDataset:
-    if root:
-        try:
-            return LeRobotDataset(repo_id, root=Path(root))
-        except TypeError:
-            return LeRobotDataset(repo_id, Path(root))
-    return LeRobotDataset(repo_id)
+def to_pil_rgb(x: Any) -> Image.Image:
+    if isinstance(x, Image.Image):
+        return x.convert("RGB")
+    arr = to_numpy(x)
+    if arr.ndim != 3:
+        raise ValueError(f"Expected image with 3 dims, got {arr.shape}")
+    if arr.shape[0] == 3 and arr.shape[-1] != 3:
+        arr = np.transpose(arr, (1, 2, 0))
+    if arr.shape[-1] != 3:
+        raise ValueError(f"Expected RGB image, got {arr.shape}")
+    if arr.dtype != np.uint8:
+        if np.issubdtype(arr.dtype, np.floating) and float(np.nanmax(arr)) <= 1.0:
+            arr = arr * 255.0
+        arr = np.clip(arr, 0, 255).astype(np.uint8)
+    return Image.fromarray(np.ascontiguousarray(arr)).convert("RGB")
 
 
-class LiberoLeRobotIQLDataset(Dataset):
-    """
-    A narrow dataset reader for the LIBERO LeRobot layout produced for this project.
-
-    It deliberately does not use OpenPI data_loader/train.py. It reads single-step
-    LeRobot frames and constructs fixed-length action chunks inside each episode.
-    """
-
-    def __init__(
-        self,
-        repo_id: str,
-        root: str,
-        horizon: int,
-        step_reward: float,
-        success_terminal_reward: float,
-        failure_terminal_reward: float,
-        default_episode_success: str,
-        use_wrist_image: bool = True,
-    ) -> None:
+class StrictLiberoIQLDataset(Dataset):
+    def __init__(self, repo_id: str, root: str, horizon: int, use_wrist_image: bool = True) -> None:
         super().__init__()
-        if horizon <= 0:
-            raise ValueError(f"horizon must be positive, got {horizon}")
-
         self.ds = make_lerobot_dataset(repo_id, root)
         self.horizon = int(horizon)
-        self.step_reward = float(step_reward)
-        self.success_terminal_reward = float(success_terminal_reward)
-        self.failure_terminal_reward = float(failure_terminal_reward)
-        self.default_success = default_episode_success == "success"
         self.use_wrist_image = bool(use_wrist_image)
 
         self.global_indices: list[int] = []
         self.episode_of: list[int] = []
         self.local_pos_of: list[int] = []
-
         self.actions: list[np.ndarray] = []
-        self.reward_values: list[float | None] = []
-        self.done_values: list[bool | None] = []
-        self.success_values: list[bool | None] = []
-
+        self.rewards: list[float] = []
+        self.dones: list[bool] = []
+        self.successes: list[bool] = []
         self.episodes: dict[int, list[int]] = defaultdict(list)
+
         self._build_index()
 
     def _build_index(self) -> None:
-        print(f"[IQL data] Scanning LeRobot dataset: {len(self.ds)} frames")
+        print(f"[IQL data] strict scan: {len(self.ds)} frames")
         for global_idx in tqdm(range(len(self.ds)), desc="scan", leave=False):
             sample = self.ds[global_idx]
 
-            ep_raw = first_present(sample, EPISODE_KEYS, required=False)
-            ep = int(to_scalar(ep_raw, default=0))
-
-            action = to_float_array(first_present(sample, ACTION_KEYS))
-            if action.ndim != 1:
-                action = action.reshape(-1)
-
-            reward_raw = first_present(sample, REWARD_KEYS, required=False)
-            reward = None if reward_raw is None else float(to_scalar(reward_raw, default=0.0))
-
-            done_raw = first_present(sample, DONE_KEYS, required=False)
-            done = None if done_raw is None else bool(to_scalar(done_raw, default=False))
-
-            success_raw = first_present(sample, SUCCESS_KEYS, required=False)
-            success = None if success_raw is None else bool(to_scalar(success_raw, default=self.default_success))
-
+            ep = int(to_scalar(require_key(sample, EPISODE_KEY)))
             local_pos = len(self.episodes[ep])
 
+            action = to_float_array(require_key(sample, ACTION_KEY)).reshape(-1)
+            reward = float(to_scalar(require_key(sample, REWARD_KEY)))
+            done = bool(to_scalar(require_key(sample, DONE_KEY)))
+            success = bool(to_scalar(require_key(sample, SUCCESS_KEY)))
+
+            internal_idx = len(self.global_indices)
             self.global_indices.append(global_idx)
             self.episode_of.append(ep)
             self.local_pos_of.append(local_pos)
             self.actions.append(action.astype(np.float32))
-            self.reward_values.append(reward)
-            self.done_values.append(done)
-            self.success_values.append(success)
-            self.episodes[ep].append(len(self.global_indices) - 1)
+            self.rewards.append(reward)
+            self.dones.append(done)
+            self.successes.append(success)
+            self.episodes[ep].append(internal_idx)
 
         if not self.global_indices:
             raise RuntimeError("Empty dataset.")
 
-        action_dims = {a.shape[-1] for a in self.actions}
-        if len(action_dims) != 1:
-            raise ValueError(f"Mixed action dims found: {sorted(action_dims)}")
-
         print(
-            f"[IQL data] {len(self.global_indices)} frames, "
-            f"{len(self.episodes)} episodes, action_dim={next(iter(action_dims))}, horizon={self.horizon}"
+            f"[IQL data] frames={len(self.global_indices)} episodes={len(self.episodes)} "
+            f"action_dim={self.actions[0].shape[-1]} horizon={self.horizon}"
         )
 
     def __len__(self) -> int:
         return len(self.global_indices)
-
-    def _episode_success(self, ep_internal_indices: list[int]) -> bool:
-        vals = [self.success_values[i] for i in ep_internal_indices if self.success_values[i] is not None]
-        if not vals:
-            return self.default_success
-        # If any frame says success, treat the whole episode as success.
-        return bool(any(vals))
 
     def _chunk_arrays(self, internal_idx: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, bool, int]:
         ep = self.episode_of[internal_idx]
         ep_indices = self.episodes[ep]
         local_pos = self.local_pos_of[internal_idx]
         ep_len = len(ep_indices)
-        ep_success = self._episode_success(ep_indices)
 
         action_dim = self.actions[internal_idx].shape[-1]
         actions = np.zeros((self.horizon, action_dim), dtype=np.float32)
@@ -383,30 +295,12 @@ class LiberoLeRobotIQLDataset(Dataset):
         first_terminal_seen = False
         for k in range(self.horizon):
             unclamped_pos = local_pos + k
-            future_pos = min(unclamped_pos, ep_len - 1)
-            future_internal_idx = ep_indices[future_pos]
+            pos = min(unclamped_pos, ep_len - 1)
+            idx = ep_indices[pos]
+            actions[k] = self.actions[idx]
+            rewards[k] = self.rewards[idx] if unclamped_pos <= ep_len - 1 else 0.0
 
-            actions[k] = self.actions[future_internal_idx]
-
-            if self.reward_values[future_internal_idx] is not None:
-                if unclamped_pos <= ep_len - 1:
-                    rewards[k] = float(self.reward_values[future_internal_idx])
-                else:
-                    rewards[k] = 0.0
-            else:
-                rewards[k] = self.step_reward
-                if unclamped_pos == ep_len - 1:
-                    rewards[k] = (
-                        self.success_terminal_reward if ep_success else self.failure_terminal_reward
-                    )
-                elif unclamped_pos > ep_len - 1:
-                    rewards[k] = 0.0
-
-            if self.done_values[future_internal_idx] is not None and unclamped_pos <= ep_len - 1:
-                term = bool(self.done_values[future_internal_idx])
-            else:
-                term = unclamped_pos >= ep_len - 1
-
+            term = self.dones[idx] if unclamped_pos <= ep_len - 1 else True
             if first_terminal_seen:
                 term = True
             if term:
@@ -415,57 +309,39 @@ class LiberoLeRobotIQLDataset(Dataset):
 
         next_pos = min(local_pos + self.horizon, ep_len - 1)
         next_internal_idx = ep_indices[next_pos]
+        ep_success = bool(any(self.successes[i] for i in ep_indices))
         return actions, rewards, is_terminal, ep_success, next_internal_idx
 
     def _read_observation(self, internal_idx: int) -> dict[str, Any]:
         sample = self.ds[self.global_indices[internal_idx]]
 
-        base = to_pil_rgb(first_present(sample, IMAGE_KEYS))
+        base = to_pil_rgb(require_key(sample, IMAGE_KEY))
         if self.use_wrist_image:
-            wrist_raw = first_present(sample, WRIST_IMAGE_KEYS, required=False)
-            wrist = to_pil_rgb(wrist_raw) if wrist_raw is not None else base.copy()
+            wrist = to_pil_rgb(require_key(sample, WRIST_IMAGE_KEY))
             wrist_mask = True
         else:
             wrist = Image.new("RGB", base.size, (0, 0, 0))
             wrist_mask = False
 
-        state = to_float_array(first_present(sample, STATE_KEYS))
-        if state.ndim != 1:
-            state = state.reshape(-1)
-
-        prompt_raw = first_present(sample, TASK_KEYS, required=False)
-        if prompt_raw is None and "task_index" in sample:
-            prompt_raw = self._task_from_index(sample["task_index"])
-        prompt = decode_prompt(prompt_raw).strip()
-        if not prompt:
-            prompt = "do something"
+        state = to_float_array(require_key(sample, STATE_KEY)).reshape(-1)
+        task = decode_task(require_key(sample, TASK_KEY)).strip()
+        if not task:
+            raise ValueError(f"Empty `{TASK_KEY}` at frame {self.global_indices[internal_idx]}")
 
         return {
             "base_image": base,
             "wrist_image": wrist,
             "wrist_mask": wrist_mask,
             "state": state.astype(np.float32),
-            "prompt": prompt,
+            "task": task,
         }
-
-    def _task_from_index(self, task_index: Any) -> str:
-        idx = int(to_scalar(task_index, default=0))
-        meta = getattr(self.ds, "meta", None)
-        tasks = getattr(meta, "tasks", None)
-        if isinstance(tasks, dict) and idx in tasks:
-            return decode_prompt(tasks[idx])
-        if isinstance(tasks, (list, tuple)) and 0 <= idx < len(tasks):
-            return decode_prompt(tasks[idx])
-        return ""
 
     def __getitem__(self, internal_idx: int) -> dict[str, Any]:
         actions, rewards, is_terminal, ep_success, next_internal_idx = self._chunk_arrays(internal_idx)
 
         obs = self._read_observation(internal_idx)
         next_obs = self._read_observation(next_internal_idx)
-
-        # For CLIP text encoding, keep next prompt the same as current task.
-        next_obs["prompt"] = obs["prompt"]
+        next_obs["task"] = obs["task"]
 
         return {
             "obs": obs,
@@ -486,26 +362,17 @@ class Pi0StyleIQLCollator:
         return image.convert("RGB").resize((self.image_size, self.image_size), Image.BILINEAR)
 
     def _process_images(self, images: list[Image.Image]) -> torch.Tensor:
-        enc = self.processor(images=images, return_tensors="pt")
-        return enc["pixel_values"]
+        return self.processor(images=images, return_tensors="pt")["pixel_values"]
 
     def _build_observation(self, obs_list: list[dict[str, Any]]) -> dict[str, Any]:
         base_images = [self._resize(o["base_image"]) for o in obs_list]
         wrist_images = [self._resize(o["wrist_image"]) for o in obs_list]
         zero_images = [Image.new("RGB", (self.image_size, self.image_size), (0, 0, 0)) for _ in obs_list]
 
-        prompts = [str(o["prompt"]) for o in obs_list]
-        tokens = self.processor.tokenizer(
-            prompts,
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-        )
+        prompts = [str(o["task"]) for o in obs_list]
+        tokens = self.processor.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True)
 
-        state = torch.as_tensor(np.stack([o["state"] for o in obs_list]), dtype=torch.float32)
-        wrist_mask = torch.as_tensor([bool(o["wrist_mask"]) for o in obs_list], dtype=torch.bool)
-        batch_size = len(obs_list)
-
+        bsz = len(obs_list)
         return {
             "image": {
                 "base_0_rgb": self._process_images(base_images),
@@ -513,32 +380,23 @@ class Pi0StyleIQLCollator:
                 "right_wrist_0_rgb": self._process_images(zero_images),
             },
             "image_mask": {
-                "base_0_rgb": torch.ones(batch_size, dtype=torch.bool),
-                "left_wrist_0_rgb": wrist_mask,
-                "right_wrist_0_rgb": torch.zeros(batch_size, dtype=torch.bool),
+                "base_0_rgb": torch.ones(bsz, dtype=torch.bool),
+                "left_wrist_0_rgb": torch.as_tensor([bool(o["wrist_mask"]) for o in obs_list], dtype=torch.bool),
+                "right_wrist_0_rgb": torch.zeros(bsz, dtype=torch.bool),
             },
-            "state": state,
-            # Same key names as pi0 Observation, but tokenized by CLIP tokenizer.
+            "state": torch.as_tensor(np.stack([o["state"] for o in obs_list]), dtype=torch.float32),
             "tokenized_prompt": tokens["input_ids"].long(),
             "tokenized_prompt_mask": tokens["attention_mask"].long(),
         }
 
     def __call__(self, samples: list[dict[str, Any]]) -> dict[str, Any]:
-        obs = self._build_observation([s["obs"] for s in samples])
-        next_obs = self._build_observation([s["next_obs"] for s in samples])
-
-        actions = torch.as_tensor(np.stack([s["actions"] for s in samples]), dtype=torch.float32)
-        rewards = torch.as_tensor(np.stack([s["rewards"] for s in samples]), dtype=torch.float32)
-        is_terminal = torch.as_tensor(np.stack([s["is_terminal"] for s in samples]), dtype=torch.bool)
-        from_success = torch.as_tensor(np.stack([s["from_success"] for s in samples]), dtype=torch.bool)
-
         return {
-            "observation": obs,
-            "next_observation": next_obs,
-            "actions": actions,
-            "rewards": rewards,
-            "is_terminal": is_terminal,
-            "from_success": from_success,
+            "observation": self._build_observation([s["obs"] for s in samples]),
+            "next_observation": self._build_observation([s["next_obs"] for s in samples]),
+            "actions": torch.as_tensor(np.stack([s["actions"] for s in samples]), dtype=torch.float32),
+            "rewards": torch.as_tensor(np.stack([s["rewards"] for s in samples]), dtype=torch.float32),
+            "is_terminal": torch.as_tensor(np.stack([s["is_terminal"] for s in samples]), dtype=torch.bool),
+            "from_success": torch.as_tensor(np.stack([s["from_success"] for s in samples]), dtype=torch.bool),
         }
 
 
@@ -547,22 +405,15 @@ def move_to_device(x: Any, device: torch.device) -> Any:
         return x.to(device, non_blocking=True)
     if isinstance(x, dict):
         return {k: move_to_device(v, device) for k, v in x.items()}
-    if isinstance(x, list):
-        return [move_to_device(v, device) for v in x]
-    if isinstance(x, tuple):
-        return tuple(move_to_device(v, device) for v in x)
     return x
 
 
-def infer_dims(dataset: LiberoLeRobotIQLDataset) -> tuple[int, int]:
+def infer_dims(dataset: StrictLiberoIQLDataset) -> tuple[int, int]:
     sample = dataset[0]
-    state_dim = int(sample["obs"]["state"].shape[-1])
-    action_dim = int(sample["actions"].shape[-1])
-    return state_dim, action_dim
+    return int(sample["obs"]["state"].shape[-1]), int(sample["actions"].shape[-1])
 
 
 def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Module:
-    # Preferred constructor for the pi0-style replacement model.
     try:
         return LightIQLCritic(
             args.encoder_name,
@@ -575,7 +426,6 @@ def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Mo
             q_layers=args.q_layers,
         )
     except TypeError:
-        # Fallback for a LightVLValueModel-style constructor after replacing the input interface.
         return LightIQLCritic(
             encoder_name=args.encoder_name,
             robot_state_dim=state_dim,
@@ -590,32 +440,21 @@ def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Mo
         )
 
 
-def loss_from_model_output(output: Any) -> tuple[torch.Tensor, dict[str, float]]:
+def loss_from_output(output: Any) -> tuple[torch.Tensor, dict[str, float]]:
     if isinstance(output, dict):
-        if "loss" in output:
-            loss = output["loss"]
-        else:
-            loss = output["critic_loss"] + output["value_loss"]
-        metrics = {
-            k: float(v.detach().cpu().item()) if torch.is_tensor(v) and v.numel() == 1 else v
-            for k, v in output.items()
-            if k != "loss"
-        }
+        loss = output["loss"] if "loss" in output else output["critic_loss"] + output["value_loss"]
+        metrics = {}
+        for k, v in output.items():
+            if k != "loss" and torch.is_tensor(v) and v.numel() == 1:
+                metrics[k] = float(v.detach().cpu().item())
         return loss, metrics
 
     if isinstance(output, tuple):
-        if len(output) < 2:
-            raise ValueError("compute_loss tuple output must contain critic_loss and value_loss.")
-        critic_loss, value_loss = output[0], output[1]
-        loss = critic_loss + value_loss
-        metrics = {
+        critic_loss, value_loss = output[:2]
+        return critic_loss + value_loss, {
             "critic_loss": float(critic_loss.detach().cpu().item()),
             "value_loss": float(value_loss.detach().cpu().item()),
         }
-        if len(output) >= 3 and isinstance(output[2], dict):
-            for k, v in output[2].items():
-                metrics[k] = float(v.detach().cpu().item()) if torch.is_tensor(v) and v.numel() == 1 else v
-        return loss, metrics
 
     if torch.is_tensor(output):
         return output, {}
@@ -623,40 +462,22 @@ def loss_from_model_output(output: Any) -> tuple[torch.Tensor, dict[str, float]]
     raise TypeError(f"Unsupported compute_loss output type: {type(output)}")
 
 
-def save_checkpoint(
-    path: Path,
-    model: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
-    args: TrainArgs,
-    step: int,
-    state_dim: int,
-    action_dim: int,
-) -> None:
+def save_checkpoint(path: Path, model: torch.nn.Module, optimizer: torch.optim.Optimizer, args: TrainArgs, step: int, state_dim: int, action_dim: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ckpt_args = asdict(args)
-    ckpt_args.update(
-        {
-            "state_dim": int(state_dim),
-            "action_dim": int(action_dim),
-            "horizon": int(args.horizon),
-            "image_size": int(args.image_size),
-            "hidden_dim": int(args.hidden_dim),
-            "num_q": int(args.num_q),
-            "action_layers": int(args.action_layers),
-            "q_layers": int(args.q_layers),
-            "encoder_name": args.encoder_name,
-        }
-    )
+    ckpt_args.update({
+        "state_dim": int(state_dim),
+        "action_dim": int(action_dim),
+        "horizon": int(args.horizon),
+        "image_size": int(args.image_size),
+        "hidden_dim": int(args.hidden_dim),
+        "num_q": int(args.num_q),
+        "action_layers": int(args.action_layers),
+        "q_layers": int(args.q_layers),
+        "encoder_name": args.encoder_name,
+    })
     tmp = path.with_suffix(path.suffix + ".tmp")
-    torch.save(
-        {
-            "args": ckpt_args,
-            "step": int(step),
-            "model": model.state_dict(),
-            "optimizer": optimizer.state_dict(),
-        },
-        tmp,
-    )
+    torch.save({"args": ckpt_args, "step": int(step), "model": model.state_dict(), "optimizer": optimizer.state_dict()}, tmp)
     os.replace(tmp, path)
 
 
@@ -665,26 +486,20 @@ def main() -> None:
     set_seed(args.seed)
 
     device = torch.device(args.device if torch.cuda.is_available() or args.device == "cpu" else "cpu")
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "args.json").write_text(json.dumps(asdict(args), indent=2), encoding="utf-8")
+    out_dir = Path(args.output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "args.json").write_text(json.dumps(asdict(args), indent=2), encoding="utf-8")
 
     processor = CLIPProcessor.from_pretrained(args.encoder_name)
-
-    dataset = LiberoLeRobotIQLDataset(
+    dataset = StrictLiberoIQLDataset(
         repo_id=args.repo_id,
         root=args.root,
         horizon=args.horizon,
-        step_reward=args.step_reward,
-        success_terminal_reward=args.success_terminal_reward,
-        failure_terminal_reward=args.failure_terminal_reward,
-        default_episode_success=args.default_episode_success,
         use_wrist_image=args.use_wrist_image,
     )
     state_dim, action_dim = infer_dims(dataset)
     print(f"[IQL train] state_dim={state_dim}, action_dim={action_dim}, horizon={args.horizon}")
 
-    collator = Pi0StyleIQLCollator(processor=processor, image_size=args.image_size)
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -692,31 +507,29 @@ def main() -> None:
         num_workers=args.num_workers,
         pin_memory=(device.type == "cuda"),
         drop_last=True,
-        collate_fn=collator,
+        collate_fn=Pi0StyleIQLCollator(processor=processor, image_size=args.image_size),
         persistent_workers=(args.num_workers > 0),
     )
 
-    model = build_model(args, state_dim=state_dim, action_dim=action_dim).to(device)
+    model = build_model(args, state_dim, action_dim).to(device)
     if hasattr(model, "freeze_backbone"):
         model.freeze_backbone()
 
-    trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
+    params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.weight_decay)
 
-    start_step = 0
+    step = 0
     if args.resume:
         ckpt = torch.load(args.resume, map_location="cpu")
         model.load_state_dict(ckpt["model"])
         if "optimizer" in ckpt:
             optimizer.load_state_dict(ckpt["optimizer"])
-        start_step = int(ckpt.get("step", 0))
-        print(f"[IQL train] Resumed from {args.resume}, step={start_step}")
+        step = int(ckpt.get("step", 0))
+
+    running: dict[str, list[float]] = defaultdict(list)
+    pbar = tqdm(total=args.max_steps, initial=step, desc="iql", dynamic_ncols=True)
 
     model.train()
-    step = start_step
-    running: dict[str, list[float]] = defaultdict(list)
-
-    progress = tqdm(total=args.max_steps, initial=start_step, desc="iql", dynamic_ncols=True)
     while step < args.max_steps:
         for batch in loader:
             if step >= args.max_steps:
@@ -725,9 +538,6 @@ def main() -> None:
             batch = move_to_device(batch, device)
             debug = args.debug_every > 0 and step % args.debug_every == 0
 
-            # The replacement pi0-style model should accept these kwargs.
-            # If your local model keeps a simpler signature, remove the extra kwargs there
-            # rather than changing the batch format here.
             try:
                 output = model.compute_loss(
                     batch,
@@ -737,30 +547,24 @@ def main() -> None:
                     use_q_aug=args.use_q_aug,
                 )
             except TypeError:
-                output = model.compute_loss(
-                    batch,
-                    gamma=args.gamma,
-                    expectile=args.expectile,
-                )
+                output = model.compute_loss(batch, gamma=args.gamma, expectile=args.expectile)
 
-            loss, metrics = loss_from_model_output(output)
+            loss, metrics = loss_from_output(output)
 
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             if args.grad_clip > 0:
-                clip_grad_norm_(trainable_params, args.grad_clip)
+                clip_grad_norm_(params, args.grad_clip)
             optimizer.step()
 
             if hasattr(model, "update_target_q"):
                 model.update_target_q(tau=args.tau)
 
             step += 1
-            progress.update(1)
-
+            pbar.update(1)
             running["loss"].append(float(loss.detach().cpu().item()))
             for k, v in metrics.items():
-                if isinstance(v, (int, float)):
-                    running[k].append(float(v))
+                running[k].append(float(v))
 
             if args.log_every > 0 and step % args.log_every == 0:
                 msg = {"step": step}
@@ -771,29 +575,13 @@ def main() -> None:
                 running.clear()
 
             if args.save_every > 0 and step % args.save_every == 0:
-                save_checkpoint(
-                    output_dir / f"step_{step}.pt",
-                    model,
-                    optimizer,
-                    args,
-                    step,
-                    state_dim,
-                    action_dim,
-                )
-                save_checkpoint(
-                    output_dir / "latest.pt",
-                    model,
-                    optimizer,
-                    args,
-                    step,
-                    state_dim,
-                    action_dim,
-                )
+                save_checkpoint(out_dir / f"step_{step}.pt", model, optimizer, args, step, state_dim, action_dim)
+                save_checkpoint(out_dir / "latest.pt", model, optimizer, args, step, state_dim, action_dim)
 
-    save_checkpoint(output_dir / "final.pt", model, optimizer, args, step, state_dim, action_dim)
-    save_checkpoint(output_dir / "latest.pt", model, optimizer, args, step, state_dim, action_dim)
-    progress.close()
-    print(f"[IQL train] finished. final checkpoint: {output_dir / 'final.pt'}")
+    save_checkpoint(out_dir / "final.pt", model, optimizer, args, step, state_dim, action_dim)
+    save_checkpoint(out_dir / "latest.pt", model, optimizer, args, step, state_dim, action_dim)
+    pbar.close()
+    print(f"[IQL train] final checkpoint: {out_dir / 'final.pt'}")
 
 
 if __name__ == "__main__":
