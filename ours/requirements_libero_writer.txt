@@ -1,6 +1,0 @@
-lerobot
-pandas
-pyarrow
-datasets
-huggingface-hub
-filelock
