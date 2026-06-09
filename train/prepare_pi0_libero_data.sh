@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/sft_config.sh"
 
@@ -48,7 +45,7 @@ if [[ "${COMPUTE_NORM_STATS}" == "true" ]]; then
     "--repo-id=${REPO_ID}"
     "--config-name=${CONFIG_NAME}"
     "--assets-base-dir=${ASSETS_BASE_DIR}"
-    "--checkpoint-base-dir=${CHECKPOINT_BASE_DIR}"
+    "--checkpoint-base-dir=${MODEL_DIR}"
     "--batch-size=${BATCH_SIZE}"
     "--num-workers=${NUM_WORKERS}"
   )

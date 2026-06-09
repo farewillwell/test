@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/sft_config.sh"
 
@@ -30,6 +27,11 @@ if [[ "${CHECK_INPUTS}" == "true" ]]; then
   if [[ ! -d "${LEROBOT_DATA_DIR}" ]]; then
     echo "Missing LeRobot dataset: ${LEROBOT_DATA_DIR}" >&2
     echo "Run: bash ${PI0_ROOT}/train/prepare_pi0_libero_data.sh" >&2
+    exit 1
+  fi
+  if [[ ! -d "${LEROBOT_DATA_DIR}/data" || ! -d "${LEROBOT_DATA_DIR}/meta" ]]; then
+    echo "Invalid LeRobot dataset: ${LEROBOT_DATA_DIR}" >&2
+    echo "Expected ${LEROBOT_DATA_DIR}/data and ${LEROBOT_DATA_DIR}/meta" >&2
     exit 1
   fi
 

@@ -1,1 +1,0 @@
-MODEL_PATH=/data/huangdi/heliqun/pi0/sft_runs/checkpoints/sft/final bash test/test.sh

@@ -7,7 +7,7 @@ OPENPI_ROOT="${OPENPI_ROOT:-${PI0_ROOT}/openpi}"
 
 # 1) Data preparation: read HDF5 demos from HDF5_DIR and write LeRobot data to
 #    LEROBOT_DATA_DIR.
-HDF5_DIR="${HDF5_DIR:-/data/aoss/heliqun/dataset/libero-dataset/libero_goal_select_50}"
+HDF5_DIR="${HDF5_DIR:-/data/aoss/heliqun/dataset/libero-dataset/bytaskid/6}"
 LEROBOT_DATA_DIR="${LEROBOT_DATA_DIR:-${PI0_ROOT}/sft_runs/lerobot_data}"
 LEROBOT_DATA_DIR="${LEROBOT_DATA_DIR%/}"
 
@@ -31,7 +31,7 @@ CONFIG_NAME="${CONFIG_NAME:-pi0_libero_low_mem_finetune}"
 EXP_NAME="${EXP_NAME:-sft}"
 OPENPI_DATA_HOME="${OPENPI_DATA_HOME:-/data/aoss/heliqun/model/pi}"
 
-NUM_TRAIN_STEPS="${NUM_TRAIN_STEPS:-3000}"
+NUM_TRAIN_STEPS="${NUM_TRAIN_STEPS:-1000}"
 BATCH_SIZE="${BATCH_SIZE:-16}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
 SAVE_INTERVAL="${SAVE_INTERVAL:-1000}"

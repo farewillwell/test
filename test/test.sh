@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PI0_ROOT="${PI0_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 OPENPI_ROOT="${OPENPI_ROOT:-${PI0_ROOT}/openpi}"
@@ -100,12 +97,12 @@ run_eval() {
   cd "${OPENPI_ROOT}"
   cmd=(
     python -u examples/libero/main.py
-    --host "${HOST}"
-    --port "${PORT}"
-    --task-suite-name "${TASK_SUITE_NAME}"
-    --task-id "${TASK_ID}"
-    --num-trials-per-task "${NUM_TRIALS_PER_TASK}"
-    --video-out-path "${VIDEO_OUT_PATH}"
+    --args.host "${HOST}"
+    --args.port "${PORT}"
+    --args.task-suite-name "${TASK_SUITE_NAME}"
+    --args.task-id "${TASK_ID}"
+    --args.num-trials-per-task "${NUM_TRIALS_PER_TASK}"
+    --args.video-out-path "${VIDEO_OUT_PATH}"
   )
 
   if [[ "${DRY_RUN}" == "true" ]]; then

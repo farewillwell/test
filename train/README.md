@@ -41,6 +41,8 @@ bash train/prepare_pi0_libero_data.sh
 2. 将数据转换成 OpenPI 可读取的 LeRobot 格式，写入 `LEROBOT_DATA_DIR`。
 3. 为这份 LeRobot 数据计算归一化统计量，默认写入 `${LEROBOT_DATA_DIR}/openpi_assets`。
 
+转换时会将 `agentview_rgb` 和 `eye_in_hand_rgb` 旋转 180 度，以匹配 OpenPI 官方 LIBERO eval 中的图像预处理。动作直接使用 HDF5 里的 `actions` 字段，不在 converter 中做 state 差分。
+
 示例：
 
 ```bash
@@ -261,7 +263,7 @@ bash train/train_pi0_libero_sft.sh
 部署模型：
 
 ```bash
-MODEL_PATH=/data/aoss/heliqun/models/pi0/libero_goal_select_50_sft/final \
+MODEL_PATH=/data/huangdi/heliqun/pi0/sft_runs/model/final \
 MODE=serve \
 PORT=8000 \
 bash test/test.sh
@@ -275,7 +277,7 @@ HOST=0.0.0.0 \
 PORT=8000 \
 TASK_SUITE_NAME=libero_goal \
 TASK_ID=6 \
-NUM_TRIALS_PER_TASK=1 \
+NUM_TRIALS_PER_TASK=10 \
 bash test/test.sh
 ```
 
