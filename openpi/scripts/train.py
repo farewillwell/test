@@ -139,7 +139,7 @@ def train_step(
     config: _config.TrainConfig,
     rng: at.KeyArrayLike,
     state: training_utils.TrainState,
-    batch: tuple[_model.Observation, _model.Actions],
+    batch: tuple,
 ) -> tuple[training_utils.TrainState, dict[str, at.Array]]:
     model = nnx.merge(state.model_def, state.params)
     model.train()
@@ -149,7 +149,9 @@ def train_step(
         model: _model.BaseModel, rng: at.KeyArrayLike, observation: _model.Observation, actions: _model.Actions,adv,
     ):
         chunked_loss = model.compute_loss(rng, observation, actions, train=True)
-        if config.use_awbc and adv is not None:
+        if config.use_awbc:
+            if adv is None:
+                raise RuntimeError("adv is none!")
             adv = jnp.asarray(adv, dtype=jnp.float32).reshape(-1)
             per_sample_loss = jnp.mean(chunked_loss, axis=-1)
 

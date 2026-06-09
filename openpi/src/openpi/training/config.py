@@ -33,6 +33,7 @@ ModelType: TypeAlias = _model.ModelType
 # Work around a tyro issue with using nnx.filterlib.Filter directly.
 Filter: TypeAlias = nnx.filterlib.Filter
 
+LIBERO_REPLAN_STEPS = 5
 
 @dataclasses.dataclass(frozen=True)
 class AssetsConfig:
@@ -591,6 +592,7 @@ class TrainConfig:
     awbc_log_weight_clip: float = 2.0
     awbc_weight_min: float = 0.2
     awbc_weight_max: float = 3.0
+    default_libero_replan_steps:int = LIBERO_REPLAN_STEPS
 
     @property
     def assets_dirs(self) -> pathlib.Path:
@@ -738,7 +740,8 @@ _CONFIGS = [
     TrainConfig(
         name="pi0_libero_low_mem_finetune",
         # Here is an example of loading a pi0 model for LoRA fine-tuning.
-        model=pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"),
+        model=pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora",
+                                   action_horizon=LIBERO_REPLAN_STEPS),
         data=LeRobotLiberoDataConfig(
             repo_id="physical-intelligence/libero",
             base_config=DataConfig(prompt_from_task=True),
@@ -759,8 +762,9 @@ _CONFIGS = [
     TrainConfig(
         name="pi0_libero_awbc",
         # Here is an example of loading a pi0 model for LoRA fine-tuning.
-        model=pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"),
-        data=LeRobotLiberoDataConfig(
+        model=pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"
+                                   ,action_horizon=LIBERO_REPLAN_STEPS),
+        data=LeRobotLiberoDataAWBCConfig(
             repo_id="physical-intelligence/libero",
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
