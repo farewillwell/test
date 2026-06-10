@@ -16,6 +16,11 @@ Assumption:
 Reward:
     normal step: -1
     final success terminal: 10
+
+Important local-path rule:
+    This script treats --input-dir and --output-dir as actual local LeRobot repo
+    directories. It does not rely on HuggingFace Hub lookup, and it does not rely
+    on HF_LEROBOT_HOME to decide the output path.
 """
 
 from __future__ import annotations
@@ -43,7 +48,7 @@ EPISODE_KEY = "episode_index"
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input-dir", required=True, help="Input LeRobot repo directory, e.g. /path/to/demo_repo")
-    p.add_argument("--output-dir", required=True, help="Output LeRobot repo directory, e.g. workspace/converted_demo")
+    p.add_argument("--output-dir", required=True, help="Output LeRobot repo directory, e.g. workspace/pool/raw")
     p.add_argument("--overwrite", action="store_true")
 
     p.add_argument("--fps", type=int, default=10)
@@ -122,11 +127,65 @@ def require_key(sample: dict[str, Any], key: str) -> Any:
     return sample[key]
 
 
+def assert_lerobot_repo_dir(repo_dir: Path, *, name: str) -> None:
+    info_path = repo_dir / "meta" / "info.json"
+    if not repo_dir.exists():
+        raise FileNotFoundError(f"{name} directory does not exist: {repo_dir}")
+    if not info_path.exists():
+        raise FileNotFoundError(
+            f"{name} is not a valid local LeRobot repo: {repo_dir}\n"
+            f"Expected metadata file: {info_path}"
+        )
+
+
 def open_lerobot_dataset(repo_dir: Path):
+    """Open a local LeRobot repo whose root is exactly repo_dir."""
     from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 
-    repo_dir = repo_dir.resolve()
-    return LeRobotDataset(repo_dir.name, root=repo_dir.parent)
+    repo_dir = Path(repo_dir).expanduser().absolute()
+    assert_lerobot_repo_dir(repo_dir, name="input-dir")
+
+    # In this user's LeRobot version, root must be the actual dataset root
+    # containing meta/info.json. Passing repo_dir.parent causes Hub fallback.
+    return LeRobotDataset(repo_dir.name, root=repo_dir)
+
+
+def _create_lerobot_dataset_with_root(
+    *,
+    repo_id: str,
+    root: Path,
+    robot_type: str,
+    fps: int,
+    features: dict[str, Any],
+):
+    """Create a LeRobot dataset at an explicit local root.
+
+    Some LeRobot versions support root= in create(); some older variants do not.
+    We prefer root=output_dir. If unsupported, we set HF_LEROBOT_HOME to the
+    parent and verify that the actual output path is still output_dir.
+    """
+    from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+
+    create_kwargs = dict(
+        repo_id=repo_id,
+        robot_type=robot_type,
+        fps=fps,
+        features=features,
+        use_videos=False,
+        image_writer_threads=10,
+        image_writer_processes=5,
+    )
+
+    try:
+        return LeRobotDataset.create(root=root, **create_kwargs)
+    except TypeError as e:
+        # Compatibility fallback for LeRobot versions whose create() has no
+        # root= argument. This is intentionally guarded and checked after use.
+        if "root" not in str(e):
+            raise
+
+        os.environ["HF_LEROBOT_HOME"] = str(root.parent)
+        return LeRobotDataset.create(**create_kwargs)
 
 
 def create_output_dataset(
@@ -139,9 +198,7 @@ def create_output_dataset(
     state_dim: int,
     action_dim: int,
 ):
-    from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-
-    output_dir = output_dir.resolve()
+    output_dir = Path(output_dir).expanduser().absolute()
     output_parent = output_dir.parent
     output_repo_id = output_dir.name
 
@@ -152,87 +209,107 @@ def create_output_dataset(
 
     output_parent.mkdir(parents=True, exist_ok=True)
 
-    old_home = os.environ.get("HF_LEROBOT_HOME", "")
+    # Keep this for compatibility with code paths that still consult it, but do
+    # not rely on it as the primary path binding.
     os.environ["HF_LEROBOT_HOME"] = str(output_parent)
 
-    try:
-        return LeRobotDataset.create(
-            repo_id=output_repo_id,
-            robot_type="libero",
-            fps=fps,
-            features={
-                "image": {
-                    "dtype": "image",
-                    "shape": tuple(image_shape),
-                    "names": ["height", "width", "channel"],
-                },
-                "wrist_image": {
-                    "dtype": "image",
-                    "shape": tuple(wrist_shape),
-                    "names": ["height", "width", "channel"],
-                },
-                "state": {
-                    "dtype": "float32",
-                    "shape": (state_dim,),
-                    "names": ["state"],
-                },
-                "actions": {
-                    "dtype": "float32",
-                    "shape": (action_dim,),
-                    "names": ["actions"],
-                },
-                "reward": {
-                    "dtype": "float32",
-                    "shape": (1,),
-                    "names": ["reward"],
-                },
-                "terminal": {
-                    "dtype": "int64",
-                    "shape": (1,),
-                    "names": ["terminal"],
-                },
-                "success": {
-                    "dtype": "int64",
-                    "shape": (1,),
-                    "names": ["success"],
-                },
-                "task_id": {
-                    "dtype": "int64",
-                    "shape": (1,),
-                    "names": ["task_id"],
-                },
-                "trial_id": {
-                    "dtype": "int64",
-                    "shape": (1,),
-                    "names": ["trial_id"],
-                },
-                "step_index": {
-                    "dtype": "int64",
-                    "shape": (1,),
-                    "names": ["step_index"],
-                },
-            },
-            use_videos=False,
-            image_writer_threads=10,
-            image_writer_processes=5,
+    features = {
+        "image": {
+            "dtype": "image",
+            "shape": tuple(image_shape),
+            "names": ["height", "width", "channel"],
+        },
+        "wrist_image": {
+            "dtype": "image",
+            "shape": tuple(wrist_shape),
+            "names": ["height", "width", "channel"],
+        },
+        "state": {
+            "dtype": "float32",
+            "shape": (state_dim,),
+            "names": ["state"],
+        },
+        "actions": {
+            "dtype": "float32",
+            "shape": (action_dim,),
+            "names": ["actions"],
+        },
+        "reward": {
+            "dtype": "float32",
+            "shape": (1,),
+            "names": ["reward"],
+        },
+        "terminal": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["terminal"],
+        },
+        "success": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["success"],
+        },
+        "task_id": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["task_id"],
+        },
+        "trial_id": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["trial_id"],
+        },
+        "step_index": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["step_index"],
+        },
+    }
+
+    ds = _create_lerobot_dataset_with_root(
+        repo_id=output_repo_id,
+        root=output_dir,
+        robot_type="libero",
+        fps=fps,
+        features=features,
+    )
+
+    actual_root = Path(getattr(ds, "root", output_dir)).expanduser().absolute()
+    print(f"[convert] requested output root: {output_dir}", flush=True)
+    print(f"[convert] actual dataset root: {actual_root}", flush=True)
+
+    if actual_root != output_dir:
+        print(
+            f"[convert][warn] LeRobotDataset root differs from requested output-dir: "
+            f"actual={actual_root} requested={output_dir}",
+            flush=True,
         )
-    finally:
-        if old_home:
-            os.environ["HF_LEROBOT_HOME"] = old_home
-        else:
-            os.environ.pop("HF_LEROBOT_HOME", None)
+
+    return ds
 
 
-def finish_dataset(dataset) -> None:
-    if hasattr(dataset, "stop_image_writer"):
-        dataset.stop_image_writer()
+def assert_output_created(output_dir: Path) -> None:
+    output_dir = Path(output_dir).expanduser().absolute()
+    info_path = output_dir / "meta" / "info.json"
+    if not output_dir.exists():
+        raise RuntimeError(
+            f"Output directory was not created: {output_dir}\n"
+            "This means LeRobotDataset.create() did not bind to --output-dir."
+        )
+    if not info_path.exists():
+        candidates = [str(p) for p in output_dir.parent.glob("*/meta/info.json")]
+        raise RuntimeError(
+            f"Output directory exists but is not a valid LeRobot repo: {output_dir}\n"
+            f"Expected metadata: {info_path}\n"
+            f"Nearby LeRobot repos: {candidates}"
+        )
 
 
 def main() -> None:
     args = parse_args()
 
-    input_dir = Path(args.input_dir).resolve()
-    output_dir = Path(args.output_dir).resolve()
+    input_dir = Path(args.input_dir).expanduser().absolute()
+    output_dir = Path(args.output_dir).expanduser().absolute()
 
     src = open_lerobot_dataset(input_dir)
 
@@ -271,59 +348,57 @@ def main() -> None:
     total_episodes = 0
     total_frames = 0
 
-    try:
-        for out_ep, src_ep in enumerate(sorted(by_ep)):
-            if args.max_episodes > 0 and total_episodes >= args.max_episodes:
-                break
+    for out_ep, src_ep in enumerate(sorted(by_ep)):
+        if args.max_episodes > 0 and total_episodes >= args.max_episodes:
+            break
 
-            indices = by_ep[src_ep]
-            ep_len = len(indices)
-            if ep_len <= 0:
-                continue
+        indices = by_ep[src_ep]
+        ep_len = len(indices)
+        if ep_len <= 0:
+            continue
 
-            for local_pos, global_idx in enumerate(indices):
-                sample = src[global_idx]
+        for local_pos, global_idx in enumerate(indices):
+            sample = src[global_idx]
 
-                image = image_hwc_uint8(require_key(sample, IMAGE_KEY))
-                wrist_image = image_hwc_uint8(require_key(sample, WRIST_IMAGE_KEY))
-                state = float_vec(require_key(sample, STATE_KEY), STATE_KEY)
-                action = float_vec(require_key(sample, ACTION_KEY), ACTION_KEY)
-                task = decode_task(require_key(sample, TASK_KEY)).strip()
+            image = image_hwc_uint8(require_key(sample, IMAGE_KEY))
+            wrist_image = image_hwc_uint8(require_key(sample, WRIST_IMAGE_KEY))
+            state = float_vec(require_key(sample, STATE_KEY), STATE_KEY)
+            action = float_vec(require_key(sample, ACTION_KEY), ACTION_KEY)
+            task = decode_task(require_key(sample, TASK_KEY)).strip()
 
-                if not task:
-                    raise ValueError(f"Empty task at source frame {global_idx}")
+            if not task:
+                raise ValueError(f"Empty task at source frame {global_idx}")
 
-                is_last = local_pos == ep_len - 1
-                reward = args.success_terminal_reward if is_last else args.step_reward
-                terminal = 1 if is_last else 0
+            is_last = local_pos == ep_len - 1
+            reward = args.success_terminal_reward if is_last else args.step_reward
+            terminal = 1 if is_last else 0
 
-                dst.add_frame(
-                    {
-                        "image": image,
-                        "wrist_image": wrist_image,
-                        "state": state.astype(np.float32),
-                        "actions": action.astype(np.float32),
-                        "reward": np.asarray([reward], dtype=np.float32),
-                        "terminal": np.asarray([terminal], dtype=np.int64),
-                        "success": np.asarray([1], dtype=np.int64),
-                        "task_id": np.asarray([int(args.task_id)], dtype=np.int64),
-                        "trial_id": np.asarray([int(src_ep)], dtype=np.int64),
-                        "step_index": np.asarray([int(local_pos)], dtype=np.int64),
-                        "task": task,
-                    }
-                )
-                total_frames += 1
+            dst.add_frame(
+                {
+                    "image": image,
+                    "wrist_image": wrist_image,
+                    "state": state.astype(np.float32),
+                    "actions": action.astype(np.float32),
+                    "reward": np.asarray([reward], dtype=np.float32),
+                    "terminal": np.asarray([terminal], dtype=np.int64),
+                    "success": np.asarray([1], dtype=np.int64),
+                    "task_id": np.asarray([int(args.task_id)], dtype=np.int64),
+                    "trial_id": np.asarray([int(src_ep)], dtype=np.int64),
+                    "step_index": np.asarray([int(local_pos)], dtype=np.int64),
+                    "task": task,
+                }
+            )
+            total_frames += 1
 
-            dst.save_episode()
-            total_episodes += 1
-            print(f"[convert] src_ep={src_ep} out_ep={out_ep} len={ep_len} success=1")
+        dst.save_episode()
+        total_episodes += 1
+        print(f"[convert] src_ep={src_ep} out_ep={out_ep} len={ep_len} success=1", flush=True)
 
-    finally:
-        finish_dataset(dst)
+    assert_output_created(output_dir)
 
-    print(f"[convert] saved: {output_dir}")
-    print(f"[convert] episodes={total_episodes} frames={total_frames}")
-    print(f"[convert] reward step={args.step_reward} success_terminal={args.success_terminal_reward}")
+    print(f"[convert] saved: {output_dir}", flush=True)
+    print(f"[convert] episodes={total_episodes} frames={total_frames}", flush=True)
+    print(f"[convert] reward step={args.step_reward} success_terminal={args.success_terminal_reward}", flush=True)
 
 
 if __name__ == "__main__":

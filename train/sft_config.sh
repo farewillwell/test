@@ -27,7 +27,7 @@ MODEL_DIR="${MODEL_DIR:-${PI0_ROOT}/sft_runs/model}"
 STEP_CHECKPOINT_DIR="${MODEL_DIR}/steps"
 FINAL_CHECKPOINT_DIR="${MODEL_DIR}/final"
 
-CONFIG_NAME="${CONFIG_NAME:-pi0_libero_low_mem_finetune}"
+CONFIG_NAME="${CONFIG_NAME:-pi0_libero}"
 EXP_NAME="${EXP_NAME:-sft}"
 OPENPI_DATA_HOME="${OPENPI_DATA_HOME:-/data/aoss/heliqun/model/pi}"
 

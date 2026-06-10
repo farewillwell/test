@@ -143,7 +143,7 @@ def open_lerobot_dataset_from_dir(repo_dir: str | Path) -> LeRobotDataset:
     repo_dir = Path(repo_dir).resolve()
     if not repo_dir.exists():
         raise FileNotFoundError(f"LeRobot repo dir does not exist: {repo_dir}")
-    return LeRobotDataset(repo_dir.name, root=repo_dir.parent)
+    return LeRobotDataset(repo_dir.name, root=repo_dir)
 
 
 def to_scalar(x: Any) -> Any:

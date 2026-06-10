@@ -86,7 +86,7 @@ class TrainArgs:
 
     log_every: int = 50
     debug_every: int = 500
-    save_every: int = 1000
+    save_every: int = 1000000
     seed: int = 7
     device: str = "cuda"
     resume: str = ""
@@ -131,7 +131,7 @@ def parse_args() -> TrainArgs:
 
     p.add_argument("--log-every", type=int, default=50)
     p.add_argument("--debug-every", type=int, default=500)
-    p.add_argument("--save-every", type=int, default=1000)
+    p.add_argument("--save-every", type=int, default=1000000)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--device", default="cuda")
     p.add_argument("--resume", default="")
@@ -170,7 +170,7 @@ def open_lerobot_dataset_from_dir(repo_dir: str | Path) -> LeRobotDataset:
     repo_dir = Path(repo_dir).resolve()
     if not repo_dir.exists():
         raise FileNotFoundError(f"LeRobot repo dir does not exist: {repo_dir}")
-    return LeRobotDataset(repo_dir.name, root=repo_dir.parent)
+    return LeRobotDataset(repo_dir.name, root=repo_dir)
 
 
 def to_scalar(x: Any) -> Any:

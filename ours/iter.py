@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Stage-resumable pi0 iterative learning driver with workspace-local data pool.
+Stage-resumable pi0 iterative learning driver with a virtual data pool.
+
+Key design:
+    - pool/raw is only the initial success-demo dataset converted to IQL style.
+    - New collect datasets are NOT physically merged into pool/raw.
+    - pool/meta/sources.jsonl records all data sources.
+    - IQL/train_pool.py and IQL/label_pool.py receive the current source list via --repo-dirs.
 
 Workspace layout:
 
 workspace/
 ├── save.json
 ├── logs/main.log
-├── pool/raw              # accumulated collector-style data: success + failure
-├── pool/meta/sources.jsonl
+├── pool/
+│   ├── raw                  # initial converted success-demo IQL-style LeRobot repo
+│   └── meta/sources.jsonl   # virtual pool source list
 ├── iter0/
 │   ├── logs/
 │   ├── iql/final.pt
-│   ├── data/labeled      # success-only AWBC data labeled by iter0 critic
-│   ├── data/collect      # newly collected data from iter0 policy
+│   ├── data/labeled         # success-only AWBC data labeled by iter0 critic
+│   ├── data/collect         # newly collected success+failure data
 │   ├── awbc_model/final/params
 │   ├── collect_videos/
 │   └── collect_metrics.jsonl
@@ -31,14 +38,10 @@ import shlex
 import shutil
 import socket
 import subprocess
-import sys
 import time
-from collections import defaultdict
 from typing import Any
-from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-import numpy as np
-import torch
-from PIL import Image
+
+
 STAGE_TRAIN_IQL = "train_iql"
 STAGE_LABEL = "label"
 STAGE_TRAIN_AWBC = "train_awbc"
@@ -49,20 +52,10 @@ STAGE_FINISHED = "finished"
 STAGES = (STAGE_TRAIN_IQL, STAGE_LABEL, STAGE_TRAIN_AWBC, STAGE_COLLECT, STAGE_APPEND_POOL)
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 
-IQL_REQUIRED_KEYS = {
-    "image",
-    "wrist_image",
-    "state",
-    "actions",
-    "reward",
-    "terminal",
-    "success",
-    "task",
-    "episode_index",
-}
 STEP_REWARD = -1.0
 SUCCESS_TERMINAL_REWARD = 10.0
 FAILURE_TERMINAL_REWARD = -100.0
+
 
 def _task_mode(task_id: int) -> str:
     return "single" if int(task_id) >= 0 else "multi"
@@ -72,24 +65,48 @@ def get_iql_steps(iter_index: int, task_id: int) -> int:
     base = 4000
     iter_task_add = 2000
     iter_scale = max(int(iter_index) + 1, 1)
-    num_tasks = 1 if task_id >=0 else 10
-    return int(base+ iter_task_add * num_tasks * iter_scale)
+    num_tasks = 1 if int(task_id) >= 0 else 10
+    return int(base + iter_task_add * num_tasks * iter_scale)
 
 
 def get_awbc_steps(iter_index: int, task_id: int) -> int:
-    base = 3000
-    iter_task_add = 2000
+    base = 1
+    iter_task_add = 500
     iter_scale = max(int(iter_index) + 1, 1)
-    num_tasks = 1 if task_id >=0 else 10
-    return int(base+ iter_task_add * num_tasks * iter_scale)
+    num_tasks = 1 if int(task_id) >= 0 else 10
+    return int(base + iter_task_add * num_tasks * iter_scale)
 
+def check_env_for_subprocess(env: dict[str, Any], *, log_path: Path) -> None:
+    bad = {k: v for k, v in env.items() if v is None}
+    if bad:
+        log_line(log_path, "[env-error] subprocess env contains None values:")
+        for k in sorted(bad):
+            log_line(log_path, f"[env-error] {k}=None")
+        raise RuntimeError(
+            "subprocess env contains None values: "
+            + ", ".join(sorted(bad.keys()))
+        )
+
+    bad_type = {
+        k: type(v).__name__
+        for k, v in env.items()
+        if not isinstance(v, (str, bytes, os.PathLike))
+    }
+    if bad_type:
+        log_line(log_path, "[env-error] subprocess env contains non-string values:")
+        for k in sorted(bad_type):
+            log_line(log_path, f"[env-error] {k}: type={bad_type[k]} value={env[k]!r}")
+        raise RuntimeError(
+            "subprocess env contains non-string values: "
+            + ", ".join(f"{k}:{bad_type[k]}" for k in sorted(bad_type))
+        )
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Run pi0 iterative IQL/AWBC/Q-select with workspace-local data pool.")
+    p = argparse.ArgumentParser(description="Run pi0 iterative IQL/AWBC/Q-select with a virtual data pool.")
 
-    # Only three core user paths.
+    # Core paths.
     p.add_argument("--workspace", required=True, help="Experiment root. All generated data/checkpoints/logs stay under it.")
-    p.add_argument("--src-dir", required=True, help="Initial collector-style LeRobot dataset directory.")
+    p.add_argument("--src-dir", required=True, help="Initial success-only OpenPI/LeRobot demo dataset directory.")
     p.add_argument("--base-model", required=True, help="Initial pi0 checkpoint directory containing params/.")
 
     # Repository / environment roots.
@@ -107,11 +124,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--horizon", type=int, default=5)
     p.add_argument("--replan-steps", type=int, default=5)
 
+    # Initial demo conversion reward.
+    p.add_argument("--demo-step-reward", type=float, default=STEP_REWARD)
+    p.add_argument("--demo-success-terminal-reward", type=float, default=SUCCESS_TERMINAL_REWARD)
+
     # IQL.
     p.add_argument("--iql-encoder-name", default="/data/aoss/heliqun/model/clip/clip-vit-base-patch32")
     p.add_argument("--iql-batch-size", type=int, default=64)
     p.add_argument("--iql-num-workers", type=int, default=4)
-    p.add_argument("--iql-devices", type=int, default=1)
     p.add_argument("--iql-hidden-dim", type=int, default=512)
     p.add_argument("--iql-num-q", type=int, default=2)
     p.add_argument("--iql-action-layers", type=int, default=2)
@@ -175,9 +195,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
-    workspace = Path(args.workspace).resolve()
-    src_dir = Path(args.src_dir).resolve()
-    base_model = Path(args.base_model).resolve()
+    workspace = Path(args.workspace)
+    src_dir = Path(args.src_dir)
+    base_model = Path(args.base_model)
 
     if not src_dir.exists():
         raise FileNotFoundError(f"--src-dir does not exist: {src_dir}")
@@ -192,19 +212,28 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
     args.src_dir = str(src_dir)
     args.base_model = str(base_model)
 
-    this_file = Path(__file__).resolve()
-    pi0_root = Path(args.pi0_root).resolve() if args.pi0_root else this_file.parents[1]
+    this_file = Path(__file__)
+    pi0_root = Path(args.pi0_root) if args.pi0_root else this_file.parents[1]
     args.pi0_root = str(pi0_root)
 
-    openpi_root = Path(args.openpi_root).resolve() if args.openpi_root else pi0_root / "openpi"
+    openpi_root = Path(args.openpi_root) if args.openpi_root else pi0_root / "openpi"
     args.openpi_root = str(openpi_root)
-    args.pi_python = str(Path(args.pi_python).resolve() if args.pi_python else openpi_root / "pi_env" / "bin" / "python")
+    args.pi_python = str(Path(args.pi_python) if args.pi_python else openpi_root / "pi_env" / "bin" / "python")
     args.libero_python = str(
-        Path(args.libero_python).resolve()
+        Path(args.libero_python)
         if args.libero_python
         else openpi_root / "examples" / "libero" / "libero_env" / "bin" / "python"
     )
-    args.cache_root = str(workspace / "cache")
+
+    # Required helper scripts.
+    for script in (
+        Path(args.pi0_root) / "ours" / "convert_demo.py",
+        Path(args.pi0_root) / "ours" / "IQL" / "train.py",
+        Path(args.pi0_root) / "ours" / "IQL" / "label.py",
+    ):
+        if not script.exists():
+            raise FileNotFoundError(f"Required script not found: {script}")
+
     return args
 
 
@@ -263,10 +292,8 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
     env["PYTHONUNBUFFERED"] = "1"
     env["TOKENIZERS_PARALLELISM"] = env.get("TOKENIZERS_PARALLELISM", "false")
     env["WANDB_MODE"] = env.get("WANDB_MODE", "offline")
-    if "OPENPI_DATA_HOME" not in env or not env["OPENPI_DATA_HOME"]:
-        raise RuntimeError("OPENPI_DATA_HOME must be set in the shell environment.")
-    env["JAX_COMPILATION_CACHE_DIR"] = env.get("JAX_COMPILATION_CACHE_DIR", str(Path(args.cache_root) / "jax"))
-    env["CUDA_CACHE_PATH"] = env.get("CUDA_CACHE_PATH", str(Path(args.cache_root) / "cuda"))
+    env["JAX_COMPILATION_CACHE_DIR"] = env.get("JAX_COMPILATION_CACHE_DIR")
+    env["CUDA_CACHE_PATH"] = env.get("CUDA_CACHE_PATH")
     env["CUDA_CACHE_MAXSIZE"] = env.get("CUDA_CACHE_MAXSIZE", "2147483648")
     env["JAX_ENABLE_COMPILATION_CACHE"] = env.get("JAX_ENABLE_COMPILATION_CACHE", "true")
     env["JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS"] = env.get("JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS", "0")
@@ -277,21 +304,24 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
 
 def libero_env(args: argparse.Namespace, data_root: Path) -> dict[str, str]:
     env = base_env(args)
+
     if "LIBERO_CONFIG_PATH" not in env or not env["LIBERO_CONFIG_PATH"]:
         raise RuntimeError("LIBERO_CONFIG_PATH must be set in the shell environment.")
     if "MUJOCO_GL" not in env or not env["MUJOCO_GL"]:
         raise RuntimeError("MUJOCO_GL must be set in the shell environment, e.g. export MUJOCO_GL=egl")
+
     env["HF_LEROBOT_HOME"] = str(data_root)
     third_party_libero = str(Path(args.openpi_root) / "third_party" / "libero")
     env["PYTHONPATH"] = third_party_libero + os.pathsep + env.get("PYTHONPATH", "")
     return env
 
 
-def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str], dry_run: bool) -> None:
+def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -> None:
     log_line(log_path, f"[cmd] {quote_cmd(cmd)}")
     log_line(log_path, f"[cwd] {cwd}")
-    if dry_run:
-        return
+
+    check_env_for_subprocess(env, log_path=log_path)
+
     with subprocess.Popen(
         [str(x) for x in cmd],
         cwd=str(cwd),
@@ -306,6 +336,7 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str], d
             print(line, end="", flush=True)
             with log_path.open("a", encoding="utf-8") as f:
                 f.write(line)
+
         rc = proc.wait()
         if rc != 0:
             raise subprocess.CalledProcessError(rc, cmd)
@@ -314,85 +345,19 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str], d
 def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: float, log_path: Path) -> None:
     connect_host = "127.0.0.1" if host in {"0.0.0.0", ""} else host
     deadline = time.time() + timeout
+
     while time.time() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(f"Policy server exited early with code {proc.returncode}. See {log_path}")
+
         try:
             with socket.create_connection((connect_host, int(port)), timeout=2.0):
                 log_line(log_path, f"[server] ready at {connect_host}:{port}")
                 return
         except OSError:
             time.sleep(1.0)
+
     raise TimeoutError(f"Timed out waiting for policy server at {connect_host}:{port}. See {log_path}")
-
-
-def to_scalar(x: Any) -> Any:
-    if torch.is_tensor(x):
-        if x.numel() == 1:
-            return x.detach().cpu().item()
-        return x.detach().cpu().numpy()
-
-    if isinstance(x, (int, float, bool, str, bytes)):
-        return x
-    arr = np.asarray(x)
-    if arr.shape == ():
-        return arr.item()
-    if arr.size == 1:
-        return arr.reshape(-1)[0].item()
-    return arr
-
-
-def to_numpy(x: Any) -> np.ndarray:
-    if torch.is_tensor(x):
-        return x.detach().cpu().numpy()
-    if isinstance(x, Image.Image):
-        return np.asarray(x)
-    return np.asarray(x)
-
-
-def decode_task(x: Any) -> str:
-    if isinstance(x, bytes):
-        return x.decode("utf-8")
-    if isinstance(x, str):
-        return x
-
-    if torch.is_tensor(x):
-        if x.numel() == 1:
-            return decode_task(x.detach().cpu().item())
-        return str(x.detach().cpu().numpy())
-    arr = np.asarray(x)
-    if arr.shape == ():
-        return decode_task(arr.item())
-    if arr.size == 1:
-        return decode_task(arr.reshape(-1)[0])
-    return str(x)
-
-
-def image_hwc_uint8(x: Any) -> np.ndarray:
-    arr = to_numpy(x)
-    if arr.ndim != 3:
-        raise ValueError(f"Expected image [H,W,3] or [3,H,W], got {arr.shape}")
-    if arr.shape[0] == 3 and arr.shape[-1] != 3:
-        arr = np.transpose(arr, (1, 2, 0))
-    if arr.shape[-1] != 3:
-        raise ValueError(f"Expected RGB image, got {arr.shape}")
-    if arr.dtype != np.uint8:
-        if np.issubdtype(arr.dtype, np.floating) and float(np.nanmax(arr)) <= 1.0:
-            arr = arr * 255.0
-        arr = np.clip(arr, 0, 255).astype(np.uint8)
-    return np.ascontiguousarray(arr)
-
-
-def require_keys(sample: dict[str, Any], keys: set[str], *, repo: str) -> None:
-    missing = sorted(k for k in keys if k not in sample)
-    if missing:
-        raise KeyError(f"Repo {repo} missing required keys: {missing}. keys={sorted(sample.keys())}")
-
-
-def open_lerobot_dataset(repo_dir: Path):
-    repo_dir = repo_dir.resolve()
-    repo_id = repo_dir.name
-    return LeRobotDataset(repo_id, root=repo_dir)
 
 
 def remove_path(path: Path) -> None:
@@ -403,127 +368,84 @@ def remove_path(path: Path) -> None:
             path.unlink()
 
 
-def merge_collector_repos(input_dirs: list[Path], output_dir: Path, *, overwrite: bool, log_path: Path) -> dict[str, int]:
-    """Materialize a collector-style LeRobot repo by concatenating whole episodes."""
-    openpi_src = Path(__file__).resolve().parents[1] / "openpi" / "src"
-    if openpi_src.exists() and str(openpi_src) not in sys.path:
-        sys.path.insert(0, str(openpi_src))
-    from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-
-    input_dirs = [Path(p).resolve() for p in input_dirs]
-    output_dir = Path(output_dir).resolve()
-    output_parent = output_dir.parent
-    output_repo_id = output_dir.name
-
-    for src in input_dirs:
-        if not src.exists():
-            raise FileNotFoundError(f"Input LeRobot repo does not exist: {src}")
-
-    if output_dir.exists():
-        if overwrite:
-            shutil.rmtree(output_dir)
-        else:
-            raise FileExistsError(f"Output repo exists: {output_dir}")
-
-    output_parent.mkdir(parents=True, exist_ok=True)
-
-    first_sample = None
-    first_repo = ""
-    for src in input_dirs:
-        ds = open_lerobot_dataset(src)
-        if len(ds) > 0:
-            first_sample = ds[0]
-            first_repo = str(src)
-            break
-    if first_sample is None:
-        raise RuntimeError(f"All input repos are empty: {input_dirs}")
-
-    require_keys(first_sample, IQL_REQUIRED_KEYS, repo=first_repo)
-    image_shape = image_hwc_uint8(first_sample["image"]).shape
-    wrist_shape = image_hwc_uint8(first_sample["wrist_image"]).shape
-    state_dim = int(to_numpy(first_sample["state"]).reshape(-1).shape[0])
-    action_dim = int(to_numpy(first_sample["actions"]).reshape(-1).shape[0])
-
-    os.environ["HF_LEROBOT_HOME"] = str(output_parent)
-
-    out = LeRobotDataset.create(
-        repo_id=output_repo_id,
-        robot_type="libero",
-        fps=10,
-        features={
-            "image": {"dtype": "image", "shape": tuple(image_shape), "names": ["height", "width", "channel"]},
-            "wrist_image": {"dtype": "image", "shape": tuple(wrist_shape), "names": ["height", "width", "channel"]},
-            "state": {"dtype": "float32", "shape": (state_dim,), "names": ["state"]},
-            "actions": {"dtype": "float32", "shape": (action_dim,), "names": ["actions"]},
-            "reward": {"dtype": "float32", "shape": (1,), "names": ["reward"]},
-            "done": {"dtype": "int64", "shape": (1,), "names": ["done"]},
-            "success": {"dtype": "int64", "shape": (1,), "names": ["success"]},
-        },
-        use_videos=False,
-    )
-
-    total_frames = 0
-    total_episodes = 0
-
-    for src in input_dirs:
-        repo_name = str(src)
-        ds = open_lerobot_dataset(src)
-        by_ep: dict[int, list[int]] = defaultdict(list)
-        for idx in range(len(ds)):
-            sample = ds[idx]
-            require_keys(sample, IQL_REQUIRED_KEYS, repo=repo_name)
-            ep = int(to_scalar(sample["episode_index"]))
-            by_ep[ep].append(idx)
-        log_line(log_path, f"[merge] reading {src}: frames={len(ds)} episodes={len(by_ep)}")
-        for ep in sorted(by_ep):
-            for idx in by_ep[ep]:
-                sample = ds[idx]
-                out.add_frame({
-                    "image": image_hwc_uint8(sample["image"]),
-                    "wrist_image": image_hwc_uint8(sample["wrist_image"]),
-                    "state": to_numpy(sample["state"]).astype(np.float32).reshape(-1),
-                    "actions": to_numpy(sample["actions"]).astype(np.float32).reshape(-1),
-                    "reward": np.asarray([float(to_scalar(sample["reward"]))], dtype=np.float32),
-                    "done": np.asarray([int(bool(to_scalar(sample["done"])))], dtype=np.int64),
-                    "success": np.asarray([int(bool(to_scalar(sample["success"])))], dtype=np.int64),
-                    "task": decode_task(sample["task"]),
-                })
-                total_frames += 1
-            out.save_episode()
-            total_episodes += 1
-    log_line(log_path, f"[merge] wrote {output_dir}: episodes={total_episodes} frames={total_frames}")
-    return {"episodes": int(total_episodes), "frames": int(total_frames)}
-
-
 def append_sources_record(args: argparse.Namespace, record: dict[str, Any]) -> None:
     pools = pool_paths(args)
     pools["meta"].mkdir(parents=True, exist_ok=True)
+
     record = dict(record)
     record.setdefault("time", now())
+
     with pools["sources"].open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def atomic_replace_dir(src_tmp: Path, dst: Path, backup: Path) -> None:
-    remove_path(backup)
-    if dst.exists():
-        dst.rename(backup)
-    src_tmp.rename(dst)
-    remove_path(backup)
+def pool_source_dirs(args: argparse.Namespace) -> list[Path]:
+    """
+    Return virtual pool source repos in append order.
+
+    sources.jsonl records absolute repo directories. The first source is normally
+    workspace/pool/raw. Later sources are iterN/data/collect.
+    """
+    pools = pool_paths(args)
+    sources = pools["sources"]
+
+    if not sources.exists():
+        if pools["raw"].exists():
+            return [pools["raw"]]
+        raise FileNotFoundError(f"Pool sources file not found: {sources}")
+
+    repo_dirs: list[Path] = []
+    seen: set[str] = set()
+
+    with sources.open("r", encoding="utf-8") as f:
+        for line_no, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+
+            record = json.loads(line)
+            repo_dir = record.get("repo_dir") or record.get("collect_dir") or record.get("pool_raw")
+
+            if not repo_dir:
+                raise KeyError(f"{sources}:{line_no} missing repo_dir/collect_dir/pool_raw: {record}")
+
+            path = Path(repo_dir)
+            if not path.exists():
+                raise FileNotFoundError(f"Pool source from {sources}:{line_no} does not exist: {path}")
+
+            key = str(path)
+            if key not in seen:
+                repo_dirs.append(path)
+                seen.add(key)
+
+    if not repo_dirs:
+        raise RuntimeError(f"No valid source repos found in {sources}")
+
+    return repo_dirs
 
 
 def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
+    """
+    Initialize the virtual pool.
+
+    Because load_or_init_state() only calls this when save.json does not exist,
+    this function directly overwrites workspace/pool/raw.
+    """
     pools = pool_paths(args)
     raw = pools["raw"]
 
     pools["root"].mkdir(parents=True, exist_ok=True)
+    pools["meta"].mkdir(parents=True, exist_ok=True)
+
+    # Reset stale source manifest for a fresh run.
+    remove_path(pools["sources"])
 
     cmd = [
         args.pi_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "convert_demo.py"),
         "--input-dir",
-        str(Path(args.src_dir).resolve()),
+        str(Path(args.src_dir)),
         "--output-dir",
         str(raw),
         "--fps",
@@ -531,9 +453,9 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
         "--task-id",
         str(max(int(args.task_id), 0)),
         "--step-reward",
-        "-1.0",
+        str(args.demo_step_reward),
         "--success-terminal-reward",
-        "10.0",
+        str(args.demo_success_terminal_reward),
         "--overwrite",
     ]
 
@@ -542,7 +464,6 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
         log_path=log_path,
         cwd=Path(args.pi0_root) / "ours",
         env=base_env(args),
-        dry_run=False,
     )
 
     if not raw.exists():
@@ -552,19 +473,22 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
         args,
         {
             "event": "init_pool_from_success_demo",
-            "src_dir": str(Path(args.src_dir).resolve()),
+            "repo_dir": str(raw),
+            "src_dir": str(Path(args.src_dir)),
             "pool_raw": str(raw),
         },
     )
 
+
 def build_initial_state(args: argparse.Namespace) -> dict[str, Any]:
     pools = pool_paths(args)
     return {
-        "version": 4,
+        "version": 5,
         "iter_index": 0,
         "next_stage": STAGE_TRAIN_IQL,
         "pool_raw_dir": str(pools["raw"]),
-        "current_policy_dir": str(Path(args.base_model).resolve()),
+        "pool_sources_path": str(pools["sources"]),
+        "current_policy_dir": str(Path(args.base_model)),
         "current_head_path": "",
         "current_awbc_data_dir": "",
         "last_collect_data_dir": "",
@@ -590,12 +514,14 @@ def save_state(args: argparse.Namespace, state: dict[str, Any]) -> None:
 def load_or_init_state(args: argparse.Namespace) -> dict[str, Any]:
     save_path = Path(args.workspace) / "save.json"
     log = main_log(args)
+
     if save_path.exists():
         state = json.loads(save_path.read_text(encoding="utf-8"))
         if state.get("next_stage") not in VALID_STAGES:
             raise ValueError(f"Invalid next_stage in save.json: {state.get('next_stage')}")
         log_line(log, f"[resume] {save_path}: iter={state.get('iter_index')} next_stage={state.get('next_stage')}")
         return state
+
     ensure_pool_initialized(args, log)
     state = build_initial_state(args)
     save_state(args, state)
@@ -604,61 +530,134 @@ def load_or_init_state(args: argparse.Namespace) -> dict[str, Any]:
 
 def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Path]) -> dict[str, Any]:
     log_path = p["logs"] / f"{STAGE_TRAIN_IQL}.log"
-    pools = pool_paths(args)
     iter_index = int(state["iter_index"])
     iql_steps = get_iql_steps(iter_index, args.task_id)
+    repo_dirs = pool_source_dirs(args)
+
     log_line(
         log_path,
-        f"[steps] IQL max_steps={iql_steps} mode={_task_mode(args.task_id)} "
-        f"iter={iter_index}",
+        f"[steps] IQL max_steps={iql_steps} mode={_task_mode(args.task_id)} iter={iter_index}",
     )
+    log_line(log_path, f"[pool] repo_dirs={json.dumps([str(x) for x in repo_dirs], ensure_ascii=False)}")
+
     cmd = [
-        args.pi_python, "-u", "-m", "torch.distributed.run",
-        "--standalone", "--nnodes", "1", "--nproc-per-node", str(args.gpus),
-        str("IQL/train.py"),
-        "--repo-id", "raw", "--root", str(pools["root"]), "--output-dir", str(p["iql_dir"]),
-        "--encoder-name", args.iql_encoder_name, "--horizon", str(args.horizon),
-        "--batch-size", str(args.iql_batch_size), "--num-workers", str(args.iql_num_workers),
-        "--max-steps", str(iql_steps), "--lr", str(args.iql_lr),
-        "--weight-decay", str(args.iql_weight_decay), "--gamma", str(args.iql_gamma),
-        "--expectile", str(args.iql_expectile), "--tau", str(args.iql_tau),
-        "--grad-clip", str(args.iql_grad_clip), "--hidden-dim", str(args.iql_hidden_dim),
-        "--num-q", str(args.iql_num_q), "--action-layers", str(args.iql_action_layers),
-        "--q-layers", str(args.iql_q_layers), "--dropout", str(args.iql_dropout),
-        "--q-l2-coef", str(args.iql_q_l2_coef), "--log-every", str(args.iql_log_every),
-        "--debug-every", str(args.iql_debug_every), "--save-every", str(args.iql_save_every),
-        "--seed", str(args.seed),
+        args.pi_python,
+        "-u",
+        "-m",
+        "torch.distributed.run",
+        "--standalone",
+        "--nnodes",
+        "1",
+        "--nproc-per-node",
+        str(args.gpus),
+        str(Path(args.pi0_root) / "ours" / "IQL" / "train.py"),
+        "--repo-dirs",
+        *[str(x) for x in repo_dirs],
+        "--output-dir",
+        str(p["iql_dir"]),
+        "--encoder-name",
+        args.iql_encoder_name,
+        "--horizon",
+        str(args.horizon),
+        "--batch-size",
+        str(args.iql_batch_size),
+        "--num-workers",
+        str(args.iql_num_workers),
+        "--max-steps",
+        str(iql_steps),
+        "--lr",
+        str(args.iql_lr),
+        "--weight-decay",
+        str(args.iql_weight_decay),
+        "--gamma",
+        str(args.iql_gamma),
+        "--expectile",
+        str(args.iql_expectile),
+        "--tau",
+        str(args.iql_tau),
+        "--grad-clip",
+        str(args.iql_grad_clip),
+        "--hidden-dim",
+        str(args.iql_hidden_dim),
+        "--num-q",
+        str(args.iql_num_q),
+        "--action-layers",
+        str(args.iql_action_layers),
+        "--q-layers",
+        str(args.iql_q_layers),
+        "--dropout",
+        str(args.iql_dropout),
+        "--q-l2-coef",
+        str(args.iql_q_l2_coef),
+        "--log-every",
+        str(args.iql_log_every),
+        "--debug-every",
+        str(args.iql_debug_every),
+        "--save-every",
+        str(args.iql_save_every),
+        "--seed",
+        str(args.seed),
     ]
+
     if args.iql_use_q_aug:
         cmd.append("--use-q-aug")
+
     log_line(
         log_path,
-        f"[steps] IQL max_steps={iql_steps} iter={iter_index} "
-        f"gpus={args.gpus} per_gpu_batch_size={args.iql_batch_size} "
+        f"[batch] gpus={args.gpus} per_gpu_batch_size={args.iql_batch_size} "
         f"effective_global_batch_size={int(args.gpus) * int(args.iql_batch_size)}",
     )
-    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root) / "ours" / "IQL", env=base_env(args), dry_run=args.dry_run)
+
+    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root) / "ours" / "IQL", env=base_env(args))
+
     head = p["iql_dir"] / "final.pt"
-    if not args.dry_run and not head.exists():
+    if not head.exists():
         raise RuntimeError(f"Expected IQL checkpoint not found: {head}")
+
     state["current_head_path"] = str(head)
     state["next_stage"] = STAGE_LABEL
-    append_history(state, int(state["iter_index"]), STAGE_TRAIN_IQL, {"pool_raw_dir": str(pools["raw"]), "head_path": str(head), "iql_steps": int(iql_steps), "gpus": int(args.gpus)})
+
+    append_history(
+        state,
+        iter_index,
+        STAGE_TRAIN_IQL,
+        {
+            "repo_dirs": [str(x) for x in repo_dirs],
+            "head_path": str(head),
+            "iql_steps": int(iql_steps),
+            "gpus": int(args.gpus),
+        },
+    )
     return state
 
 
 def stage_label(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Path]) -> dict[str, Any]:
     log_path = p["logs"] / f"{STAGE_LABEL}.log"
-    pools = pool_paths(args)
+    repo_dirs = pool_source_dirs(args)
+
     env = base_env(args)
     env["HF_LEROBOT_HOME"] = str(p["data"])
+
+    log_line(log_path, f"[pool] repo_dirs={json.dumps([str(x) for x in repo_dirs], ensure_ascii=False)}")
+
     cmd = [
-        args.pi_python, "-u", str(Path(args.pi0_root) / "ours" / "IQL" / "label.py"),
-        "--input-repo-id", "raw", "--input-root", str(pools["root"]),
-        "--output-repo-id", "labeled", "--critic-path", state["current_head_path"],
-        "--horizon", str(args.horizon), "--batch-size", str(args.label_batch_size),
-        "--seed", str(args.seed),
+        args.pi_python,
+        "-u",
+        str(Path(args.pi0_root) / "ours" / "IQL" / "label.py"),
+        "--repo-dirs",
+        *[str(x) for x in repo_dirs],
+        "--output-repo-id",
+        "labeled",
+        "--critic-path",
+        state["current_head_path"],
+        "--horizon",
+        str(args.horizon),
+        "--batch-size",
+        str(args.label_batch_size),
+        "--seed",
+        str(args.seed),
     ]
+
     if args.label_normalize_adv:
         cmd.append("--normalize-adv")
     if args.label_clamp_adv > 0:
@@ -669,10 +668,25 @@ def stage_label(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Pa
         cmd.extend(["--max-episodes", str(args.label_max_episodes)])
     if args.overwrite_repos:
         cmd.append("--overwrite")
-    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root) / "ours" / "IQL", env=env, dry_run=args.dry_run)
-    state["current_awbc_data_dir"] = str(p["labeled_data"])
+
+    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root) / "ours" / "IQL", env=env)
+
+    labeled_data_dir = p["labeled_data"]
+    if not labeled_data_dir.exists():
+        raise RuntimeError(f"Expected labeled data not found: {labeled_data_dir}")
+
+    state["current_awbc_data_dir"] = str(labeled_data_dir)
     state["next_stage"] = STAGE_TRAIN_AWBC
-    append_history(state, int(state["iter_index"]), STAGE_LABEL, {"input_pool_raw_dir": str(pools["raw"]), "labeled_data_dir": str(p["labeled_data"])})
+
+    append_history(
+        state,
+        int(state["iter_index"]),
+        STAGE_LABEL,
+        {
+            "repo_dirs": [str(x) for x in repo_dirs],
+            "labeled_data_dir": str(labeled_data_dir),
+        },
+    )
     return state
 
 
@@ -680,36 +694,69 @@ def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[st
     log_path = p["logs"] / f"{STAGE_TRAIN_AWBC}.log"
     iter_index = int(state["iter_index"])
     awbc_steps = get_awbc_steps(iter_index, args.task_id)
+
     log_line(
         log_path,
-        f"[steps] AWBC num_train_steps={awbc_steps} mode={_task_mode(args.task_id)} "
-        f"iter={iter_index}",
+        f"[steps] AWBC num_train_steps={awbc_steps} mode={_task_mode(args.task_id)} iter={iter_index}",
     )
+
     cmd = [
-        args.pi_python, "-u", str(Path(args.pi0_root) / "ours" / "AWBC" / "train_awbc.py"),
-        "--awbc-repo-id", "labeled", "--hf-lerobot-home", str(p["data"]),
-        "--model-dir", str(p["model_dir"]), "--base-policy-dir", state["current_policy_dir"],
-        "--pi0-root", str(Path(args.pi0_root)), "--openpi-root", str(Path(args.openpi_root)),
-        "--python-bin", args.pi_python, "--config-name", args.awbc_config_name,
-        "--asset-id", args.asset_id, "--project-name", args.project_name,
-        "--exp-name", f"iter{iter_index}_awbc", "--num-train-steps", str(awbc_steps),
-        "--batch-size", str(args.awbc_batch_size), "--num-workers", str(args.awbc_num_workers),
-        "--save-interval", str(args.awbc_save_interval), "--log-interval", str(args.awbc_log_interval),
-        "--keep-period", args.awbc_keep_period, "--seed", str(args.seed),
-        "--fsdp-devices", str(args.gpus),
-        "--cache-root", args.cache_root, "--log-file", str(log_path),
+        args.pi_python,
+        "-u",
+        str(Path(args.pi0_root) / "ours" / "BC" / "train_awbc.py"),
+
+        "--data-dir",
+        str(p["labeled_data"]),
+        "--model-dir",
+        str(p["model_dir"]),
+        "--base-policy-dir",
+        state["current_policy_dir"],
+
+        "--pi0-root",
+        str(Path(args.pi0_root)),
+        "--openpi-root",
+        str(Path(args.openpi_root)),
+        "--python-bin",
+        args.pi_python,
+
+        "--steps",
+        str(awbc_steps),
+        "--batch-size",
+        str(args.awbc_batch_size),
+        "--num-workers",
+        str(args.awbc_num_workers),
+        "--gpus",
+        str(args.gpus),
+        "--seed",
+        str(args.seed),
+        "--log-file",
+        str(log_path),
     ]
     if args.norm_max_frames > 0:
         cmd.extend(["--norm-max-frames", str(args.norm_max_frames)])
-    cmd.append("--wandb-enabled" if args.wandb_enabled else "--no-wandb-enabled")
-    cmd.append("--overwrite" if args.overwrite_repos else "--no-overwrite")
-    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root), env=base_env(args), dry_run=args.dry_run)
+    run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root), env=base_env(args))
+
     next_policy = p["model_dir"] / "final"
-    if not args.dry_run and not (next_policy / "params").exists():
+    if not (next_policy / "params").exists():
         raise RuntimeError(f"Expected AWBC final checkpoint with params/ not found: {next_policy}")
+
     state["current_policy_dir"] = str(next_policy)
     state["next_stage"] = STAGE_COLLECT
-    append_history(state, iter_index, STAGE_TRAIN_AWBC, {"policy_dir": str(next_policy), "awbc_data_dir": str(p["labeled_data"])})
+
+    append_history(
+        state,
+        iter_index,
+        STAGE_TRAIN_AWBC,
+        {
+            "policy_dir": str(next_policy),
+            "awbc_data_dir": str(p["labeled_data"]),
+            "awbc_steps": int(awbc_steps),
+            "batch_size": int(args.awbc_batch_size),
+            "num_workers": int(args.awbc_num_workers),
+            "gpus": int(args.gpus),
+            "seed": int(args.seed),
+        },
+    )
     return state
 
 
@@ -720,30 +767,71 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
     mode = "qselect" if args.use_q_select else "simple"
 
     server_cmd = [
-        args.pi_python, "-u", str(Path(args.pi0_root) / "ours" / "Qselect" / "server.py"),
-        "--policy-config", args.policy_config_name, "--policy-dir", state["current_policy_dir"],
-        "--sample-mode", mode, "--num-action-samples", str(args.num_action_samples),
-        "--num-steps", str(args.qselect_num_steps), "--noise-scale", str(args.noise_scale),
-        "--seed", str(args.seed), "--score-horizon", str(args.score_horizon),
-        "--port", str(args.port),
+        args.pi_python,
+        "-u",
+        str(Path(args.pi0_root) / "ours" / "Qselect" / "server.py"),
+        "--policy-config",
+        args.policy_config_name,
+        "--policy-dir",
+        state["current_policy_dir"],
+        "--sample-mode",
+        mode,
+        "--num-action-samples",
+        str(args.num_action_samples),
+        "--num-steps",
+        str(args.qselect_num_steps),
+        "--noise-scale",
+        str(args.noise_scale),
+        "--seed",
+        str(args.seed),
+        "--score-horizon",
+        str(args.score_horizon),
+        "--port",
+        str(args.port),
     ]
+
     if args.selector_device:
         server_cmd.extend(["--selector-device", args.selector_device])
     if mode == "qselect":
         server_cmd.extend(["--critic-path", state["current_head_path"]])
 
     collect_cmd = [
-        args.libero_python, "-u", str(Path(args.pi0_root) / "ours" / "Qselect" / "collect.py"),
-        "--host", args.host, "--port", str(args.port), "--resize-size", "224",
-        "--replan-steps", str(args.replan_steps), "--task-suite-name", args.task_suite_name,
-        "--task-id", str(args.task_id), "--num-steps-wait", str(args.num_steps_wait),
-        "--num-trials-per-task", str(args.num_trials_per_task),
-        "--initial-state-offset", str(args.initial_state_offset), "--seed", str(args.seed),
-        "--max-steps-override", str(args.max_steps_override), "--repo-id", "collect",
-        "--video-out-path", str(p["videos"]), "--metrics-path", str(p["metrics"]),
+        args.libero_python,
+        "-u",
+        str(Path(args.pi0_root) / "ours" / "Qselect" / "collect.py"),
+        "--host",
+        args.host,
+        "--port",
+        str(args.port),
+        "--resize-size",
+        "224",
+        "--replan-steps",
+        str(args.replan_steps),
+        "--task-suite-name",
+        args.task_suite_name,
+        "--task-id",
+        str(args.task_id),
+        "--num-steps-wait",
+        str(args.num_steps_wait),
+        "--num-trials-per-task",
+        str(args.num_trials_per_task),
+        "--initial-state-offset",
+        str(args.initial_state_offset),
+        "--seed",
+        str(args.seed),
+        "--max-steps-override",
+        str(args.max_steps_override),
+        "--repo-id",
+        "collect",
+        "--video-out-path",
+        str(p["videos"]),
+        "--metrics-path",
+        str(p["metrics"]),
     ]
+
     if args.overwrite_repos:
         collect_cmd.append("--overwrite")
+
     collect_cmd.append("--save-videos" if args.save_videos else "--no-save-videos")
     collect_cmd.append("--save-success" if args.save_success else "--no-save-success")
     collect_cmd.append("--save-failure" if args.save_failure else "--no-save-failure")
@@ -751,18 +839,15 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
     log_line(log_path, f"[server] {quote_cmd(server_cmd)}")
     log_line(log_path, f"[collect] {quote_cmd(collect_cmd)}")
 
-    if args.dry_run:
-        state["last_collect_data_dir"] = str(p["collect_data"])
-        state["next_stage"] = STAGE_APPEND_POOL
-        return state
-
     env_server = base_env(args)
     env_collect = libero_env(args, p["data"])
 
     server_log.parent.mkdir(parents=True, exist_ok=True)
+
     with server_log.open("a", encoding="utf-8") as server_fp:
         server_fp.write(f"\n[{now()}] [server start] {quote_cmd(server_cmd)}\n")
         server_fp.flush()
+
         proc = subprocess.Popen(
             [str(x) for x in server_cmd],
             cwd=str(Path(args.openpi_root)),
@@ -771,9 +856,10 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
             stderr=subprocess.STDOUT,
             text=True,
         )
+
         try:
             wait_for_port(args.host, args.port, proc, args.server_wait_timeout, server_log)
-            run_cmd(collect_cmd, log_path=log_path, cwd=Path(args.openpi_root), env=env_collect, dry_run=False)
+            run_cmd(collect_cmd, log_path=log_path, cwd=Path(args.openpi_root), env=env_collect)
         finally:
             if proc.poll() is None:
                 proc.terminate()
@@ -788,23 +874,62 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
 
     state["last_collect_data_dir"] = str(p["collect_data"])
     state["next_stage"] = STAGE_APPEND_POOL
-    append_history(state, iter_index, STAGE_COLLECT, {"collect_data_dir": str(p["collect_data"]), "sample_mode": mode})
+
+    append_history(
+        state,
+        iter_index,
+        STAGE_COLLECT,
+        {
+            "collect_data_dir": str(p["collect_data"]),
+            "sample_mode": mode,
+        },
+    )
     return state
 
 
 def stage_append_pool(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Path]) -> dict[str, Any]:
+    """
+    O(1) virtual append.
+
+    This stage does not copy/merge LeRobot data. It only records the new collect repo
+    path in pool/meta/sources.jsonl. Later train/label stages consume the full
+    repo list through --repo-dirs.
+    """
     log_path = p["logs"] / f"{STAGE_APPEND_POOL}.log"
     pools = pool_paths(args)
     iter_index = int(state["iter_index"])
-    collect_dir = Path(state["last_collect_data_dir"]).resolve()
+
+    collect_dir = Path(state["last_collect_data_dir"])
+
     if not pools["raw"].exists():
         raise FileNotFoundError(f"Pool raw does not exist: {pools['raw']}")
     if not collect_dir.exists():
         raise FileNotFoundError(f"Collect data does not exist: {collect_dir}")
-    stats = merge_collector_repos([pools["raw"], collect_dir], pools["raw_tmp"], overwrite=True, log_path=log_path)
-    atomic_replace_dir(pools["raw_tmp"], pools["raw"], pools["raw_backup"])
-    append_sources_record(args, {"event": "append_collect", "iter": iter_index, "collect_dir": str(collect_dir), "pool_raw": str(pools["raw"]), **stats})
-    append_history(state, iter_index, STAGE_APPEND_POOL, {"collect_data_dir": str(collect_dir), "pool_raw_dir": str(pools["raw"]), **stats})
+
+    append_sources_record(
+        args,
+        {
+            "event": "append_collect",
+            "iter": iter_index,
+            "repo_dir": str(collect_dir),
+            "collect_dir": str(collect_dir),
+        },
+    )
+
+    repo_dirs = pool_source_dirs(args)
+    log_line(log_path, f"[append_pool] virtual sources now={json.dumps([str(x) for x in repo_dirs], ensure_ascii=False)}")
+
+    append_history(
+        state,
+        iter_index,
+        STAGE_APPEND_POOL,
+        {
+            "collect_data_dir": str(collect_dir),
+            "pool_sources_path": str(pools["sources"]),
+            "num_pool_sources": int(len(repo_dirs)),
+        },
+    )
+
     state["iter_index"] = iter_index + 1
     state["next_stage"] = STAGE_FINISHED if state["iter_index"] >= int(args.iters) else STAGE_TRAIN_IQL
     return state
@@ -821,9 +946,9 @@ STAGE_EXECUTORS = {
 
 def iter_train(args: argparse.Namespace) -> None:
     args = resolve_args(args)
+
     workspace = Path(args.workspace)
     (workspace / "logs").mkdir(parents=True, exist_ok=True)
-    Path(args.cache_root).mkdir(parents=True, exist_ok=True)
 
     log_line(main_log(args), "=" * 80)
     log_line(main_log(args), f"workspace={args.workspace}")
@@ -839,11 +964,14 @@ def iter_train(args: argparse.Namespace) -> None:
 
     while state.get("next_stage") != STAGE_FINISHED:
         stage = str(state["next_stage"])
+
         if stage not in STAGE_EXECUTORS:
             raise ValueError(f"Unknown stage: {stage}")
+
         iter_index = int(state["iter_index"])
         p = workspace_paths(args, iter_index)
         mkdir_stage_dirs(p)
+
         log_line(main_log(args), f"[start] iter={iter_index} stage={stage}")
         state = STAGE_EXECUTORS[stage](args, state, p)
         save_state(args, state)

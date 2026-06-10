@@ -23,7 +23,7 @@ WORKSPACE=/data/aoss/heliqun/pi0-ours/goal-6
 SRC_DIR=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
 BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
 
-${PI_PYTHON} -u ours/iter.py \
+${PI_PYTHON} -u ours/iter_baseline.py \
   --workspace "${WORKSPACE}" \
   --src-dir "${SRC_DIR}" \
   --base-model "${BASE_MODEL}" \
@@ -33,7 +33,6 @@ ${PI_PYTHON} -u ours/iter.py \
   --libero-python "${LIBERO_PYTHON}" \
   --iters 4 \
   --gpus 2 \
-  --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
   --num-trials-per-task 50 \

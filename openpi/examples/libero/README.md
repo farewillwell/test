@@ -55,7 +55,7 @@ Terminal window 2:
 
 ```bash
 # Run the server
-uv run scripts/serve_policy.py --env LIBERO
+MODEL_PATH=/data/huangdi/heliqun/pi0/sft_runs/model/final  bash test/test.sh
 ```
 
 ## Results
