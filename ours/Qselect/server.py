@@ -18,6 +18,10 @@ Core logic per request:
     7. Run IQL selector once on [N, H, 7].
     8. Return the selected action chunk as {"actions": [H, 7]}.
 
+In --sample-mode simple, this wrapper just delegates to OpenPI Policy.infer().
+For pi0 flow matching there is no separate greedy/random/first mode: a single
+normal inference call is the simple baseline.
+
 The collector / test env process should connect to this server just like it
 connects to scripts/serve_policy.py.
 
@@ -42,7 +46,6 @@ import dataclasses
 import logging
 import os
 import pathlib
-import random
 import socket
 import sys
 import time
@@ -59,18 +62,12 @@ from openpi.serving import websocket_policy_server
 from openpi.training import config as _config
 
 
-# Make `from q_select import QSelector` work when this file is placed in ours/.
+# Make `from selector import QSelector` work when this file is placed in Qselect/.
 THIS_DIR = pathlib.Path(__file__).resolve().parent
 if str(THIS_DIR) not in sys.path:
     sys.path.insert(0, str(THIS_DIR))
 
-try:
-    from q_select import QSelector
-except Exception as exc:
-    QSelector = None
-    _QSELECT_IMPORT_ERROR = exc
-else:
-    _QSELECT_IMPORT_ERROR = None
+from selector import QSelector
 
 
 @dataclasses.dataclass
@@ -81,7 +78,7 @@ class Args:
 
     # Q selector.
     critic_path: str = ""
-    sample_mode: str = "qselect"  # qselect | best | random | first
+    sample_mode: str = "qselect"  # qselect | simple
     selector_device: str = ""
 
     # Batched stochastic sampling.
@@ -110,7 +107,7 @@ def parse_args() -> Args:
     p.add_argument("--policy-dir", required=True)
 
     p.add_argument("--critic-path", default="")
-    p.add_argument("--sample-mode", default="qselect", choices=("qselect", "best", "random", "first"))
+    p.add_argument("--sample-mode", default="qselect", choices=("qselect", "simple"))
     p.add_argument("--selector-device", default="")
 
     p.add_argument("--num-action-samples", type=int, default=16)
@@ -214,7 +211,7 @@ class Pi0QSelectPolicy:
         self.metadata.update(
             {
                 "qselect": {
-                    "enabled": args.sample_mode in {"qselect", "best"},
+                    "enabled": args.sample_mode == "qselect",
                     "num_action_samples": int(args.num_action_samples),
                     "sample_mode": args.sample_mode,
                     "critic_path": args.critic_path,
@@ -233,17 +230,14 @@ class Pi0QSelectPolicy:
         self.action_horizon = int(getattr(self.train_config.model, "action_horizon"))
         self.action_dim = int(getattr(self.train_config.model, "action_dim"))
 
-        if args.sample_mode in {"qselect", "best"}:
-            if QSelector is None:
-                raise ImportError(f"Could not import QSelector from q_select.py: {_QSELECT_IMPORT_ERROR}")
+        if args.sample_mode == "qselect":
             if not args.critic_path:
-                raise ValueError("--critic-path is required for qselect/best mode.")
+                raise ValueError("--critic-path is required for qselect mode.")
             selector_device = args.selector_device or ("cuda" if torch.cuda.is_available() else "cpu")
             self.selector = QSelector(args.critic_path, device=selector_device)
         else:
             self.selector = None
 
-        random.seed(args.seed)
         np.random.seed(args.seed)
         self.torch_generator = torch.Generator(device=self.pytorch_device if str(self.pytorch_device).startswith("cuda") else "cpu")
         self.torch_generator.manual_seed(args.seed)
@@ -357,14 +351,7 @@ class Pi0QSelectPolicy:
     def _select_candidate(self, obs: dict[str, Any], candidates: np.ndarray) -> tuple[int, np.ndarray]:
         mode = self.args.sample_mode
 
-        if mode == "first":
-            return 0, np.zeros((candidates.shape[0],), dtype=np.float32)
-
-        if mode == "random":
-            idx = random.randrange(candidates.shape[0])
-            return idx, np.zeros((candidates.shape[0],), dtype=np.float32)
-
-        if mode not in {"qselect", "best"}:
+        if mode != "qselect":
             raise ValueError(f"Unknown sample mode: {mode}")
 
         if self.selector is None:
@@ -389,6 +376,20 @@ class Pi0QSelectPolicy:
 
     def infer(self, obs: dict[str, Any]) -> dict[str, Any]:
         self.request_count += 1
+
+        if self.args.sample_mode == "simple":
+            start = time.monotonic()
+            out = self.policy.infer(obs)
+            infer_time = time.monotonic() - start
+            if self.args.log_every > 0 and self.request_count % self.args.log_every == 0:
+                actions = np.asarray(out.get("actions", []), dtype=np.float32)
+                logging.info(
+                    "request=%s mode=simple action_shape=%s infer_ms=%.1f",
+                    self.request_count,
+                    tuple(actions.shape),
+                    infer_time * 1000.0,
+                )
+            return out
 
         # Match OpenPI Policy.infer(): copy because transforms may mutate.
         transform_start = time.monotonic()
