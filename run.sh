@@ -19,7 +19,7 @@ LIBERO_PYTHON=${OPENPI_ROOT}/examples/libero/libero_env/bin/python
 
 WORKSPACE=/data/aoss/heliqun/pi0-ours/goal-6
 SRC_DIR=/data/aoss/heliqun/dataset/libero-dataset/bytaskid/${task_id}
-BASE_MODEL=/data/aoss/heliqun/model/pi
+BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
 
 ${PI_PYTHON} -u ours/iter.py \
   --workspace "${WORKSPACE}" \
@@ -32,23 +32,21 @@ ${PI_PYTHON} -u ours/iter.py \
   --iters 4 \
   --horizon 5 \
   --replan-steps 5 \
+  --gpus 2 \
   --awbc-config-name pi0_libero_awbc \
   --policy-config-name pi0_libero_awbc \
   --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
-  --iql-steps 4000 \
   --iql-batch-size 64 \
   --iql-num-workers 4 \
   --iql-hidden-dim 512 \
   --iql-num-q 2 \
   --iql-lr 1e-4 \
   --iql-use-q-aug \
-  --awbc-steps 30000 \
   --awbc-batch-size 16 \
   --awbc-num-workers 4 \
   --awbc-save-interval 1000 \
   --awbc-log-interval 100 \
   --awbc-keep-period 5000 \
-  --awbc-fsdp-devices 2 \
   --asset-id physical-intelligence/libero \
   --project-name openpi \
   --no-wandb-enabled \
@@ -63,7 +61,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --num-trials-per-task 50 \
   --initial-state-offset 0 \
   --max-steps-override -1 \
-  --save-videos \
   --seed 7 \
-  "$@" \
   > "iter-${task_id}-rank-qselect.log" 2>&1

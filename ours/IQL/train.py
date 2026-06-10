@@ -3,26 +3,16 @@
 """
 Strict-schema IQL trainer for collected LIBERO LeRobot data.
 
-Input dataset: collector output, and ONLY this schema is accepted:
-    image
-    wrist_image
-    state
-    actions
-    reward
-    done
-    success
-    task
-    episode_index
+DDP launch contract:
+    torchrun --standalone --nnodes 1 --nproc-per-node N train.py ...
 
-No alias/fallback names are allowed. This is intentional to prevent silent
-schema drift.
+This follows the original Light-VL IQL style:
+    PartialState -> local_process_index -> torch.cuda.set_device(device_id)
+    critic = DDP(critic, device_ids=[device_id])
+    critic.module.compute_loss(...)
+    rank0/main process saves checkpoints
 
-The loader constructs:
-    observation, next_observation, actions[H], rewards[H], is_terminal[H],
-    from_success[H]
-
-Use --horizon 5 for:
-    pi0 action_horizon == replan_steps == IQL chunk_size.
+Only the data pipeline is different: this file reads collector-style LeRobot data.
 """
 
 from __future__ import annotations
@@ -38,25 +28,20 @@ from typing import Any
 
 import numpy as np
 import torch
+import torch.distributed as dist
+import torch.nn as nn
+from accelerate import PartialState
 from PIL import Image
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.utils import clip_grad_norm_
+from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 from transformers import CLIPProcessor
 
-try:
-    from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-except Exception as exc:
-    raise ImportError("Could not import LeRobotDataset. Run in the OpenPI/LeRobot env.") from exc
-
-try:
-    from model import LightIQLCritic
-except ImportError:
-    try:
-        from model import LightVLValueModel as LightIQLCritic
-    except ImportError as exc:
-        raise ImportError("Could not import LightIQLCritic/LightVLValueModel from local model.py.") from exc
-
+from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+from model import LightIQLCritic
 
 IMAGE_KEY = "image"
 WRIST_IMAGE_KEY = "wrist_image"
@@ -159,12 +144,18 @@ def set_seed(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
+def wrap_ddp(module: nn.Module, device_id: int, find_unused: bool = True) -> DDP:
+    return DDP(
+        module,
+        device_ids=[device_id],
+        find_unused_parameters=find_unused,
+        gradient_as_bucket_view=True,
+    )
+
+
 def make_lerobot_dataset(repo_id: str, root: str = "") -> LeRobotDataset:
     if root:
-        try:
-            return LeRobotDataset(repo_id, root=Path(root))
-        except TypeError:
-            return LeRobotDataset(repo_id, Path(root))
+        return LeRobotDataset(repo_id, root=Path(root))
     return LeRobotDataset(repo_id)
 
 
@@ -414,55 +405,27 @@ def infer_dims(dataset: StrictLiberoIQLDataset) -> tuple[int, int]:
 
 
 def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Module:
-    try:
-        return LightIQLCritic(
-            args.encoder_name,
-            state_dim,
-            action_dim,
-            args.horizon,
-            hidden_dim=args.hidden_dim,
-            num_q=args.num_q,
-            action_layers=args.action_layers,
-            q_layers=args.q_layers,
-        )
-    except TypeError:
-        return LightIQLCritic(
-            encoder_name=args.encoder_name,
-            robot_state_dim=state_dim,
-            action_dim=action_dim,
-            chunk_size=args.horizon,
-            num_q=args.num_q,
-            d_model=args.hidden_dim,
-            action_layers=args.action_layers,
-            fusion_layers=args.q_layers,
-            dropout=args.dropout,
-            q_l2_coef=args.q_l2_coef,
-        )
+    return LightIQLCritic(
+        args.encoder_name,
+        state_dim,
+        action_dim,
+        args.horizon,
+        hidden_dim=args.hidden_dim,
+        num_q=args.num_q,
+        action_layers=args.action_layers,
+        q_layers=args.q_layers,
+    )
 
 
-def loss_from_output(output: Any) -> tuple[torch.Tensor, dict[str, float]]:
-    if isinstance(output, dict):
-        loss = output["loss"] if "loss" in output else output["critic_loss"] + output["value_loss"]
-        metrics = {}
-        for k, v in output.items():
-            if k != "loss" and torch.is_tensor(v) and v.numel() == 1:
-                metrics[k] = float(v.detach().cpu().item())
-        return loss, metrics
-
-    if isinstance(output, tuple):
-        critic_loss, value_loss = output[:2]
-        return critic_loss + value_loss, {
-            "critic_loss": float(critic_loss.detach().cpu().item()),
-            "value_loss": float(value_loss.detach().cpu().item()),
-        }
-
-    if torch.is_tensor(output):
-        return output, {}
-
-    raise TypeError(f"Unsupported compute_loss output type: {type(output)}")
-
-
-def save_checkpoint(path: Path, model: torch.nn.Module, optimizer: torch.optim.Optimizer, args: TrainArgs, step: int, state_dim: int, action_dim: int) -> None:
+def save_checkpoint(
+    path: Path,
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+    args: TrainArgs,
+    step: int,
+    state_dim: int,
+    action_dim: int,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ckpt_args = asdict(args)
     ckpt_args.update({
@@ -485,10 +448,19 @@ def main() -> None:
     args = parse_args()
     set_seed(args.seed)
 
-    device = torch.device(args.device if torch.cuda.is_available() or args.device == "cpu" else "cpu")
+    distributed_state = PartialState()
+    device_id = distributed_state.local_process_index
+    torch.cuda.set_device(device_id)
+    torch.cuda.empty_cache()
+    device = torch.device(f"cuda:{device_id}")
+
+    if dist.is_available() and dist.is_initialized():
+        dist.barrier()
+
     out_dir = Path(args.output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "args.json").write_text(json.dumps(asdict(args), indent=2), encoding="utf-8")
+    if distributed_state.is_main_process:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "args.json").write_text(json.dumps(asdict(args), indent=2), encoding="utf-8")
 
     processor = CLIPProcessor.from_pretrained(args.encoder_name)
     dataset = StrictLiberoIQLDataset(
@@ -498,90 +470,117 @@ def main() -> None:
         use_wrist_image=args.use_wrist_image,
     )
     state_dim, action_dim = infer_dims(dataset)
-    print(f"[IQL train] state_dim={state_dim}, action_dim={action_dim}, horizon={args.horizon}")
+    if distributed_state.is_main_process:
+        print(f"[IQL train] state_dim={state_dim}, action_dim={action_dim}, horizon={args.horizon}", flush=True)
 
+    sampler = DistributedSampler(dataset, shuffle=True, drop_last=True)
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=args.num_workers,
-        pin_memory=(device.type == "cuda"),
-        drop_last=True,
+        sampler=sampler,
         collate_fn=Pi0StyleIQLCollator(processor=processor, image_size=args.image_size),
+        num_workers=args.num_workers,
+        pin_memory=True,
+        drop_last=True,
         persistent_workers=(args.num_workers > 0),
     )
 
-    model = build_model(args, state_dim, action_dim).to(device)
-    if hasattr(model, "freeze_backbone"):
-        model.freeze_backbone()
-
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.weight_decay)
+    critic = build_model(args, state_dim, action_dim).to(device_id)
 
     step = 0
+    resume_optimizer_state = None
     if args.resume:
         ckpt = torch.load(args.resume, map_location="cpu")
-        model.load_state_dict(ckpt["model"])
-        if "optimizer" in ckpt:
-            optimizer.load_state_dict(ckpt["optimizer"])
+        critic.load_state_dict(ckpt["model"])
+        resume_optimizer_state = ckpt["optimizer"]
         step = int(ckpt.get("step", 0))
 
-    running: dict[str, list[float]] = defaultdict(list)
-    pbar = tqdm(total=args.max_steps, initial=step, desc="iql", dynamic_ncols=True)
+    critic.freeze_backbone()
+    critic = wrap_ddp(critic, device_id, find_unused=True)
+    if distributed_state.is_main_process:
+        print("[load light-vl critic] finish !!!!", flush=True)
 
-    model.train()
+    trainable_params = [p for p in critic.parameters() if p.requires_grad]
+    optimizer = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
+    if resume_optimizer_state is not None:
+        optimizer.load_state_dict(resume_optimizer_state)
+
+    total_losses: list[float] = []
+    critic_losses: list[float] = []
+    value_losses: list[float] = []
+    running: dict[str, list[float]] = defaultdict(list)
+
+    progress = tqdm(total=args.max_steps, initial=step, leave=False, disable=not distributed_state.is_main_process, desc="iql")
+    critic.train()
+    optimizer.zero_grad(set_to_none=True)
+
+    epoch = 0
     while step < args.max_steps:
-        for batch in loader:
+        sampler.set_epoch(epoch)
+        epoch += 1
+
+        for batch_idx, batch in enumerate(loader):
             if step >= args.max_steps:
                 break
 
             batch = move_to_device(batch, device)
-            debug = args.debug_every > 0 and step % args.debug_every == 0
+            debug = args.debug_every > 0 and step % args.debug_every == 0 and distributed_state.is_main_process
 
-            try:
-                output = model.compute_loss(
-                    batch,
-                    gamma=args.gamma,
-                    expectile=args.expectile,
-                    debug=debug,
-                    use_q_aug=args.use_q_aug,
-                )
-            except TypeError:
-                output = model.compute_loss(batch, gamma=args.gamma, expectile=args.expectile)
+            critic_loss, value_loss = critic.module.compute_loss(
+                batch=batch,
+                gamma=args.gamma,
+                expectile=args.expectile,
+                debug=debug,
+                use_q_aug=args.use_q_aug,
+            )
+            loss = critic_loss + value_loss
 
-            loss, metrics = loss_from_output(output)
-
-            optimizer.zero_grad(set_to_none=True)
             loss.backward()
             if args.grad_clip > 0:
-                clip_grad_norm_(params, args.grad_clip)
+                clip_grad_norm_(trainable_params, args.grad_clip)
             optimizer.step()
+            optimizer.zero_grad(set_to_none=True)
 
-            if hasattr(model, "update_target_q"):
-                model.update_target_q(tau=args.tau)
+            critic.module.update_target_q(tau=args.tau)
 
             step += 1
-            pbar.update(1)
-            running["loss"].append(float(loss.detach().cpu().item()))
-            for k, v in metrics.items():
-                running[k].append(float(v))
 
-            if args.log_every > 0 and step % args.log_every == 0:
-                msg = {"step": step}
-                for k, vals in running.items():
-                    if vals:
-                        msg[k] = sum(vals) / len(vals)
-                print("[IQL train]", json.dumps(msg, ensure_ascii=False))
-                running.clear()
+            if distributed_state.is_main_process:
+                loss_value = float(loss.detach().cpu().item())
+                critic_loss_value = float(critic_loss.detach().cpu().item())
+                value_loss_value = float(value_loss.detach().cpu().item())
+                total_losses.append(loss_value)
+                critic_losses.append(critic_loss_value)
+                value_losses.append(value_loss_value)
+                running["loss"].append(loss_value)
+                running["critic_loss"].append(critic_loss_value)
+                running["value_loss"].append(value_loss_value)
+                progress.update(1)
 
-            if args.save_every > 0 and step % args.save_every == 0:
-                save_checkpoint(out_dir / f"step_{step}.pt", model, optimizer, args, step, state_dim, action_dim)
-                save_checkpoint(out_dir / "latest.pt", model, optimizer, args, step, state_dim, action_dim)
+                if args.log_every > 0 and step % args.log_every == 0:
+                    msg = {"step": step}
+                    for k, vals in running.items():
+                        if vals:
+                            msg[k] = sum(vals) / len(vals)
+                    print("[IQL train]", json.dumps(msg, ensure_ascii=False), flush=True)
+                    running.clear()
 
-    save_checkpoint(out_dir / "final.pt", model, optimizer, args, step, state_dim, action_dim)
-    save_checkpoint(out_dir / "latest.pt", model, optimizer, args, step, state_dim, action_dim)
-    pbar.close()
-    print(f"[IQL train] final checkpoint: {out_dir / 'final.pt'}")
+                if args.save_every > 0 and step % args.save_every == 0:
+                    save_checkpoint(out_dir / f"step_{step}.pt", critic.module, optimizer, args, step, state_dim, action_dim)
+                    save_checkpoint(out_dir / "latest.pt", critic.module, optimizer, args, step, state_dim, action_dim)
+
+        if dist.is_available() and dist.is_initialized():
+            dist.barrier()
+
+    if distributed_state.is_main_process:
+        save_checkpoint(out_dir / "final.pt", critic.module, optimizer, args, step, state_dim, action_dim)
+        save_checkpoint(out_dir / "latest.pt", critic.module, optimizer, args, step, state_dim, action_dim)
+        progress.close()
+        print(f"[IQL train] final checkpoint: {out_dir / 'final.pt'}", flush=True)
+
+    if dist.is_available() and dist.is_initialized():
+        dist.barrier()
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":

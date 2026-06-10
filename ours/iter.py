@@ -54,6 +54,27 @@ IQL_REQUIRED_KEYS = {
 }
 
 
+
+def _task_mode(task_id: int) -> str:
+    return "single" if int(task_id) >= 0 else "multi"
+
+
+def get_iql_steps(iter_index: int, task_id: int) -> int:
+    base = 4000
+    iter_task_add = 2000
+    iter_scale = max(int(iter_index) + 1, 1)
+    num_tasks = 1 if task_id >=0 else 10
+    return int(base+ iter_task_add * num_tasks * iter_scale)
+
+
+def get_awbc_steps(iter_index: int, task_id: int) -> int:
+    base = 3000
+    iter_task_add = 2000
+    iter_scale = max(int(iter_index) + 1, 1)
+    num_tasks = 1 if task_id >=0 else 10
+    return int(base+ iter_task_add * num_tasks * iter_scale)
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run pi0 iterative IQL/AWBC/Q-select with workspace-local data pool.")
 
@@ -73,6 +94,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--restart", action="store_true", help="Delete workspace before starting.")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--gpus", type=int, default=2)
     p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)
 
     # Time scale. These are intentionally fixed to 5.
@@ -84,6 +106,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--iql-steps", type=int, default=4000)
     p.add_argument("--iql-batch-size", type=int, default=64)
     p.add_argument("--iql-num-workers", type=int, default=4)
+    p.add_argument("--iql-devices", type=int, default=1)
     p.add_argument("--iql-hidden-dim", type=int, default=512)
     p.add_argument("--iql-num-q", type=int, default=2)
     p.add_argument("--iql-action-layers", type=int, default=2)
@@ -111,13 +134,11 @@ def parse_args() -> argparse.Namespace:
     # AWBC.
     p.add_argument("--awbc-config-name", default="pi0_libero_awbc")
     p.add_argument("--policy-config-name", default="pi0_libero_awbc")
-    p.add_argument("--awbc-steps", type=int, default=30000)
     p.add_argument("--awbc-batch-size", type=int, default=16)
     p.add_argument("--awbc-num-workers", type=int, default=4)
     p.add_argument("--awbc-save-interval", type=int, default=1000)
     p.add_argument("--awbc-log-interval", type=int, default=100)
     p.add_argument("--awbc-keep-period", default="5000")
-    p.add_argument("--awbc-fsdp-devices", type=int, default=2)
     p.add_argument("--norm-max-frames", type=int, default=0)
     p.add_argument("--asset-id", default="physical-intelligence/libero")
     p.add_argument("--project-name", default="openpi")
@@ -164,8 +185,6 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
         raise FileNotFoundError(f"--base-model must contain params/: {base_model}")
     if args.horizon != 5 or args.replan_steps != 5:
         raise ValueError("pi0 action_horizon, IQL horizon and replan_steps must all be 5.")
-    if args.iters <= 0:
-        raise ValueError(f"--iters must be positive, got {args.iters}")
 
     args.workspace = str(workspace)
     args.src_dir = str(src_dir)
@@ -585,12 +604,21 @@ def load_or_init_state(args: argparse.Namespace) -> dict[str, Any]:
 def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Path]) -> dict[str, Any]:
     log_path = p["logs"] / f"{STAGE_TRAIN_IQL}.log"
     pools = pool_paths(args)
+    iter_index = int(state["iter_index"])
+    iql_steps = get_iql_steps(iter_index, args.task_id)
+    log_line(
+        log_path,
+        f"[steps] IQL max_steps={iql_steps} mode={_task_mode(args.task_id)} "
+        f"iter={iter_index}",
+    )
     cmd = [
-        args.pi_python, "-u", str(Path(args.pi0_root) / "ours" / "IQL" / "train.py"),
+        args.pi_python, "-u", "-m", "torch.distributed.run",
+        "--standalone", "--nnodes", "1", "--nproc-per-node", str(args.gpus),
+        str("IQL/train.py"),
         "--repo-id", "raw", "--root", str(pools["root"]), "--output-dir", str(p["iql_dir"]),
         "--encoder-name", args.iql_encoder_name, "--horizon", str(args.horizon),
         "--batch-size", str(args.iql_batch_size), "--num-workers", str(args.iql_num_workers),
-        "--max-steps", str(args.iql_steps), "--lr", str(args.iql_lr),
+        "--max-steps", str(iql_steps), "--lr", str(args.iql_lr),
         "--weight-decay", str(args.iql_weight_decay), "--gamma", str(args.iql_gamma),
         "--expectile", str(args.iql_expectile), "--tau", str(args.iql_tau),
         "--grad-clip", str(args.iql_grad_clip), "--hidden-dim", str(args.iql_hidden_dim),
@@ -602,13 +630,19 @@ def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str
     ]
     if args.iql_use_q_aug:
         cmd.append("--use-q-aug")
+    log_line(
+        log_path,
+        f"[steps] IQL max_steps={iql_steps} iter={iter_index} "
+        f"gpus={args.gpus} per_gpu_batch_size={args.iql_batch_size} "
+        f"effective_global_batch_size={int(args.gpus) * int(args.iql_batch_size)}",
+    )
     run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root) / "ours" / "IQL", env=base_env(args), dry_run=args.dry_run)
     head = p["iql_dir"] / "final.pt"
     if not args.dry_run and not head.exists():
         raise RuntimeError(f"Expected IQL checkpoint not found: {head}")
     state["current_head_path"] = str(head)
     state["next_stage"] = STAGE_LABEL
-    append_history(state, int(state["iter_index"]), STAGE_TRAIN_IQL, {"pool_raw_dir": str(pools["raw"]), "head_path": str(head)})
+    append_history(state, int(state["iter_index"]), STAGE_TRAIN_IQL, {"pool_raw_dir": str(pools["raw"]), "head_path": str(head), "iql_steps": int(iql_steps), "gpus": int(args.gpus)})
     return state
 
 
@@ -644,6 +678,12 @@ def stage_label(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Pa
 def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[str, Path]) -> dict[str, Any]:
     log_path = p["logs"] / f"{STAGE_TRAIN_AWBC}.log"
     iter_index = int(state["iter_index"])
+    awbc_steps = get_awbc_steps(iter_index, args.task_id)
+    log_line(
+        log_path,
+        f"[steps] AWBC num_train_steps={awbc_steps} mode={_task_mode(args.task_id)} "
+        f"iter={iter_index}",
+    )
     cmd = [
         args.pi_python, "-u", str(Path(args.pi0_root) / "ours" / "AWBC" / "train_awbc.py"),
         "--awbc-repo-id", "labeled", "--hf-lerobot-home", str(p["data"]),
@@ -651,11 +691,11 @@ def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[st
         "--pi0-root", str(Path(args.pi0_root)), "--openpi-root", str(Path(args.openpi_root)),
         "--python-bin", args.pi_python, "--config-name", args.awbc_config_name,
         "--asset-id", args.asset_id, "--project-name", args.project_name,
-        "--exp-name", f"iter{iter_index}_awbc", "--num-train-steps", str(args.awbc_steps),
+        "--exp-name", f"iter{iter_index}_awbc", "--num-train-steps", str(awbc_steps),
         "--batch-size", str(args.awbc_batch_size), "--num-workers", str(args.awbc_num_workers),
         "--save-interval", str(args.awbc_save_interval), "--log-interval", str(args.awbc_log_interval),
         "--keep-period", args.awbc_keep_period, "--seed", str(args.seed),
-        "--fsdp-devices", str(args.awbc_fsdp_devices),
+        "--fsdp-devices", str(args.gpus),
         "--cache-root", args.cache_root, "--log-file", str(log_path),
     ]
     if args.norm_max_frames > 0:
@@ -796,6 +836,7 @@ def iter_train(args: argparse.Namespace) -> None:
     log_line(main_log(args), f"src_dir={args.src_dir}")
     log_line(main_log(args), f"base_model={args.base_model}")
     log_line(main_log(args), f"iters={args.iters} task={args.task_suite_name}:{args.task_id}")
+    log_line(main_log(args), f"gpus={args.gpus}")
     log_line(main_log(args), f"use_q_select={args.use_q_select} num_action_samples={args.num_action_samples}")
     log_line(main_log(args), f"iql_use_q_aug={args.iql_use_q_aug}")
     log_line(main_log(args), f"horizon={args.horizon} replan_steps={args.replan_steps}")
