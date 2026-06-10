@@ -60,7 +60,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fsdp-devices", type=int, default=2)
     p.add_argument("--norm-max-frames", type=int, default=0)
 
-    p.add_argument("--openpi-data-home", default="/data/aoss/heliqun/model/pi")
     p.add_argument("--cache-root", default="", help="Defaults to <pi0-root>/cache.")
     p.add_argument("--log-file", default="")
 
@@ -155,7 +154,8 @@ def build_env(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str, str
     env = os.environ.copy()
     if args.hf_lerobot_home:
         env["HF_LEROBOT_HOME"] = str(Path(args.hf_lerobot_home).resolve())
-    env["OPENPI_DATA_HOME"] = args.openpi_data_home
+    if "OPENPI_DATA_HOME" not in env or not env["OPENPI_DATA_HOME"]:
+        raise RuntimeError("OPENPI_DATA_HOME must be set in the shell environment.")
     env["PYTHONUNBUFFERED"] = "1"
     env["JAX_COMPILATION_CACHE_DIR"] = env.get("JAX_COMPILATION_CACHE_DIR", str(paths["cache_root"] / "jax"))
     env["CUDA_CACHE_PATH"] = env.get("CUDA_CACHE_PATH", str(paths["cache_root"] / "cuda"))

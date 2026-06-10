@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 825, in <module>
+    main()
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 821, in main
+    iter_train(parse_args())
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 789, in iter_train
+    args = resolve_args(args)
+           ^^^^^^^^^^^^^^^^^^
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 164, in resolve_args
+    raise FileNotFoundError(f"--base-model must contain params/: {base_model}")
+FileNotFoundError: --base-model must contain params/: /data/aoss/heliqun/model/pi
