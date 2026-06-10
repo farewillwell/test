@@ -12,7 +12,8 @@ This follows the original Light-VL IQL style:
     critic.module.compute_loss(...)
     rank0/main process saves checkpoints
 
-Only the data pipeline is different: this file reads collector-style LeRobot data.
+Only the data pipeline is different: this file reads a list of collector-style
+LeRobot repos and treats them as one virtual pool.
 """
 
 from __future__ import annotations
@@ -50,15 +51,14 @@ ACTION_KEY = "actions"
 TASK_KEY = "task"
 EPISODE_KEY = "episode_index"
 REWARD_KEY = "reward"
-DONE_KEY = "done"
+TERMINAL_KEY = "terminal"
 SUCCESS_KEY = "success"
 
 
 @dataclass
 class TrainArgs:
-    repo_id: str
+    repo_dirs: list[str]
     output_dir: str
-    root: str = ""
     encoder_name: str = "openai/clip-vit-base-patch32"
 
     horizon: int = 5
@@ -94,9 +94,16 @@ class TrainArgs:
 
 def parse_args() -> TrainArgs:
     p = argparse.ArgumentParser()
-    p.add_argument("--repo-id", required=True)
+    p.add_argument(
+        "--repo-dirs",
+        nargs="+",
+        required=True,
+        help=(
+            "List of local LeRobot repo directories. Example: "
+            "workspace/pool/raw workspace/iter0/data/collect"
+        ),
+    )
     p.add_argument("--output-dir", required=True)
-    p.add_argument("--root", default="")
     p.add_argument("--encoder-name", default="openai/clip-vit-base-patch32")
 
     p.add_argument("--horizon", type=int, default=5)
@@ -153,10 +160,17 @@ def wrap_ddp(module: nn.Module, device_id: int, find_unused: bool = True) -> DDP
     )
 
 
-def make_lerobot_dataset(repo_id: str, root: str = "") -> LeRobotDataset:
-    if root:
-        return LeRobotDataset(repo_id, root=Path(root))
-    return LeRobotDataset(repo_id)
+def open_lerobot_dataset_from_dir(repo_dir: str | Path) -> LeRobotDataset:
+    """Open a local LeRobot repo directory.
+
+    For a repo at /x/workspace/pool/raw, use:
+        repo_id = raw
+        root    = /x/workspace/pool
+    """
+    repo_dir = Path(repo_dir).resolve()
+    if not repo_dir.exists():
+        raise FileNotFoundError(f"LeRobot repo dir does not exist: {repo_dir}")
+    return LeRobotDataset(repo_dir.name, root=repo_dir.parent)
 
 
 def to_scalar(x: Any) -> Any:
@@ -221,56 +235,94 @@ def to_pil_rgb(x: Any) -> Image.Image:
 
 
 class StrictLiberoIQLDataset(Dataset):
-    def __init__(self, repo_id: str, root: str, horizon: int, use_wrist_image: bool = True) -> None:
+    """Virtual concatenation of multiple collector-style LeRobot repos.
+
+    The physical data is not merged. Each sample is addressed by an internal
+    index that maps to (repo_idx, frame_idx). Episode ids are namespaced by
+    repo_idx to avoid collisions between repos that both contain episode_index=0.
+    """
+
+    def __init__(self, repo_dirs: list[str], horizon: int, use_wrist_image: bool = True) -> None:
         super().__init__()
-        self.ds = make_lerobot_dataset(repo_id, root)
+        if not repo_dirs:
+            raise ValueError("repo_dirs must be non-empty.")
+
+        self.repo_dirs = [Path(x).resolve() for x in repo_dirs]
+        self.datasets: list[LeRobotDataset] = [
+            open_lerobot_dataset_from_dir(x) for x in self.repo_dirs
+        ]
+
         self.horizon = int(horizon)
         self.use_wrist_image = bool(use_wrist_image)
 
-        self.global_indices: list[int] = []
-        self.episode_of: list[int] = []
+        # internal_idx -> (repo_idx, frame_idx_inside_repo)
+        self.frame_refs: list[tuple[int, int]] = []
+
+        # internal_idx -> (repo_idx, episode_index_inside_repo)
+        self.episode_of: list[tuple[int, int]] = []
         self.local_pos_of: list[int] = []
+
         self.actions: list[np.ndarray] = []
         self.rewards: list[float] = []
-        self.dones: list[bool] = []
+        self.terminals: list[bool] = []
         self.successes: list[bool] = []
-        self.episodes: dict[int, list[int]] = defaultdict(list)
+
+        self.episodes: dict[tuple[int, int], list[int]] = defaultdict(list)
 
         self._build_index()
 
     def _build_index(self) -> None:
-        print(f"[IQL data] strict scan: {len(self.ds)} frames")
-        for global_idx in tqdm(range(len(self.ds)), desc="scan", leave=False):
-            sample = self.ds[global_idx]
+        total_raw_frames = sum(len(ds) for ds in self.datasets)
+        print(
+            f"[IQL data] pool scan: repos={len(self.datasets)} raw_frames={total_raw_frames}",
+            flush=True,
+        )
 
-            ep = int(to_scalar(require_key(sample, EPISODE_KEY)))
-            local_pos = len(self.episodes[ep])
+        for repo_idx, ds in enumerate(self.datasets):
+            repo_dir = self.repo_dirs[repo_idx]
+            print(f"[IQL data] repo[{repo_idx}] {repo_dir}: frames={len(ds)}", flush=True)
 
-            action = to_float_array(require_key(sample, ACTION_KEY)).reshape(-1)
-            reward = float(to_scalar(require_key(sample, REWARD_KEY)))
-            done = bool(to_scalar(require_key(sample, DONE_KEY)))
-            success = bool(to_scalar(require_key(sample, SUCCESS_KEY)))
+            for frame_idx in tqdm(range(len(ds)), desc=f"scan repo{repo_idx}", leave=False):
+                sample = ds[frame_idx]
 
-            internal_idx = len(self.global_indices)
-            self.global_indices.append(global_idx)
-            self.episode_of.append(ep)
-            self.local_pos_of.append(local_pos)
-            self.actions.append(action.astype(np.float32))
-            self.rewards.append(reward)
-            self.dones.append(done)
-            self.successes.append(success)
-            self.episodes[ep].append(internal_idx)
+                ep_raw = int(to_scalar(require_key(sample, EPISODE_KEY)))
+                ep_key = (repo_idx, ep_raw)
+                local_pos = len(self.episodes[ep_key])
 
-        if not self.global_indices:
+                action = to_float_array(require_key(sample, ACTION_KEY)).reshape(-1)
+                reward = float(to_scalar(require_key(sample, REWARD_KEY)))
+                is_terminal = bool(to_scalar(require_key(sample, TERMINAL_KEY)))
+                success = bool(to_scalar(require_key(sample, SUCCESS_KEY)))
+
+                internal_idx = len(self.frame_refs)
+
+                self.frame_refs.append((repo_idx, frame_idx))
+                self.episode_of.append(ep_key)
+                self.local_pos_of.append(local_pos)
+
+                self.actions.append(action.astype(np.float32))
+                self.rewards.append(reward)
+                self.terminals.append(is_terminal)
+                self.successes.append(success)
+
+                self.episodes[ep_key].append(internal_idx)
+
+        if not self.frame_refs:
             raise RuntimeError("Empty dataset.")
 
         print(
-            f"[IQL data] frames={len(self.global_indices)} episodes={len(self.episodes)} "
-            f"action_dim={self.actions[0].shape[-1]} horizon={self.horizon}"
+            f"[IQL data] frames={len(self.frame_refs)} "
+            f"episodes={len(self.episodes)} "
+            f"repos={len(self.datasets)} "
+            f"action_dim={self.actions[0].shape[-1]} "
+            f"horizon={self.horizon} "
+            f"success_frames={int(sum(bool(x) for x in self.successes))} "
+            f"terminal_frames={int(sum(bool(x) for x in self.terminals))}",
+            flush=True,
         )
 
     def __len__(self) -> int:
-        return len(self.global_indices)
+        return len(self.frame_refs)
 
     def _chunk_arrays(self, internal_idx: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, bool, int]:
         ep = self.episode_of[internal_idx]
@@ -284,29 +336,46 @@ class StrictLiberoIQLDataset(Dataset):
         is_terminal = np.zeros((self.horizon,), dtype=np.bool_)
 
         first_terminal_seen = False
+
         for k in range(self.horizon):
             unclamped_pos = local_pos + k
+            in_episode = unclamped_pos <= ep_len - 1
+
             pos = min(unclamped_pos, ep_len - 1)
             idx = ep_indices[pos]
-            actions[k] = self.actions[idx]
-            rewards[k] = self.rewards[idx] if unclamped_pos <= ep_len - 1 else 0.0
 
-            term = self.dones[idx] if unclamped_pos <= ep_len - 1 else True
+            actions[k] = self.actions[idx]
+
+            if in_episode:
+                rewards[k] = self.rewards[idx]
+                term = bool(self.terminals[idx])
+            else:
+                rewards[k] = 0.0
+                term = True
+
             if first_terminal_seen:
                 term = True
+
             if term:
                 first_terminal_seen = True
+
             is_terminal[k] = term
 
         next_pos = min(local_pos + self.horizon, ep_len - 1)
         next_internal_idx = ep_indices[next_pos]
+
         ep_success = bool(any(self.successes[i] for i in ep_indices))
+
         return actions, rewards, is_terminal, ep_success, next_internal_idx
 
     def _read_observation(self, internal_idx: int) -> dict[str, Any]:
-        sample = self.ds[self.global_indices[internal_idx]]
+        repo_idx, frame_idx = self.frame_refs[internal_idx]
+        ds = self.datasets[repo_idx]
+
+        sample = ds[frame_idx]
 
         base = to_pil_rgb(require_key(sample, IMAGE_KEY))
+
         if self.use_wrist_image:
             wrist = to_pil_rgb(require_key(sample, WRIST_IMAGE_KEY))
             wrist_mask = True
@@ -316,8 +385,12 @@ class StrictLiberoIQLDataset(Dataset):
 
         state = to_float_array(require_key(sample, STATE_KEY)).reshape(-1)
         task = decode_task(require_key(sample, TASK_KEY)).strip()
+
         if not task:
-            raise ValueError(f"Empty `{TASK_KEY}` at frame {self.global_indices[internal_idx]}")
+            raise ValueError(
+                f"Empty `{TASK_KEY}` at internal_idx={internal_idx}, "
+                f"repo_idx={repo_idx}, frame_idx={frame_idx}"
+            )
 
         return {
             "base_image": base,
@@ -399,7 +472,7 @@ def move_to_device(x: Any, device: torch.device) -> Any:
     return x
 
 
-def infer_dims(dataset: StrictLiberoIQLDataset) -> tuple[int, int]:
+def infer_dims(dataset: Dataset) -> tuple[int, int]:
     sample = dataset[0]
     return int(sample["obs"]["state"].shape[-1]), int(sample["actions"].shape[-1])
 
@@ -464,8 +537,7 @@ def main() -> None:
 
     processor = CLIPProcessor.from_pretrained(args.encoder_name)
     dataset = StrictLiberoIQLDataset(
-        repo_id=args.repo_id,
-        root=args.root,
+        repo_dirs=args.repo_dirs,
         horizon=args.horizon,
         use_wrist_image=args.use_wrist_image,
     )
@@ -526,7 +598,7 @@ def main() -> None:
             batch = move_to_device(batch, device)
             debug = args.debug_every > 0 and step % args.debug_every == 0 and distributed_state.is_main_process
 
-            critic_loss, value_loss = critic.module.compute_loss(
+            critic_loss, value_loss, metrics = critic.module.compute_loss(
                 batch=batch,
                 gamma=args.gamma,
                 expectile=args.expectile,
@@ -555,6 +627,8 @@ def main() -> None:
                 running["loss"].append(loss_value)
                 running["critic_loss"].append(critic_loss_value)
                 running["value_loss"].append(value_loss_value)
+                for metric_key, metric_value in metrics.items():
+                    running[metric_key].append(float(metric_value))
                 progress.update(1)
 
                 if args.log_every > 0 and step % args.log_every == 0:

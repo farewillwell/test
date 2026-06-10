@@ -13,7 +13,7 @@ collector repo.
 """
 
 from __future__ import annotations
-
+import torch
 import argparse
 import dataclasses
 import json
@@ -166,15 +166,10 @@ def build_env(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str, str
 
 
 def to_scalar(x: Any) -> Any:
-    try:
-        import torch
-
-        if torch.is_tensor(x):
-            if x.numel() == 1:
-                return x.detach().cpu().item()
-            return x.detach().cpu().numpy()
-    except Exception:
-        pass
+    if torch.is_tensor(x):
+        if x.numel() == 1:
+            return x.detach().cpu().item()
+        return x.detach().cpu().numpy()
     if isinstance(x, (int, float, bool, str, bytes)):
         return x
     arr = np.asarray(x)

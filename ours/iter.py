@@ -35,10 +35,10 @@ import sys
 import time
 from collections import defaultdict
 from typing import Any
-
+from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 import numpy as np
-
-
+import torch
+from PIL import Image
 STAGE_TRAIN_IQL = "train_iql"
 STAGE_LABEL = "label"
 STAGE_TRAIN_AWBC = "train_awbc"
@@ -50,10 +50,19 @@ STAGES = (STAGE_TRAIN_IQL, STAGE_LABEL, STAGE_TRAIN_AWBC, STAGE_COLLECT, STAGE_A
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 
 IQL_REQUIRED_KEYS = {
-    "image", "wrist_image", "state", "actions", "reward", "done", "success", "task", "episode_index",
+    "image",
+    "wrist_image",
+    "state",
+    "actions",
+    "reward",
+    "terminal",
+    "success",
+    "task",
+    "episode_index",
 }
-
-
+STEP_REWARD = -1.0
+SUCCESS_TERMINAL_REWARD = 10.0
+FAILURE_TERMINAL_REWARD = -100.0
 
 def _task_mode(task_id: int) -> str:
     return "single" if int(task_id) >= 0 else "multi"
@@ -91,9 +100,6 @@ def parse_args() -> argparse.Namespace:
 
     # Iteration / resume.
     p.add_argument("--iters", type=int, default=4)
-    p.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
-    p.add_argument("--restart", action="store_true", help="Delete workspace before starting.")
-    p.add_argument("--dry-run", action="store_true")
     p.add_argument("--gpus", type=int, default=2)
     p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)
 
@@ -103,7 +109,6 @@ def parse_args() -> argparse.Namespace:
 
     # IQL.
     p.add_argument("--iql-encoder-name", default="/data/aoss/heliqun/model/clip/clip-vit-base-patch32")
-    p.add_argument("--iql-steps", type=int, default=4000)
     p.add_argument("--iql-batch-size", type=int, default=64)
     p.add_argument("--iql-num-workers", type=int, default=4)
     p.add_argument("--iql-devices", type=int, default=1)
@@ -156,7 +161,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--server-wait-timeout", type=float, default=180.0)
 
     p.add_argument("--task-suite-name", default="libero_goal")
-    p.add_argument("--task-id", type=int, default=6)
+    p.add_argument("--task-id", type=int, default=-1)
     p.add_argument("--num-steps-wait", type=int, default=10)
     p.add_argument("--num-trials-per-task", type=int, default=50)
     p.add_argument("--initial-state-offset", type=int, default=0)
@@ -173,9 +178,6 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
     workspace = Path(args.workspace).resolve()
     src_dir = Path(args.src_dir).resolve()
     base_model = Path(args.base_model).resolve()
-
-    if args.restart and workspace.exists():
-        shutil.rmtree(workspace)
 
     if not src_dir.exists():
         raise FileNotFoundError(f"--src-dir does not exist: {src_dir}")
@@ -246,8 +248,6 @@ def pool_paths(args: argparse.Namespace) -> dict[str, Path]:
     return {
         "root": root,
         "raw": root / "raw",
-        "raw_tmp": root / "raw_tmp",
-        "raw_backup": root / "raw_backup",
         "meta": root / "meta",
         "sources": root / "meta" / "sources.jsonl",
     }
@@ -327,14 +327,11 @@ def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: fl
 
 
 def to_scalar(x: Any) -> Any:
-    try:
-        import torch
-        if torch.is_tensor(x):
-            if x.numel() == 1:
-                return x.detach().cpu().item()
-            return x.detach().cpu().numpy()
-    except Exception:
-        pass
+    if torch.is_tensor(x):
+        if x.numel() == 1:
+            return x.detach().cpu().item()
+        return x.detach().cpu().numpy()
+
     if isinstance(x, (int, float, bool, str, bytes)):
         return x
     arr = np.asarray(x)
@@ -346,18 +343,10 @@ def to_scalar(x: Any) -> Any:
 
 
 def to_numpy(x: Any) -> np.ndarray:
-    try:
-        import torch
-        if torch.is_tensor(x):
-            return x.detach().cpu().numpy()
-    except Exception:
-        pass
-    try:
-        from PIL import Image
-        if isinstance(x, Image.Image):
-            return np.asarray(x)
-    except Exception:
-        pass
+    if torch.is_tensor(x):
+        return x.detach().cpu().numpy()
+    if isinstance(x, Image.Image):
+        return np.asarray(x)
     return np.asarray(x)
 
 
@@ -366,14 +355,11 @@ def decode_task(x: Any) -> str:
         return x.decode("utf-8")
     if isinstance(x, str):
         return x
-    try:
-        import torch
-        if torch.is_tensor(x):
-            if x.numel() == 1:
-                return decode_task(x.detach().cpu().item())
-            return str(x.detach().cpu().numpy())
-    except Exception:
-        pass
+
+    if torch.is_tensor(x):
+        if x.numel() == 1:
+            return decode_task(x.detach().cpu().item())
+        return str(x.detach().cpu().numpy())
     arr = np.asarray(x)
     if arr.shape == ():
         return decode_task(arr.item())
@@ -406,12 +392,7 @@ def require_keys(sample: dict[str, Any], keys: set[str], *, repo: str) -> None:
 def open_lerobot_dataset(repo_dir: Path):
     repo_dir = repo_dir.resolve()
     repo_id = repo_dir.name
-    root = repo_dir.parent
-    from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-    try:
-        return LeRobotDataset(repo_id, root=root)
-    except TypeError:
-        return LeRobotDataset(repo_id, root)
+    return LeRobotDataset(repo_id, root=repo_dir)
 
 
 def remove_path(path: Path) -> None:
@@ -463,7 +444,6 @@ def merge_collector_repos(input_dirs: list[Path], output_dir: Path, *, overwrite
     state_dim = int(to_numpy(first_sample["state"]).reshape(-1).shape[0])
     action_dim = int(to_numpy(first_sample["actions"]).reshape(-1).shape[0])
 
-    old_home = os.environ.get("HF_LEROBOT_HOME", "")
     os.environ["HF_LEROBOT_HOME"] = str(output_parent)
 
     out = LeRobotDataset.create(
@@ -484,41 +464,33 @@ def merge_collector_repos(input_dirs: list[Path], output_dir: Path, *, overwrite
 
     total_frames = 0
     total_episodes = 0
-    try:
-        for src in input_dirs:
-            repo_name = str(src)
-            ds = open_lerobot_dataset(src)
-            by_ep: dict[int, list[int]] = defaultdict(list)
-            for idx in range(len(ds)):
-                sample = ds[idx]
-                require_keys(sample, IQL_REQUIRED_KEYS, repo=repo_name)
-                ep = int(to_scalar(sample["episode_index"]))
-                by_ep[ep].append(idx)
-            log_line(log_path, f"[merge] reading {src}: frames={len(ds)} episodes={len(by_ep)}")
-            for ep in sorted(by_ep):
-                for idx in by_ep[ep]:
-                    sample = ds[idx]
-                    out.add_frame({
-                        "image": image_hwc_uint8(sample["image"]),
-                        "wrist_image": image_hwc_uint8(sample["wrist_image"]),
-                        "state": to_numpy(sample["state"]).astype(np.float32).reshape(-1),
-                        "actions": to_numpy(sample["actions"]).astype(np.float32).reshape(-1),
-                        "reward": np.asarray([float(to_scalar(sample["reward"]))], dtype=np.float32),
-                        "done": np.asarray([int(bool(to_scalar(sample["done"])))], dtype=np.int64),
-                        "success": np.asarray([int(bool(to_scalar(sample["success"])))], dtype=np.int64),
-                        "task": decode_task(sample["task"]),
-                    })
-                    total_frames += 1
-                out.save_episode()
-                total_episodes += 1
-    finally:
-        if hasattr(out, "stop_image_writer"):
-            out.stop_image_writer()
-        if old_home:
-            os.environ["HF_LEROBOT_HOME"] = old_home
-        else:
-            os.environ.pop("HF_LEROBOT_HOME", None)
 
+    for src in input_dirs:
+        repo_name = str(src)
+        ds = open_lerobot_dataset(src)
+        by_ep: dict[int, list[int]] = defaultdict(list)
+        for idx in range(len(ds)):
+            sample = ds[idx]
+            require_keys(sample, IQL_REQUIRED_KEYS, repo=repo_name)
+            ep = int(to_scalar(sample["episode_index"]))
+            by_ep[ep].append(idx)
+        log_line(log_path, f"[merge] reading {src}: frames={len(ds)} episodes={len(by_ep)}")
+        for ep in sorted(by_ep):
+            for idx in by_ep[ep]:
+                sample = ds[idx]
+                out.add_frame({
+                    "image": image_hwc_uint8(sample["image"]),
+                    "wrist_image": image_hwc_uint8(sample["wrist_image"]),
+                    "state": to_numpy(sample["state"]).astype(np.float32).reshape(-1),
+                    "actions": to_numpy(sample["actions"]).astype(np.float32).reshape(-1),
+                    "reward": np.asarray([float(to_scalar(sample["reward"]))], dtype=np.float32),
+                    "done": np.asarray([int(bool(to_scalar(sample["done"])))], dtype=np.int64),
+                    "success": np.asarray([int(bool(to_scalar(sample["success"])))], dtype=np.int64),
+                    "task": decode_task(sample["task"]),
+                })
+                total_frames += 1
+            out.save_episode()
+            total_episodes += 1
     log_line(log_path, f"[merge] wrote {output_dir}: episodes={total_episodes} frames={total_frames}")
     return {"episodes": int(total_episodes), "frames": int(total_frames)}
 
@@ -543,16 +515,47 @@ def atomic_replace_dir(src_tmp: Path, dst: Path, backup: Path) -> None:
 def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
     pools = pool_paths(args)
     raw = pools["raw"]
-    if raw.exists():
-        return
-    if args.dry_run:
-        log_line(log_path, f"[dry-run] init pool: {args.src_dir} -> {raw}")
-        return
-    pools["root"].mkdir(parents=True, exist_ok=True)
-    stats = merge_collector_repos([Path(args.src_dir).resolve()], pools["raw_tmp"], overwrite=True, log_path=log_path)
-    atomic_replace_dir(pools["raw_tmp"], raw, pools["raw_backup"])
-    append_sources_record(args, {"event": "init_pool", "src_dir": str(Path(args.src_dir).resolve()), "pool_raw": str(raw), **stats})
 
+    pools["root"].mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        args.pi_python,
+        "-u",
+        str(Path(args.pi0_root) / "ours" / "convert_demo.py"),
+        "--input-dir",
+        str(Path(args.src_dir).resolve()),
+        "--output-dir",
+        str(raw),
+        "--fps",
+        "10",
+        "--task-id",
+        str(max(int(args.task_id), 0)),
+        "--step-reward",
+        "-1.0",
+        "--success-terminal-reward",
+        "10.0",
+        "--overwrite",
+    ]
+
+    run_cmd(
+        cmd,
+        log_path=log_path,
+        cwd=Path(args.pi0_root) / "ours",
+        env=base_env(args),
+        dry_run=False,
+    )
+
+    if not raw.exists():
+        raise RuntimeError(f"Expected initialized pool/raw not found: {raw}")
+
+    append_sources_record(
+        args,
+        {
+            "event": "init_pool_from_success_demo",
+            "src_dir": str(Path(args.src_dir).resolve()),
+            "pool_raw": str(raw),
+        },
+    )
 
 def build_initial_state(args: argparse.Namespace) -> dict[str, Any]:
     pools = pool_paths(args)
@@ -587,14 +590,12 @@ def save_state(args: argparse.Namespace, state: dict[str, Any]) -> None:
 def load_or_init_state(args: argparse.Namespace) -> dict[str, Any]:
     save_path = Path(args.workspace) / "save.json"
     log = main_log(args)
-    if save_path.exists() and args.resume and not args.restart:
+    if save_path.exists():
         state = json.loads(save_path.read_text(encoding="utf-8"))
         if state.get("next_stage") not in VALID_STAGES:
             raise ValueError(f"Invalid next_stage in save.json: {state.get('next_stage')}")
         log_line(log, f"[resume] {save_path}: iter={state.get('iter_index')} next_stage={state.get('next_stage')}")
         return state
-    if save_path.exists() and not args.resume:
-        raise FileExistsError(f"{save_path} exists. Use --resume or --restart.")
     ensure_pool_initialized(args, log)
     state = build_initial_state(args)
     save_state(args, state)
@@ -702,8 +703,6 @@ def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[st
         cmd.extend(["--norm-max-frames", str(args.norm_max_frames)])
     cmd.append("--wandb-enabled" if args.wandb_enabled else "--no-wandb-enabled")
     cmd.append("--overwrite" if args.overwrite_repos else "--no-overwrite")
-    if args.dry_run:
-        cmd.append("--dry-run")
     run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root), env=base_env(args), dry_run=args.dry_run)
     next_policy = p["model_dir"] / "final"
     if not args.dry_run and not (next_policy / "params").exists():
@@ -798,11 +797,6 @@ def stage_append_pool(args: argparse.Namespace, state: dict[str, Any], p: dict[s
     pools = pool_paths(args)
     iter_index = int(state["iter_index"])
     collect_dir = Path(state["last_collect_data_dir"]).resolve()
-    if args.dry_run:
-        log_line(log_path, f"[dry-run] append {collect_dir} -> {pools['raw']}")
-        state["iter_index"] = iter_index + 1
-        state["next_stage"] = STAGE_FINISHED if state["iter_index"] >= int(args.iters) else STAGE_TRAIN_IQL
-        return state
     if not pools["raw"].exists():
         raise FileNotFoundError(f"Pool raw does not exist: {pools['raw']}")
     if not collect_dir.exists():

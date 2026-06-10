@@ -62,12 +62,9 @@ from libero.libero.envs import OffScreenRenderEnv
 from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
 
-try:
-    from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotDataset
-except Exception as exc:
-    raise ImportError(
-        "Could not import LeRobotDataset. Run this script in the OpenPI/LeRobot environment."
-    ) from exc
+
+from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotDataset
+
 
 
 LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
@@ -80,6 +77,9 @@ TASK_MAX_STEPS = {
     "libero_10": 520,
     "libero_90": 400,
 }
+STEP_REWARD = -1.0
+SUCCESS_TERMINAL_REWARD = 10.0
+FAILURE_TERMINAL_REWARD = -100.0
 
 
 @dataclasses.dataclass
@@ -131,7 +131,7 @@ class RolloutFrame:
     state: np.ndarray
     action: np.ndarray
     reward: float
-    done: int
+    terminal: int      # RL terminal mask，用于 IQL target
     step_index: int
 
 
@@ -181,10 +181,7 @@ def parse_args() -> Args:
 def get_max_steps(task_suite_name: str, override: int = -1) -> int:
     if override > 0:
         return int(override)
-    try:
-        return TASK_MAX_STEPS[task_suite_name]
-    except KeyError as exc:
-        raise ValueError(f"Unknown task suite: {task_suite_name}") from exc
+    return TASK_MAX_STEPS[task_suite_name]
 
 
 def quat2axisangle(quat: np.ndarray) -> np.ndarray:
@@ -325,10 +322,10 @@ def create_lerobot_dataset(args: Args) -> LeRobotDataset:
                 "shape": (1,),
                 "names": ["reward"],
             },
-            "done": {
+            "terminal": {
                 "dtype": "int64",
                 "shape": (1,),
-                "names": ["done"],
+                "names": ["terminal"],
             },
             "success": {
                 "dtype": "int64",
@@ -377,7 +374,7 @@ def write_episode_to_lerobot(dataset: LeRobotDataset, result: RolloutResult) -> 
                 "state": frame.state.astype(np.float32),
                 "actions": frame.action.astype(np.float32),
                 "reward": np.asarray([frame.reward], dtype=np.float32),
-                "done": np.asarray([int(frame.done)], dtype=np.int64),
+                "terminal": np.asarray([int(frame.terminal)], dtype=np.int64),
                 "success": np.asarray([int(result.success)], dtype=np.int64),
                 "task_id": np.asarray([int(result.task_id)], dtype=np.int64),
                 "trial_id": np.asarray([int(result.trial_id)], dtype=np.int64),
@@ -434,49 +431,48 @@ def run_one_episode(
     error = ""
 
     while t < max_steps + args.num_steps_wait:
-        try:
-            # Same stabilization stage as OpenPI eval.
-            if t < args.num_steps_wait:
-                obs, reward, done, info = env.step(LIBERO_DUMMY_ACTION)
-                t += 1
-                continue
 
-            processed = preprocess_obs_for_openpi(obs, args.resize_size)
-            replay_images.append(processed["image"])
-
-            if not action_plan:
-                element = build_policy_element(processed, task_description)
-                action_chunk = query_action_chunk(client, element, args.replan_steps)
-                action_plan.extend(action_chunk[: args.replan_steps])
-
-            action = np.asarray(action_plan.popleft(), dtype=np.float32)
-            next_obs, reward, done, info = env.step(action.tolist())
-
-            frames.append(
-                RolloutFrame(
-                    image=processed["image"],
-                    wrist_image=processed["wrist_image"],
-                    state=processed["state"],
-                    action=action,
-                    reward=float(reward),
-                    done=int(bool(done)),
-                    step_index=env_action_step,
-                )
-            )
-
-            env_action_step += 1
-            obs = next_obs
+        # Same stabilization stage as OpenPI eval.
+        if t < args.num_steps_wait:
+            obs, _, _, _ = env.step(LIBERO_DUMMY_ACTION)
             t += 1
+            continue
 
-            if done:
-                success = True
-                break
+        processed = preprocess_obs_for_openpi(obs, args.resize_size)
+        replay_images.append(processed["image"])
 
-        except Exception as exc:
-            logging.exception("Caught exception during rollout")
-            error = repr(exc)
+        if not action_plan:
+            element = build_policy_element(processed, task_description)
+            action_chunk = query_action_chunk(client, element, args.replan_steps)
+            action_plan.extend(action_chunk[: args.replan_steps])
+
+        action = np.asarray(action_plan.popleft(), dtype=np.float32)
+        next_obs, _, done, info = env.step(action.tolist())
+
+        frames.append(
+            RolloutFrame(
+                image=processed["image"],
+                wrist_image=processed["wrist_image"],
+                state=processed["state"],
+                action=action,
+                reward=float(STEP_REWARD),
+                terminal=False,
+                step_index=env_action_step,
+            )
+        )
+
+        env_action_step += 1
+        obs = next_obs
+        t += 1
+
+        if done:
+            success = True
             break
-
+    frames[-1].terminal=True
+    if success:
+        frames[-1].reward = SUCCESS_TERMINAL_REWARD
+    else:
+        frames[-1].reward = FAILURE_TERMINAL_REWARD
     return RolloutResult(
         task_id=int(task_id),
         task_description=str(task_description),
@@ -512,109 +508,99 @@ def collect(args: Args) -> None:
     total_saved_episodes = 0
     total_saved_frames = 0
 
-    try:
-        for cur_task_id in tqdm.tqdm(range(num_tasks_in_suite), desc="tasks"):
-            if int(args.task_id) != -1 and int(args.task_id) != cur_task_id:
-                continue
+    for cur_task_id in tqdm.tqdm(range(num_tasks_in_suite), desc="tasks"):
+        if int(args.task_id) != -1 and int(args.task_id) != cur_task_id:
+            continue
 
-            task = task_suite.get_task(cur_task_id)
-            initial_states = task_suite.get_task_init_states(cur_task_id)
-            env, task_description = get_libero_env(task, LIBERO_ENV_RESOLUTION, args.seed)
+        task = task_suite.get_task(cur_task_id)
+        initial_states = task_suite.get_task_init_states(cur_task_id)
+        env, task_description = get_libero_env(task, LIBERO_ENV_RESOLUTION, args.seed)
 
-            task_episodes = 0
-            task_successes = 0
+        task_episodes = 0
+        task_successes = 0
 
-            try:
-                for episode_idx in tqdm.tqdm(
-                    range(args.num_trials_per_task),
-                    desc=f"task{cur_task_id}",
-                    leave=False,
-                ):
-                    state_index = args.initial_state_offset + episode_idx
-                    if state_index >= len(initial_states):
-                        raise IndexError(
-                            f"Initial state index {state_index} >= {len(initial_states)}. "
-                            f"Reduce --num-trials-per-task or --initial-state-offset."
-                        )
+        for episode_idx in tqdm.tqdm(
+            range(args.num_trials_per_task),
+            desc=f"task{cur_task_id}",
+            leave=False,
+        ):
+            state_index = args.initial_state_offset + episode_idx
+            if state_index >= len(initial_states):
+                raise IndexError(
+                    f"Initial state index {state_index} >= {len(initial_states)}. "
+                    f"Reduce --num-trials-per-task or --initial-state-offset."
+                )
 
-                    logging.info("\nTask: %s", task_description)
-                    logging.info("Starting episode %s...", task_episodes + 1)
+            logging.info("\nTask: %s", task_description)
+            logging.info("Starting episode %s...", task_episodes + 1)
 
-                    result = run_one_episode(
-                        env=env,
-                        initial_state=initial_states[state_index],
-                        client=client,
-                        task_id=cur_task_id,
-                        task_description=task_description,
-                        trial_id=state_index,
-                        args=args,
-                        max_steps=max_steps,
-                    )
+            result = run_one_episode(
+                env=env,
+                initial_state=initial_states[state_index],
+                client=client,
+                task_id=cur_task_id,
+                task_description=task_description,
+                trial_id=state_index,
+                args=args,
+                max_steps=max_steps,
+            )
 
-                    total_episodes += 1
-                    task_episodes += 1
+            total_episodes += 1
+            task_episodes += 1
 
-                    if result.success:
-                        total_successes += 1
-                        task_successes += 1
+            if result.success:
+                total_successes += 1
+                task_successes += 1
 
-                    saved_frames = 0
-                    if result.frames and should_save_episode(args, result.success):
-                        saved_frames = write_episode_to_lerobot(dataset, result)
-                        total_saved_episodes += 1
-                        total_saved_frames += saved_frames
+            saved_frames = 0
+            if result.frames and should_save_episode(args, result.success):
+                saved_frames = write_episode_to_lerobot(dataset, result)
+                total_saved_episodes += 1
+                total_saved_frames += saved_frames
 
-                    save_rollout_video(args, result)
+            # save_rollout_video(args, result)
 
-                    record = {
-                        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                        "task_suite_name": args.task_suite_name,
-                        "task_id": int(cur_task_id),
-                        "task_description": task_description,
-                        "trial_id": int(state_index),
-                        "success": bool(result.success),
-                        "num_frames": int(len(result.frames)),
-                        "saved_frames": int(saved_frames),
-                        "error": result.error,
-                        "task_episodes": int(task_episodes),
-                        "task_successes": int(task_successes),
-                        "task_success_rate": float(task_successes / max(task_episodes, 1)),
-                        "total_episodes": int(total_episodes),
-                        "total_successes": int(total_successes),
-                        "total_success_rate": float(total_successes / max(total_episodes, 1)),
-                        "total_saved_episodes": int(total_saved_episodes),
-                        "total_saved_frames": int(total_saved_frames),
-                    }
-                    append_metrics(args, record)
+            record = {
+                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "task_suite_name": args.task_suite_name,
+                "task_id": int(cur_task_id),
+                "task_description": task_description,
+                "trial_id": int(state_index),
+                "success": bool(result.success),
+                "num_frames": int(len(result.frames)),
+                "saved_frames": int(saved_frames),
+                "error": result.error,
+                "task_episodes": int(task_episodes),
+                "task_successes": int(task_successes),
+                "task_success_rate": float(task_successes / max(task_episodes, 1)),
+                "total_episodes": int(total_episodes),
+                "total_successes": int(total_successes),
+                "total_success_rate": float(total_successes / max(total_episodes, 1)),
+                "total_saved_episodes": int(total_saved_episodes),
+                "total_saved_frames": int(total_saved_frames),
+            }
+            append_metrics(args, record)
 
-                    logging.info("Success: %s", result.success)
-                    logging.info("# episodes completed so far: %s", total_episodes)
-                    logging.info(
-                        "# successes: %s (%.1f%%)",
-                        total_successes,
-                        total_successes / max(total_episodes, 1) * 100.0,
-                    )
-                    logging.info(
-                        "Current task success rate: %.3f",
-                        task_successes / max(task_episodes, 1),
-                    )
-                    logging.info(
-                        "Current total success rate: %.3f",
-                        total_successes / max(total_episodes, 1),
-                    )
-                    logging.info(
-                        "Saved episodes=%s frames=%s",
-                        total_saved_episodes,
-                        total_saved_frames,
-                    )
-
-            finally:
-                if hasattr(env, "close"):
-                    env.close()
-
-    finally:
-        finish_dataset(dataset)
-
+            logging.info("Success: %s", result.success)
+            logging.info("# episodes completed so far: %s", total_episodes)
+            logging.info(
+                "# successes: %s (%.1f%%)",
+                total_successes,
+                total_successes / max(total_episodes, 1) * 100.0,
+            )
+            logging.info(
+                "Current task success rate: %.3f",
+                task_successes / max(task_episodes, 1),
+            )
+            logging.info(
+                "Current total success rate: %.3f",
+                total_successes / max(total_episodes, 1),
+            )
+            logging.info(
+                "Saved episodes=%s frames=%s",
+                total_saved_episodes,
+                total_saved_frames,
+            )
     logging.info("Saved LeRobot dataset to: %s", HF_LEROBOT_HOME / args.repo_id)
     logging.info(
         "Total episodes=%s successes=%s success_rate=%.3f",

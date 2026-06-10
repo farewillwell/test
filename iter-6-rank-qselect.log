@@ -1,122 +1,28 @@
-[2026-06-10 08:14:42] ================================================================================
-[2026-06-10 08:14:42] workspace=/data/aoss/heliqun/pi0-ours/goal-6
-[2026-06-10 08:14:42] src_dir=/data/aoss/heliqun/dataset/libero-dataset/bytaskid/6
-[2026-06-10 08:14:42] base_model=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
-[2026-06-10 08:14:42] iters=4 task=libero_goal:6
-[2026-06-10 08:14:42] gpus=2
-[2026-06-10 08:14:42] use_q_select=True num_action_samples=16
-[2026-06-10 08:14:42] iql_use_q_aug=True
-[2026-06-10 08:14:42] horizon=5 replan_steps=5
+[2026-06-10 08:48:31] ================================================================================
+[2026-06-10 08:48:31] workspace=/data/aoss/heliqun/pi0-ours/goal-6
+[2026-06-10 08:48:31] src_dir=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
+[2026-06-10 08:48:31] base_model=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
+[2026-06-10 08:48:31] iters=4 task=libero_goal:6
+[2026-06-10 08:48:31] gpus=2
+[2026-06-10 08:48:31] use_q_select=True num_action_samples=16
+[2026-06-10 08:48:31] iql_use_q_aug=True
+[2026-06-10 08:48:31] horizon=5 replan_steps=5
+Generating train split: 0 examples [00:00, ? examples/s]Generating train split: 186 examples [00:00, 1186.02 examples/s]Generating train split: 387 examples [00:00, 1369.99 examples/s]Generating train split: 491 examples [00:00, 1394.79 examples/s]
 Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 95, in __init__
-    self.load_metadata()
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 105, in load_metadata
-    self.info = load_info(self.root)
-                ^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/utils.py", line 178, in load_info
-    info = load_json(local_dir / INFO_PATH)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/utils.py", line 146, in load_json
-    with open(fpath) as f:
-         ^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/data/aoss/heliqun/dataset/libero-dataset/bytaskid/meta/info.json'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connection.py", line 198, in _new_conn
-    sock = connection.create_connection(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/util/connection.py", line 85, in create_connection
-    raise err
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/util/connection.py", line 73, in create_connection
-    sock.connect(sa)
-OSError: [Errno 101] Network is unreachable
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
-    response = self._make_request(
-               ^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connectionpool.py", line 488, in _make_request
-    raise new_e
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
-    self._validate_conn(conn)
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
-    conn.connect()
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connection.py", line 704, in connect
-    self.sock = sock = self._new_conn()
-                       ^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connection.py", line 213, in _new_conn
-    raise NewConnectionError(
-urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7f9b65b436d0>: Failed to establish a new connection: [Errno 101] Network is unreachable
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/requests/adapters.py", line 667, in send
-    resp = conn.urlopen(
-           ^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
-    retries = retries.increment(
-              ^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/urllib3/util/retry.py", line 519, in increment
-    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/datasets/6/refs (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f9b65b436d0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 866, in <module>
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 821, in <module>
     main()
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 862, in main
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 817, in main
     iter_train(parse_args())
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 844, in iter_train
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 799, in iter_train
     state = load_or_init_state(args)
             ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 598, in load_or_init_state
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 560, in load_or_init_state
     ensure_pool_initialized(args, log)
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 552, in ensure_pool_initialized
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 516, in ensure_pool_initialized
     stats = merge_collector_repos([Path(args.src_dir).resolve()], pools["raw_tmp"], overwrite=True, log_path=log_path)
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 452, in merge_collector_repos
-    ds = open_lerobot_dataset(src)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 412, in open_lerobot_dataset
-    return LeRobotDataset(repo_id, root=root)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 487, in __init__
-    self.meta = LeRobotDatasetMetadata(
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 98, in __init__
-    self.revision = get_safe_version(self.repo_id, self.revision)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/utils.py", line 327, in get_safe_version
-    hub_versions = get_repo_versions(repo_id)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/utils.py", line 309, in get_repo_versions
-    repo_refs = api.list_repo_refs(repo_id, repo_type="dataset")
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
-    return fn(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/huggingface_hub/hf_api.py", line 3195, in list_repo_refs
-    response = get_session().get(
-               ^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/requests/sessions.py", line 602, in get
-    return self.request("GET", url, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
-    resp = self.send(prep, **send_kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
-    r = adapter.send(request, **kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/huggingface_hub/utils/_http.py", line 96, in send
-    return super().send(request, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/requests/adapters.py", line 700, in send
-    raise ConnectionError(e, request=request)
-requests.exceptions.ConnectionError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/datasets/6/refs (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f9b65b436d0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))"), '(Request ID: d7048ef5-969e-461a-abb2-c0bd24680433)')
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 435, in merge_collector_repos
+    require_keys(first_sample, IQL_REQUIRED_KEYS, repo=first_repo)
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 383, in require_keys
+    raise KeyError(f"Repo {repo} missing required keys: {missing}. keys={sorted(sample.keys())}")
+KeyError: "Repo /data/huangdi/heliqun/pi0/sft_runs/lerobot_data missing required keys: ['done', 'reward', 'success']. keys=['actions', 'episode_index', 'frame_index', 'image', 'index', 'state', 'task', 'task_index', 'timestamp', 'wrist_image']"

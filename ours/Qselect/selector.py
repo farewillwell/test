@@ -30,11 +30,8 @@ IQL_DIR = THIS_DIR.parent / "IQL"
 if str(IQL_DIR) not in sys.path:
     sys.path.insert(0, str(IQL_DIR))
 
-try:
-    from model import LightIQLCritic  # type: ignore
-except ImportError:
-    from model import LightVLValueModel as LightIQLCritic  # type: ignore
 
+from model import LightIQLCritic  # type: ignore
 
 def _to_numpy(x: Any) -> np.ndarray:
     if torch.is_tensor(x):
@@ -130,20 +127,7 @@ def _build_model_from_checkpoint(
     dropout = float(ckpt_args.get("dropout", 0.1))
     q_l2_coef = float(ckpt_args.get("q_l2_coef", 1e-4))
     encoder_amp = bool(ckpt_args.get("encoder_amp", True))
-
-    try:
-        model = LightIQLCritic(
-            encoder_name,
-            state_dim,
-            action_dim,
-            chunk_size,
-            hidden_dim=hidden_dim,
-            num_q=num_q,
-            action_layers=action_layers,
-            q_layers=q_layers,
-        )
-    except TypeError:
-        model = LightIQLCritic(
+    model = LightIQLCritic(
             encoder_name=encoder_name,
             robot_state_dim=state_dim,
             action_dim=action_dim,
@@ -291,11 +275,7 @@ class QSelector:
         batch = _move_to_device(batch, self.device)
 
         if hasattr(self.model, "infer_batch"):
-            try:
-                out = self.model.infer_batch(batch, device=self.device)
-            except TypeError:
-                out = self.model.infer_batch(batch)
-
+            out = self.model.infer_batch(batch, device=self.device)
             if isinstance(out, dict):
                 q = out.get("target_q", out.get("q", out.get("adv")))
                 if q is None:
