@@ -37,4 +37,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
   --num-trials-per-task 50 \
+  --iql-use-q-aug \
   > "iter-${task_id}-rank-qselect.log" 2>&1

@@ -47,7 +47,7 @@ STAGE_FINISHED = "finished"
 STAGES = (STAGE_TRAIN_SFT, STAGE_COLLECT, STAGE_APPEND_SUCCESS_SFT)
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 
-CONFIG_NAME = "pi0_libero_low_mem_finetune"
+CONFIG_NAME = "pi0_libero"
 ASSET_ID = "physical-intelligence/libero"
 PROJECT_NAME = "openpi"
 
@@ -91,7 +91,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--task-id", type=int, default=-1)
     p.add_argument("--num-trials-per-task", type=int, default=50)
     p.add_argument("--initial-state-offset", type=int, default=0)
-    p.add_argument("--max-steps-override", type=int, default=-1)
     p.add_argument("--num-steps-wait", type=int, default=10)
     p.add_argument("--replan-steps", type=int, default=5)
 
@@ -101,7 +100,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--server-wait-timeout", type=float, default=180.0)
 
-    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)

@@ -66,7 +66,14 @@ from openpi_client import websocket_client_policy as _websocket_client_policy
 from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotDataset
 
 
-
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
+DEFAULT_RESIZE_SIZE = 224
+DEFAULT_REPLAN_STEPS = 5
+DEFAULT_NUM_STEPS_WAIT = 10
+DEFAULT_FPS = 10
+DEFAULT_IMAGE_WRITER_THREADS = 10
+DEFAULT_IMAGE_WRITER_PROCESSES = 5
 LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 LIBERO_ENV_RESOLUTION = 256
 
@@ -149,33 +156,36 @@ class RolloutResult:
 def parse_args() -> Args:
     p = argparse.ArgumentParser()
 
-    p.add_argument("--host", default="0.0.0.0")
-    p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--resize-size", type=int, default=224)
-    p.add_argument("--replan-steps", type=int, default=5)
-
+    # Task / rollout knobs.
     p.add_argument("--task-suite-name", default="libero_goal")
     p.add_argument("--task-id", type=int, default=6)
-    p.add_argument("--num-steps-wait", type=int, default=10)
     p.add_argument("--num-trials-per-task", type=int, default=50)
     p.add_argument("--initial-state-offset", type=int, default=0)
     p.add_argument("--seed", type=int, default=7)
-    p.add_argument("--max-steps-override", type=int, default=-1)
 
+    # Output.
     p.add_argument("--repo-id", required=True)
     p.add_argument("--overwrite", action="store_true")
-    p.add_argument("--fps", type=int, default=10)
-    p.add_argument("--image-writer-threads", type=int, default=10)
-    p.add_argument("--image-writer-processes", type=int, default=5)
+    p.add_argument("--video-out-path", default="data/libero/collect_videos")
+    p.add_argument("--metrics-path", default="data/libero/collect_metrics.jsonl")
 
+    # Save policy.
+    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
 
-    p.add_argument("--video-out-path", default="data/libero/collect_videos")
-    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=True)
-    p.add_argument("--metrics-path", default="data/libero/collect_metrics.jsonl")
-
-    return Args(**vars(p.parse_args()))
+    ns = p.parse_args()
+    return Args(
+        host=DEFAULT_HOST,
+        port=DEFAULT_PORT,
+        resize_size=DEFAULT_RESIZE_SIZE,
+        replan_steps=DEFAULT_REPLAN_STEPS,
+        num_steps_wait=DEFAULT_NUM_STEPS_WAIT,
+        fps=DEFAULT_FPS,
+        image_writer_threads=DEFAULT_IMAGE_WRITER_THREADS,
+        image_writer_processes=DEFAULT_IMAGE_WRITER_PROCESSES,
+        **vars(ns),
+    )
 
 
 def get_max_steps(task_suite_name: str, override: int = -1) -> int:

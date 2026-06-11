@@ -187,6 +187,7 @@ def main() -> None:
         str(python_bin),
         "-u",
         str(pi0_root / "train" / "compute_norm_stats_custom.py"),
+        "repo-id",
         repo_id,
         "--asset-id",
         ASSET_ID,

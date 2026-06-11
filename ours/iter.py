@@ -55,6 +55,9 @@ VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 STEP_REWARD = -1.0
 SUCCESS_TERMINAL_REWARD = 10.0
 FAILURE_TERMINAL_REWARD = -100.0
+QSELECT_HOST = "127.0.0.1"
+QSELECT_PORT = 8000
+QSELECT_SERVER_WAIT_TIMEOUT = 180.0
 
 
 def _task_mode(task_id: int) -> str:
@@ -62,19 +65,19 @@ def _task_mode(task_id: int) -> str:
 
 
 def get_iql_steps(iter_index: int, task_id: int) -> int:
-    base = 4000
+    base = 3000
     iter_task_add = 2000
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
-    return int(base + iter_task_add * num_tasks * iter_scale)
+    return 1 # int(base + iter_task_add * num_tasks * iter_scale)
 
 
 def get_awbc_steps(iter_index: int, task_id: int) -> int:
-    base = 1
+    base = 3000
     iter_task_add = 500
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
-    return int(base + iter_task_add * num_tasks * iter_scale)
+    return 1 # int(base + iter_task_add * num_tasks * iter_scale)
 
 def check_env_for_subprocess(env: dict[str, Any], *, log_path: Path) -> None:
     bad = {k: v for k, v in env.items() if v is None}
@@ -132,23 +135,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--iql-encoder-name", default="/data/aoss/heliqun/model/clip/clip-vit-base-patch32")
     p.add_argument("--iql-batch-size", type=int, default=64)
     p.add_argument("--iql-num-workers", type=int, default=4)
-    p.add_argument("--iql-hidden-dim", type=int, default=512)
-    p.add_argument("--iql-num-q", type=int, default=2)
-    p.add_argument("--iql-action-layers", type=int, default=2)
-    p.add_argument("--iql-q-layers", type=int, default=2)
-    p.add_argument("--iql-dropout", type=float, default=0.1)
-    p.add_argument("--iql-lr", type=float, default=1e-4)
-    p.add_argument("--iql-weight-decay", type=float, default=1e-4)
-    p.add_argument("--iql-gamma", type=float, default=0.99)
-    p.add_argument("--iql-expectile", type=float, default=0.7)
-    p.add_argument("--iql-tau", type=float, default=0.02)
-    p.add_argument("--iql-grad-clip", type=float, default=1.0)
-    p.add_argument("--iql-q-l2-coef", type=float, default=1e-4)
     p.add_argument("--iql-use-q-aug", action="store_true")
-    p.add_argument("--iql-log-every", type=int, default=50)
-    p.add_argument("--iql-debug-every", type=int, default=500)
-    p.add_argument("--iql-save-every", type=int, default=1000)
-
     # Label.
     p.add_argument("--label-batch-size", type=int, default=128)
     p.add_argument("--label-normalize-adv", action="store_true")
@@ -157,39 +144,24 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--label-max-episodes", type=int, default=0)
 
     # AWBC.
-    p.add_argument("--awbc-config-name", default="pi0_libero_awbc")
-    p.add_argument("--policy-config-name", default="pi0_libero_awbc")
     p.add_argument("--awbc-batch-size", type=int, default=16)
     p.add_argument("--awbc-num-workers", type=int, default=4)
-    p.add_argument("--awbc-save-interval", type=int, default=1000)
-    p.add_argument("--awbc-log-interval", type=int, default=100)
-    p.add_argument("--awbc-keep-period", default="5000")
     p.add_argument("--norm-max-frames", type=int, default=0)
     p.add_argument("--asset-id", default="physical-intelligence/libero")
     p.add_argument("--project-name", default="openpi")
-    p.add_argument("--wandb-enabled", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--policy-config-name", default="pi0_libero_awbc")
 
     # Q-select / collect.
     p.add_argument("--use-q-select", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--num-action-samples", type=int, default=16)
-    p.add_argument("--qselect-num-steps", type=int, default=10)
-    p.add_argument("--noise-scale", type=float, default=1.0)
-    p.add_argument("--score-horizon", type=int, default=0)
-    p.add_argument("--selector-device", default="")
-    p.add_argument("--host", default="127.0.0.1")
-    p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--server-wait-timeout", type=float, default=180.0)
 
     p.add_argument("--task-suite-name", default="libero_goal")
     p.add_argument("--task-id", type=int, default=-1)
-    p.add_argument("--num-steps-wait", type=int, default=10)
     p.add_argument("--num-trials-per-task", type=int, default=50)
     p.add_argument("--initial-state-offset", type=int, default=0)
-    p.add_argument("--max-steps-override", type=int, default=-1)
     p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
-
     p.add_argument("--seed", type=int, default=7)
     return p.parse_args()
 
@@ -546,55 +518,32 @@ def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str
         "-m",
         "torch.distributed.run",
         "--standalone",
-        "--nnodes",
-        "1",
-        "--nproc-per-node",
-        str(args.gpus),
+        "--nnodes", "1",
+        "--nproc-per-node", str(args.gpus),
+
         str(Path(args.pi0_root) / "ours" / "IQL" / "train.py"),
+
         "--repo-dirs",
         *[str(x) for x in repo_dirs],
+
         "--output-dir",
         str(p["iql_dir"]),
+
         "--encoder-name",
         args.iql_encoder_name,
+
         "--horizon",
         str(args.horizon),
+
         "--batch-size",
         str(args.iql_batch_size),
+
         "--num-workers",
         str(args.iql_num_workers),
+
         "--max-steps",
         str(iql_steps),
-        "--lr",
-        str(args.iql_lr),
-        "--weight-decay",
-        str(args.iql_weight_decay),
-        "--gamma",
-        str(args.iql_gamma),
-        "--expectile",
-        str(args.iql_expectile),
-        "--tau",
-        str(args.iql_tau),
-        "--grad-clip",
-        str(args.iql_grad_clip),
-        "--hidden-dim",
-        str(args.iql_hidden_dim),
-        "--num-q",
-        str(args.iql_num_q),
-        "--action-layers",
-        str(args.iql_action_layers),
-        "--q-layers",
-        str(args.iql_q_layers),
-        "--dropout",
-        str(args.iql_dropout),
-        "--q-l2-coef",
-        str(args.iql_q_l2_coef),
-        "--log-every",
-        str(args.iql_log_every),
-        "--debug-every",
-        str(args.iql_debug_every),
-        "--save-every",
-        str(args.iql_save_every),
+
         "--seed",
         str(args.seed),
     ]
@@ -765,33 +714,20 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
     log_path = p["logs"] / f"{STAGE_COLLECT}.log"
     server_log = p["logs"] / "policy_server.log"
     mode = "qselect" if args.use_q_select else "simple"
-
     server_cmd = [
         args.pi_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "Qselect" / "server.py"),
-        "--policy-config",
-        args.policy_config_name,
         "--policy-dir",
         state["current_policy_dir"],
         "--sample-mode",
         mode,
         "--num-action-samples",
         str(args.num_action_samples),
-        "--num-steps",
-        str(args.qselect_num_steps),
-        "--noise-scale",
-        str(args.noise_scale),
         "--seed",
         str(args.seed),
-        "--score-horizon",
-        str(args.score_horizon),
-        "--port",
-        str(args.port),
     ]
 
-    if args.selector_device:
-        server_cmd.extend(["--selector-device", args.selector_device])
     if mode == "qselect":
         server_cmd.extend(["--critic-path", state["current_head_path"]])
 
@@ -799,28 +735,16 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         args.libero_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "Qselect" / "collect.py"),
-        "--host",
-        args.host,
-        "--port",
-        str(args.port),
-        "--resize-size",
-        "224",
-        "--replan-steps",
-        str(args.replan_steps),
         "--task-suite-name",
         args.task_suite_name,
         "--task-id",
         str(args.task_id),
-        "--num-steps-wait",
-        str(args.num_steps_wait),
         "--num-trials-per-task",
         str(args.num_trials_per_task),
         "--initial-state-offset",
         str(args.initial_state_offset),
         "--seed",
         str(args.seed),
-        "--max-steps-override",
-        str(args.max_steps_override),
         "--repo-id",
         "collect",
         "--video-out-path",
@@ -858,7 +782,7 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         )
 
         try:
-            wait_for_port(args.host, args.port, proc, args.server_wait_timeout, server_log)
+            wait_for_port(QSELECT_HOST, QSELECT_PORT, proc, QSELECT_SERVER_WAIT_TIMEOUT, server_log)
             run_cmd(collect_cmd, log_path=log_path, cwd=Path(args.openpi_root), env=env_collect)
         finally:
             if proc.poll() is None:

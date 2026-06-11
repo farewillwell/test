@@ -487,6 +487,9 @@ def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Mo
         num_q=args.num_q,
         action_layers=args.action_layers,
         q_layers=args.q_layers,
+        dropout=args.dropout,
+        q_l2_coef=args.q_l2_coef,
+
     )
 
 

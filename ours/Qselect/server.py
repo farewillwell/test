@@ -69,57 +69,48 @@ if str(THIS_DIR) not in sys.path:
 
 from selector import QSelector
 
-
+DEFAULT_POLICY_CONFIG = "pi0_libero_awbc"
+DEFAULT_PORT = 8000
+DEFAULT_NUM_STEPS = 10
+DEFAULT_NOISE_SCALE = 1.0
+DEFAULT_SCORE_HORIZON = 0
+DEFAULT_LOG_EVERY = 20
 @dataclasses.dataclass
 class Args:
-    # Policy checkpoint, same semantic role as serve_policy.py policy:checkpoint.
-    policy_config: str
+    # Required / important.
     policy_dir: str
-
-    # Q selector.
     critic_path: str = ""
-    sample_mode: str = "qselect"  # qselect | simple
-    selector_device: str = ""
 
-    # Batched stochastic sampling.
+    # Real experiment knobs.
+    sample_mode: str = "qselect"  # qselect | simple
     num_action_samples: int = 16
-    num_steps: int = 10
-    noise_scale: float = 1.0
     seed: int = 0
 
-    # Optional: if >0, selector scores only candidate[:, :score_horizon, :].
-    # For your unified setup action_horizon == replan_steps == 5, leave this 0.
-    score_horizon: int = 0
-
-    # Serving.
-    port: int = 8000
+    # Fixed defaults. Usually do not expose from iter.py.
+    policy_config: str = DEFAULT_POLICY_CONFIG
+    port: int = DEFAULT_PORT
+    num_steps: int = DEFAULT_NUM_STEPS
+    noise_scale: float = DEFAULT_NOISE_SCALE
+    score_horizon: int = DEFAULT_SCORE_HORIZON
+    selector_device: str = ""
     default_prompt: str = ""
     record: bool = False
-
-    # Debug.
-    log_every: int = 20
+    log_every: int = DEFAULT_LOG_EVERY
 
 
 def parse_args() -> Args:
     p = argparse.ArgumentParser()
 
-    p.add_argument("--policy-config", required=True)
     p.add_argument("--policy-dir", required=True)
-
     p.add_argument("--critic-path", default="")
+
     p.add_argument("--sample-mode", default="qselect", choices=("qselect", "simple"))
-    p.add_argument("--selector-device", default="")
-
     p.add_argument("--num-action-samples", type=int, default=16)
-    p.add_argument("--num-steps", type=int, default=10)
-    p.add_argument("--noise-scale", type=float, default=1.0)
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--score-horizon", type=int, default=0)
 
-    p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--default-prompt", default="")
-    p.add_argument("--record", action="store_true")
-    p.add_argument("--log-every", type=int, default=20)
+    # Keep these as escape hatches, but iter.py normally does not pass them.
+    p.add_argument("--policy-config", default=DEFAULT_POLICY_CONFIG)
+    p.add_argument("--port", type=int, default=DEFAULT_PORT)
 
     return Args(**vars(p.parse_args()))
 
