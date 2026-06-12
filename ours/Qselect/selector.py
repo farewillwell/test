@@ -128,19 +128,24 @@ def _build_model_from_checkpoint(
     q_l2_coef = float(ckpt_args.get("q_l2_coef", 1e-4))
     encoder_amp = bool(ckpt_args.get("encoder_amp", True))
     model = LightIQLCritic(
-            encoder_name=encoder_name,
-            robot_state_dim=state_dim,
-            action_dim=action_dim,
-            chunk_size=chunk_size,
-            num_q=num_q,
-            d_model=hidden_dim,
-            nhead=nhead,
-            action_layers=action_layers,
-            fusion_layers=q_layers,
-            dropout=dropout,
-            q_l2_coef=q_l2_coef,
-            encoder_amp=encoder_amp,
-        )
+        encoder_name=encoder_name,
+        state_dim=state_dim,
+        action_dim=action_dim,
+        horizon=chunk_size,
+        hidden_dim=hidden_dim,
+        num_q=num_q,
+        nhead=nhead,
+        action_layers=action_layers,
+        q_layers=q_layers,
+        dropout=dropout,
+        q_l2_coef=q_l2_coef,
+        encoder_amp=encoder_amp,
+        rank_coef=float(ckpt_args.get("rank_coef", 0.5)),
+        rank_margin=float(ckpt_args.get("rank_margin", 0.05)),
+        rank_noise_std=float(ckpt_args.get("rank_noise_std", 0.05)),
+        rank_num_noisy=int(ckpt_args.get("rank_num_noisy", 8)),
+        rank_action_clip_value=ckpt_args.get("rank_action_clip_value", 1.0),
+    )
 
     model.load_state_dict(_checkpoint_state_dict(ckpt))
     if hasattr(model, "freeze_backbone"):
@@ -157,12 +162,19 @@ class QSelector:
         self,
         critic_path: str | pathlib.Path,
         *,
-        device: str | torch.device = "",
         encoder_name: str = "",
         image_size: int = 224,
     ) -> None:
         self.critic_path = str(critic_path)
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+
+        if not torch.cuda.is_available():
+            raise RuntimeError("QSelector requires CUDA, but torch.cuda.is_available() is False.")
+
+        # Use the first GPU visible to this process.
+        # If CUDA_VISIBLE_DEVICES is set, this is logical cuda:0.
+        self.device = torch.device("cuda:0")
+        torch.cuda.set_device(0)
+
         self.image_size = int(image_size)
 
         self.model = _build_model_from_checkpoint(
@@ -170,11 +182,21 @@ class QSelector:
             device=self.device,
             encoder_name_override=encoder_name,
         )
+
         self.chunk_size = int(getattr(self.model, "chunk_size", 5))
         self.action_dim = int(getattr(self.model, "action_dim", 7))
-        self.encoder_name = str(getattr(self.model, "encoder_name", encoder_name or "openai/clip-vit-base-patch32"))
+        self.encoder_name = str(
+            getattr(self.model, "encoder_name", encoder_name or "openai/clip-vit-base-patch32")
+        )
         self.processor = CLIPProcessor.from_pretrained(self.encoder_name)
 
+        model_device = next(self.model.parameters()).device
+        print(
+            f"[QSelector] critic_path={self.critic_path} "
+            f"device={self.device} model_device={model_device} "
+            f"chunk_size={self.chunk_size} action_dim={self.action_dim}",
+            flush=True,
+        )
     def _process_one_image(self, image: Image.Image) -> torch.Tensor:
         image = image.convert("RGB").resize((self.image_size, self.image_size), Image.BILINEAR)
         return self.processor(images=[image], return_tensors="pt")["pixel_values"]
@@ -272,10 +294,12 @@ class QSelector:
     ) -> np.ndarray:
         """Return one Q score per candidate chunk."""
         batch = self.build_batch(images=images, prompt=prompt, state=state, candidates=candidates)
-        batch = _move_to_device(batch, self.device)
+
+        model_device = next(self.model.parameters()).device
+        batch = _move_to_device(batch, model_device)
 
         if hasattr(self.model, "infer_batch"):
-            out = self.model.infer_batch(batch, device=self.device)
+            out = self.model.infer_batch(batch, device=model_device)
             if isinstance(out, dict):
                 q = out.get("target_q", out.get("q", out.get("adv")))
                 if q is None:

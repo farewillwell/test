@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 Collect LIBERO rollouts through an OpenPI websocket policy server and save them
-as a LIBERO LeRobot dataset.
+as a LIBERO tmp dataset.
 
 This is the data-collection counterpart of openpi/examples/libero/main.py:
     - this process runs LIBERO env;
     - a separate process runs openpi/scripts/serve_policy.py;
     - this process calls WebsocketClientPolicy(host, port).infer(element);
     - the returned action chunk is executed for --replan-steps steps;
-    - transitions are saved to LeRobot.
+    - transitions are saved to tmp.
 
 Expected two-process usage:
 
@@ -29,7 +29,7 @@ Terminal 2, collector:
     export PYTHONPATH="${PYTHONPATH}:$(pwd)/third_party/libero"
     export LIBERO_CONFIG_PATH=/data/huangdi/heliqun/openvla-oft/openvla-oft/LIBERO/.libero
     export MUJOCO_GL=egl
-    python /data/huangdi/heliqun/pi0/ours/collect_libero_lerobot.py \
+    python /data/huangdi/heliqun/pi0/ours/collect.py \
       --host 0.0.0.0 \
       --port 8000 \
       --task-suite-name libero_goal \
@@ -63,7 +63,7 @@ from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
 
 
-from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotDataset
+import os
 
 
 DEFAULT_HOST = "127.0.0.1"
@@ -111,7 +111,7 @@ class Args:
     max_steps_override: int = -1
 
     ###########################################################################
-    # LeRobot output.
+    # tmp output.
     ###########################################################################
     repo_id: str = "heliqun/libero_collect"
     overwrite: bool = False
@@ -170,9 +170,9 @@ def parse_args() -> Args:
     p.add_argument("--metrics-path", default="data/libero/collect_metrics.jsonl")
 
     # Save policy.
-    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=False)
-    p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
-    p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--save-videos", action="store_true", default=False)
+    p.add_argument("--save-success", action="store_true", default=False)
+    p.add_argument("--save-failure", action="store_true", default=False)
 
     ns = p.parse_args()
     return Args(
@@ -293,80 +293,98 @@ def query_action_chunk(
     return action_chunk
 
 
-def create_lerobot_dataset(args: Args) -> LeRobotDataset:
-    output_path = HF_LEROBOT_HOME / args.repo_id
+def get_tmp_dataset_path(args: Args) -> pathlib.Path:
+    """
+    Raw tmp dataset root.
+
+    In iter.py, libero_env(args, p["data"]) sets:
+        HF_LEROBOT_HOME = iterN/data
+
+    Therefore, if --repo-id .collect_tmp, output becomes:
+        iterN/data/.collect_tmp
+    """
+    data_root = pathlib.Path(os.environ.get("HF_LEROBOT_HOME", ".")).expanduser()
+    return data_root / args.repo_id
+
+
+def create_tmp_dataset(args: Args) -> pathlib.Path:
+    output_path = get_tmp_dataset_path(args)
+
     if output_path.exists():
         if not args.overwrite:
             raise FileExistsError(f"{output_path} already exists. Pass --overwrite to recreate it.")
         shutil.rmtree(output_path)
 
-    return LeRobotDataset.create(
-        repo_id=args.repo_id,
-        robot_type="libero",
-        fps=args.fps,
-        features={
+    (output_path / "episodes").mkdir(parents=True, exist_ok=True)
+
+    meta = {
+        "format": "pi0_libero_collect_tmp_npz_v1",
+        "repo_id": args.repo_id,
+        "created_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "task_suite_name": args.task_suite_name,
+        "task_id": int(args.task_id),
+        "fps": int(args.fps),
+        "resize_size": int(args.resize_size),
+        "replan_steps": int(args.replan_steps),
+        "features": {
             "image": {
-                "dtype": "image",
-                "shape": (args.resize_size, args.resize_size, 3),
-                "names": ["height", "width", "channel"],
+                "dtype": "uint8",
+                "shape": [args.resize_size, args.resize_size, 3],
             },
             "wrist_image": {
-                "dtype": "image",
-                "shape": (args.resize_size, args.resize_size, 3),
-                "names": ["height", "width", "channel"],
+                "dtype": "uint8",
+                "shape": [args.resize_size, args.resize_size, 3],
             },
             "state": {
                 "dtype": "float32",
-                "shape": (8,),
-                "names": ["state"],
+                "shape": [8],
             },
             "actions": {
                 "dtype": "float32",
-                "shape": (7,),
-                "names": ["actions"],
+                "shape": [7],
             },
-            # Extra fields used by IQL. OpenPI SFT/AWBC data config can ignore them
-            # because it only repacks image/wrist_image/state/actions/task/adv.
             "reward": {
                 "dtype": "float32",
-                "shape": (1,),
-                "names": ["reward"],
+                "shape": [1],
             },
             "terminal": {
                 "dtype": "int64",
-                "shape": (1,),
-                "names": ["terminal"],
+                "shape": [1],
             },
             "success": {
                 "dtype": "int64",
-                "shape": (1,),
-                "names": ["success"],
+                "shape": [1],
             },
             "task_id": {
                 "dtype": "int64",
-                "shape": (1,),
-                "names": ["task_id"],
+                "shape": [1],
             },
             "trial_id": {
                 "dtype": "int64",
-                "shape": (1,),
-                "names": ["trial_id"],
+                "shape": [1],
             },
             "step_index": {
                 "dtype": "int64",
-                "shape": (1,),
-                "names": ["step_index"],
+                "shape": [1],
+            },
+            "task": {
+                "dtype": "str",
             },
         },
-        use_videos=False,
-        image_writer_threads=args.image_writer_threads,
-        image_writer_processes=args.image_writer_processes,
-    )
+    }
+
+    with (output_path / "meta.json").open("w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2, ensure_ascii=False)
+
+    # Create empty manifest.
+    (output_path / "episodes.jsonl").write_text("", encoding="utf-8")
+
+    return output_path
 
 
-def finish_dataset(dataset: LeRobotDataset) -> None:
-    if hasattr(dataset, "stop_image_writer"):
-        dataset.stop_image_writer()
+def finish_dataset(dataset: pathlib.Path) -> None:
+    # Raw npz writer has no async workers to stop.
+    return None
 
 
 def should_save_episode(args: Args, success: bool) -> bool:
@@ -375,25 +393,55 @@ def should_save_episode(args: Args, success: bool) -> bool:
     return bool(args.save_failure)
 
 
-def write_episode_to_lerobot(dataset: LeRobotDataset, result: RolloutResult) -> int:
-    for frame in result.frames:
-        dataset.add_frame(
-            {
-                "image": frame.image,
-                "wrist_image": frame.wrist_image,
-                "state": frame.state.astype(np.float32),
-                "actions": frame.action.astype(np.float32),
-                "reward": np.asarray([frame.reward], dtype=np.float32),
-                "terminal": np.asarray([int(frame.terminal)], dtype=np.int64),
-                "success": np.asarray([int(result.success)], dtype=np.int64),
-                "task_id": np.asarray([int(result.task_id)], dtype=np.int64),
-                "trial_id": np.asarray([int(result.trial_id)], dtype=np.int64),
-                "step_index": np.asarray([int(frame.step_index)], dtype=np.int64),
-                "task": result.task_description,
-            }
-        )
-    dataset.save_episode()
-    return len(result.frames)
+def write_episode_to_tmp(dataset_dir: pathlib.Path, result: RolloutResult) -> int:
+    if not result.frames:
+        return 0
+
+    images = np.stack([np.asarray(f.image, dtype=np.uint8) for f in result.frames], axis=0)
+    wrist_images = np.stack([np.asarray(f.wrist_image, dtype=np.uint8) for f in result.frames], axis=0)
+    states = np.stack([np.asarray(f.state, dtype=np.float32) for f in result.frames], axis=0)
+    actions = np.stack([np.asarray(f.action, dtype=np.float32) for f in result.frames], axis=0)
+
+    rewards = np.asarray([[float(f.reward)] for f in result.frames], dtype=np.float32)
+    terminals = np.asarray([[int(f.terminal)] for f in result.frames], dtype=np.int64)
+    step_indices = np.asarray([[int(f.step_index)] for f in result.frames], dtype=np.int64)
+
+    num_frames = len(result.frames)
+    success = np.full((num_frames, 1), int(result.success), dtype=np.int64)
+    task_ids = np.full((num_frames, 1), int(result.task_id), dtype=np.int64)
+    trial_ids = np.full((num_frames, 1), int(result.trial_id), dtype=np.int64)
+
+    episode_name = f"episode_task{int(result.task_id)}_trial{int(result.trial_id)}.npz"
+    episode_path = dataset_dir / "episodes" / episode_name
+
+    np.savez_compressed(
+        episode_path,
+        image=images,
+        wrist_image=wrist_images,
+        state=states,
+        actions=actions,
+        reward=rewards,
+        terminal=terminals,
+        success=success,
+        task_id=task_ids,
+        trial_id=trial_ids,
+        step_index=step_indices,
+        task=np.asarray(result.task_description),
+    )
+
+    manifest_record = {
+        "file": f"episodes/{episode_name}",
+        "task_id": int(result.task_id),
+        "task_description": str(result.task_description),
+        "trial_id": int(result.trial_id),
+        "success": bool(result.success),
+        "num_frames": int(num_frames),
+    }
+
+    with (dataset_dir / "episodes.jsonl").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(manifest_record, ensure_ascii=False) + "\n")
+
+    return num_frames
 
 
 def save_rollout_video(args: Args, result: RolloutResult) -> None:
@@ -511,7 +559,7 @@ def collect(args: Args) -> None:
 
     logging.info("Task suite: %s, num_tasks=%s, max_steps=%s", args.task_suite_name, num_tasks_in_suite, max_steps)
 
-    dataset = create_lerobot_dataset(args)
+    dataset = create_tmp_dataset(args)
 
     total_episodes = 0
     total_successes = 0
@@ -564,7 +612,7 @@ def collect(args: Args) -> None:
 
             saved_frames = 0
             if result.frames and should_save_episode(args, result.success):
-                saved_frames = write_episode_to_lerobot(dataset, result)
+                saved_frames = write_episode_to_tmp(dataset, result)
                 total_saved_episodes += 1
                 total_saved_frames += saved_frames
 
@@ -611,7 +659,7 @@ def collect(args: Args) -> None:
                 total_saved_episodes,
                 total_saved_frames,
             )
-    logging.info("Saved LeRobot dataset to: %s", HF_LEROBOT_HOME / args.repo_id)
+    logging.info("Saved tmp dataset to: %s", dataset)
     logging.info(
         "Total episodes=%s successes=%s success_rate=%.3f",
         total_episodes,

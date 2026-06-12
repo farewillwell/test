@@ -257,7 +257,7 @@ def main() -> None:
         "--keep-period=None",
         "--no-wandb-enabled",
         "--overwrite",
-        "--save-train-state=false",
+        "--no-save-train-state",
     ]
 
     # Keep resume opt-in only. Default is overwrite.

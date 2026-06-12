@@ -224,8 +224,7 @@ class Pi0QSelectPolicy:
         if args.sample_mode == "qselect":
             if not args.critic_path:
                 raise ValueError("--critic-path is required for qselect mode.")
-            selector_device = args.selector_device or ("cuda" if torch.cuda.is_available() else "cpu")
-            self.selector = QSelector(args.critic_path, device=selector_device)
+            self.selector = QSelector(args.critic_path)
         else:
             self.selector = None
 

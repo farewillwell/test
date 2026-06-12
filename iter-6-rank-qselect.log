@@ -1,79 +1,702 @@
-[2026-06-11 17:28:20] ================================================================================
-[2026-06-11 17:28:20] workspace=/data/aoss/heliqun/pi0-ours/goal-6
-[2026-06-11 17:28:20] src_dir=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
-[2026-06-11 17:28:20] base_model=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
-[2026-06-11 17:28:20] iters=4 task=libero_goal:6
-[2026-06-11 17:28:20] gpus=2
-[2026-06-11 17:28:20] use_q_select=True num_action_samples=16
-[2026-06-11 17:28:20] iql_use_q_aug=True
-[2026-06-11 17:28:20] horizon=5 replan_steps=5
-[2026-06-11 17:28:20] [resume] /data/aoss/heliqun/pi0-ours/goal-6/save.json: iter=0 next_stage=train_awbc
-[2026-06-11 17:28:21] [start] iter=0 stage=train_awbc
-[2026-06-11 17:28:21] [steps] AWBC num_train_steps=1 mode=single iter=0
-[2026-06-11 17:28:21] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/BC/train_awbc.py --data-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled --model-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model --base-policy-dir /data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base --pi0-root /data/huangdi/heliqun/pi0 --openpi-root /data/huangdi/heliqun/pi0/openpi --python-bin /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python --steps 1 --batch-size 16 --num-workers 4 --gpus 2 --seed 7 --log-file /data/aoss/heliqun/pi0-ours/goal-6/iter0/logs/train_awbc.log
-[2026-06-11 17:28:21] [cwd] /data/huangdi/heliqun/pi0
-[2026-06-11 17:28:21] ========== pi0 AWBC simple ==========
-[2026-06-11 17:28:21] data_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled
-[2026-06-11 17:28:21] repo_id=labeled
-[2026-06-11 17:28:21] model_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model
-[2026-06-11 17:28:21] HF_LEROBOT_HOME=/data/aoss/heliqun/pi0-ours/goal-6/iter0/data
-[2026-06-11 17:28:21] base_policy_dir=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
-[2026-06-11 17:28:21] steps=1 save_interval=2
-[2026-06-11 17:28:21] config=pi0_libero_awbc asset_id=physical-intelligence/libero
-[2026-06-11 17:28:21] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/train/compute_norm_stats_custom.py --repo-id labeled --asset-id physical-intelligence/libero --config-name pi0_libero_awbc --assets-base-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled/openpi_assets --checkpoint-base-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model --batch-size 16 --num-workers 4
-[2026-06-11 17:28:21] [cwd] /data/huangdi/heliqun/pi0/openpi
+[2026-06-12 11:49:31] ================================================================================
+[2026-06-12 11:49:31] workspace=/data/aoss/heliqun/pi0-ours/goal-6
+[2026-06-12 11:49:31] src_dir=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
+[2026-06-12 11:49:31] base_model=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
+[2026-06-12 11:49:31] iters=4 task=libero_goal:6
+[2026-06-12 11:49:31] gpus=2
+[2026-06-12 11:49:31] use_q_select=True num_action_samples=16
+[2026-06-12 11:49:31] iql_use_q_aug=True
+[2026-06-12 11:49:31] horizon=5 replan_steps=5
+[2026-06-12 11:49:31] [resume] /data/aoss/heliqun/pi0-ours/goal-6/save.json: iter=1 next_stage=collect
+[2026-06-12 11:49:31] [start] iter=1 stage=collect
+[2026-06-12 11:49:31] [server] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/server.py --policy-dir /data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final --sample-mode qselect --num-action-samples 16 --seed 7 --critic-path /data/aoss/heliqun/pi0-ours/goal-6/iter1/iql/final.pt
+[2026-06-12 11:49:31] [collect_raw] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 1 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_videos --metrics-path /data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-12 11:49:31] [collect_raw_dir] /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp
+[2026-06-12 11:49:31] [collect_final_dir] /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect
+[2026-06-12 11:49:31] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=0.0s
+[2026-06-12 11:50:01] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=30.0s
+[2026-06-12 11:50:31] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=60.0s
+[2026-06-12 11:51:01] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=90.1s
+[2026-06-12 11:51:31] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=120.1s
+[2026-06-12 11:52:01] [server] still waiting for 127.0.0.1:8000; server_pid=38752; elapsed=150.1s
+[2026-06-12 11:52:14] [server] ready at 127.0.0.1:8000
+[2026-06-12 11:52:14] [cmd] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 1 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_videos --metrics-path /data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-12 11:52:14] [cwd] /data/huangdi/heliqun/pi0/openpi
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+2026-06-12 11:52:27,552 [INFO] Args: Args(host='127.0.0.1', port=8000, resize_size=224, replan_steps=5, task_suite_name='libero_goal', task_id=6, num_steps_wait=10, num_trials_per_task=1, initial_state_offset=0, seed=7, max_steps_override=-1, repo_id='collect_tmp', overwrite=True, fps=10, image_writer_threads=10, image_writer_processes=5, save_success=True, save_failure=True, video_out_path='/data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_videos', save_videos=True, metrics_path='/data/aoss/heliqun/pi0-ours/goal-6/iter1/collect_metrics.jsonl')
+2026-06-12 11:52:27,553 [INFO] Connecting to policy server at 127.0.0.1:8000
+2026-06-12 11:52:27,553 [INFO] Waiting for server at ws://127.0.0.1:8000...
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2026-06-12 11:52:27,563 [INFO] Task suite: libero_goal, num_tasks=10, max_steps=300
+
+tasks:   0%|          | 0/10 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/numba/np/arraymath.py:3845: DeprecationWarning: `np.MachAr` is deprecated (NumPy 1.22).
+  @overload(np.MachAr)
+
+
+task6:   0%|          | 0/1 [00:00<?, ?it/s][A2026-06-12 11:52:31,371 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-12 11:52:31,372 [INFO] Starting episode 1...
+2026-06-12 11:53:40,945 [INFO] Success: False
+2026-06-12 11:53:40,945 [INFO] # episodes completed so far: 1
+2026-06-12 11:53:40,945 [INFO] # successes: 0 (0.0%)
+2026-06-12 11:53:40,945 [INFO] Current task success rate: 0.000
+2026-06-12 11:53:40,945 [INFO] Current total success rate: 0.000
+2026-06-12 11:53:40,945 [INFO] Saved episodes=1 frames=300
+
+
+task6: 100%|██████████| 1/1 [01:09<00:00, 69.57s/it][A
+
+                                                    [A
+tasks:  70%|███████   | 7/10 [01:13<00:31, 10.48s/it]
+tasks: 100%|██████████| 10/10 [01:13<00:00,  7.34s/it]
+2026-06-12 11:53:40,946 [INFO] Saved tmp dataset to: /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp
+2026-06-12 11:53:40,946 [INFO] Total episodes=1 successes=0 success_rate=0.000
+2026-06-12 11:53:40,946 [INFO] Saved episodes=1 frames=300
+Exception ignored in: <function MjRenderContext.__del__ at 0x7fd08c031d30>
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+    self.gl_ctx.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: 2026-06-12 11:53:41,098 [INFO] Failed to load library ( 'libGLU.so.0' ): libGLU.so.0: cannot open shared object file: No such file or directory
+EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fd0785856c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fd07a8e3b40>,
+	),
+	result = 0
+)
+Exception ignored in: <function EGLGLContext.__del__ at 0x7fd08c031b80>
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+    self.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fd0785856c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fd07a8e3b40>,
+	),
+	result = 0
+)
+[2026-06-12 11:53:42] [convert] raw tmp -> LeRobot: /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp -> /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect
+[2026-06-12 11:53:42] [raw_to_lerobot] input_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp
+[2026-06-12 11:53:42] [raw_to_lerobot] output_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect
+[2026-06-12 11:53:42] [raw_to_lerobot] discovered_episodes=1
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  24%|██▍       | 72/300 [00:00<00:00, 709.93 examples/s]Map:  50%|████▉     | 149/300 [00:00<00:00, 740.29 examples/s]Map:  75%|███████▌  | 225/300 [00:00<00:00, 743.45 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 743.77 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 673.74 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 43.43ba/s]
+[2026-06-12 11:54:15] [raw_to_lerobot] summary={"input_dir": "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp", "output_dir": "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect", "repo_id": "collect", "num_input_episodes": 1, "num_output_episodes": 1, "num_output_frames": 300, "success_episodes": 0, "failure_episodes": 1, "skipped_episodes": 0, "fps": 10, "resize_size": 224, "cleanup_input_on_success": true}
+[2026-06-12 11:54:15] [raw_to_lerobot] removed input_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp
+[2026-06-12 11:54:15] [convert_summary] {"input_dir": "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect_tmp", "output_dir": "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect", "repo_id": "collect", "num_input_episodes": 1, "num_output_episodes": 1, "num_output_frames": 300, "success_episodes": 0, "failure_episodes": 1, "skipped_episodes": 0, "fps": 10, "resize_size": 224, "cleanup_input_on_success": true}
+[2026-06-12 11:54:16] [done] iter=1 stage=collect next=append_pool
+[2026-06-12 11:54:16] [start] iter=1 stage=append_pool
+[2026-06-12 11:54:16] [append_pool] virtual sources now=["/data/aoss/heliqun/pi0-ours/goal-6/pool/raw", "/data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect", "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect"]
+[2026-06-12 11:54:16] [done] iter=1 stage=append_pool next=train_iql
+[2026-06-12 11:54:16] [start] iter=2 stage=train_iql
+[2026-06-12 11:54:16] [steps] IQL max_steps=1 mode=single iter=2
+[2026-06-12 11:54:16] [pool] repo_dirs=["/data/aoss/heliqun/pi0-ours/goal-6/pool/raw", "/data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect", "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect"]
+[2026-06-12 11:54:16] [batch] gpus=2 per_gpu_batch_size=64 effective_global_batch_size=128
+[2026-06-12 11:54:16] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u -m torch.distributed.run --standalone --nnodes 1 --nproc-per-node 2 /data/huangdi/heliqun/pi0/ours/IQL/train.py --repo-dirs /data/aoss/heliqun/pi0-ours/goal-6/pool/raw /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect --output-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/iql --encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 --horizon 5 --batch-size 64 --num-workers 4 --max-steps 1 --seed 7 --use-q-aug
+[2026-06-12 11:54:16] [cwd] /data/huangdi/heliqun/pi0/ours/IQL
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W612 11:55:20.863927301 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank1]:[W612 11:55:20.927043256 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
 
 Generating train split: 0 examples [00:00, ? examples/s]
-Generating train split: 186 examples [00:00, 1159.49 examples/s]
-Generating train split: 387 examples [00:00, 617.84 examples/s] 
-Generating train split: 491 examples [00:00, 676.64 examples/s]
-Generating train split: 491 examples [00:00, 695.54 examples/s]
+Generating train split: 300 examples [00:00, 4195.41 examples/s]
+[IQL data] pool scan: repos=3 raw_frames=1091
+[IQL data] repo[0] /data/aoss/heliqun/pi0-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s][IQL data] pool scan: repos=3 raw_frames=1091
+[IQL data] repo[0] /data/aoss/heliqun/pi0-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:   2%|▏         | 9/491 [00:00<00:05, 86.42it/s]
+scan repo0:   2%|▏         | 11/491 [00:00<00:04, 108.74it/s]
+scan repo0:   7%|▋         | 32/491 [00:00<00:02, 165.90it/s]
+scan repo0:   6%|▌         | 28/491 [00:00<00:03, 139.72it/s]
+scan repo0:  11%|█▏        | 56/491 [00:00<00:02, 193.74it/s]
+scan repo0:   9%|▉         | 45/491 [00:00<00:02, 152.14it/s]
+scan repo0:  16%|█▌        | 79/491 [00:00<00:01, 206.06it/s]
+scan repo0:  13%|█▎        | 62/491 [00:00<00:02, 158.54it/s]
+scan repo0:  21%|██        | 101/491 [00:00<00:01, 210.50it/s]
+scan repo0:  17%|█▋        | 84/491 [00:00<00:02, 180.10it/s]
+scan repo0:  25%|██▌       | 124/491 [00:00<00:01, 215.96it/s]
+scan repo0:  22%|██▏       | 107/491 [00:00<00:01, 194.99it/s]
+scan repo0:  30%|██▉       | 147/491 [00:00<00:01, 220.29it/s]
+scan repo0:  26%|██▋       | 130/491 [00:00<00:01, 204.80it/s]
+scan repo0:  35%|███▍      | 170/491 [00:00<00:01, 221.43it/s]
+scan repo0:  31%|███       | 153/491 [00:00<00:01, 210.94it/s]
+scan repo0:  39%|███▉      | 193/491 [00:00<00:01, 222.47it/s]
+scan repo0:  36%|███▌      | 175/491 [00:00<00:01, 207.25it/s]
+scan repo0:  44%|████▍     | 216/491 [00:01<00:01, 222.41it/s]
+scan repo0:  40%|████      | 198/491 [00:01<00:01, 212.26it/s]
+scan repo0:  49%|████▉     | 240/491 [00:01<00:01, 225.83it/s]
+scan repo0:  45%|████▌     | 221/491 [00:01<00:01, 216.52it/s]
+scan repo0:  54%|█████▎    | 263/491 [00:01<00:01, 224.62it/s]
+scan repo0:  50%|████▉     | 245/491 [00:01<00:01, 220.86it/s]
+scan repo0:  58%|█████▊    | 286/491 [00:01<00:00, 224.63it/s]
+scan repo0:  55%|█████▍    | 268/491 [00:01<00:01, 220.80it/s]
+scan repo0:  63%|██████▎   | 309/491 [00:01<00:00, 224.38it/s]
+scan repo0:  59%|█████▉    | 291/491 [00:01<00:00, 207.50it/s]
+scan repo0:  68%|██████▊   | 332/491 [00:01<00:00, 224.63it/s]
+scan repo0:  64%|██████▎   | 312/491 [00:01<00:00, 191.53it/s]
+scan repo0:  72%|███████▏  | 355/491 [00:01<00:00, 224.27it/s]
+scan repo0:  77%|███████▋  | 378/491 [00:01<00:00, 222.61it/s]
+scan repo0:  68%|██████▊   | 332/491 [00:01<00:00, 183.37it/s]
+scan repo0:  72%|███████▏  | 352/491 [00:01<00:00, 186.67it/s]
+scan repo0:  82%|████████▏ | 401/491 [00:01<00:00, 222.31it/s]
+scan repo0:  86%|████████▋ | 424/491 [00:01<00:00, 223.83it/s]
+scan repo0:  76%|███████▋  | 375/491 [00:01<00:00, 196.60it/s]
+scan repo0:  91%|█████████ | 447/491 [00:02<00:00, 225.32it/s]
+scan repo0:  81%|████████  | 397/491 [00:02<00:00, 202.41it/s]
+scan repo0:  96%|█████████▌| 470/491 [00:02<00:00, 225.74it/s]
+scan repo0:  86%|████████▌ | 420/491 [00:02<00:00, 208.97it/s]
+                                                              
+[IQL data] repo[1] /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect: frames=300
+
+scan repo1:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo0:  90%|█████████ | 443/491 [00:02<00:00, 214.84it/s]
+scan repo1:   9%|▊         | 26/300 [00:00<00:01, 253.54it/s]
+scan repo0:  95%|█████████▍| 466/491 [00:02<00:00, 217.03it/s]
+scan repo1:  18%|█▊        | 53/300 [00:00<00:00, 257.88it/s]
+scan repo0: 100%|█████████▉| 489/491 [00:02<00:00, 218.13it/s]
+                                                              
+[IQL data] repo[1] /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect: frames=300
+
+scan repo1:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo1:  27%|██▋       | 80/300 [00:00<00:00, 259.84it/s]
+scan repo1:   9%|▊         | 26/300 [00:00<00:01, 253.32it/s]
+scan repo1:  36%|███▋      | 109/300 [00:00<00:00, 268.42it/s]
+scan repo1:  18%|█▊        | 53/300 [00:00<00:00, 257.98it/s]
+scan repo1:  46%|████▌     | 138/300 [00:00<00:00, 273.19it/s]
+scan repo1:  27%|██▋       | 80/300 [00:00<00:00, 259.43it/s]
+scan repo1:  55%|█████▌    | 166/300 [00:00<00:00, 268.56it/s]
+scan repo1:  36%|███▌      | 108/300 [00:00<00:00, 265.65it/s]
+scan repo1:  64%|██████▍   | 193/300 [00:00<00:00, 264.99it/s]
+scan repo1:  45%|████▌     | 136/300 [00:00<00:00, 270.73it/s]
+scan repo1:  74%|███████▎  | 221/300 [00:00<00:00, 266.87it/s]
+scan repo1:  55%|█████▍    | 164/300 [00:00<00:00, 265.83it/s]
+scan repo1:  83%|████████▎ | 248/300 [00:00<00:00, 266.71it/s]
+scan repo1:  64%|██████▎   | 191/300 [00:00<00:00, 263.34it/s]
+scan repo1:  92%|█████████▏| 277/300 [00:01<00:00, 271.80it/s]
+scan repo1:  73%|███████▎  | 218/300 [00:00<00:00, 261.12it/s]
+                                                              
+[IQL data] repo[2] /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect: frames=300
+
+scan repo2:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo1:  82%|████████▏ | 245/300 [00:00<00:00, 262.17it/s]
+scan repo2:   9%|▉         | 28/300 [00:00<00:01, 271.05it/s]
+scan repo1:  91%|█████████ | 273/300 [00:01<00:00, 267.50it/s]
+scan repo2:  19%|█▊        | 56/300 [00:00<00:00, 273.06it/s]
+scan repo1: 100%|██████████| 300/300 [00:01<00:00, 267.26it/s]
+                                                              
+[IQL data] repo[2] /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect: frames=300
+
+scan repo2:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo2:  29%|██▉       | 88/300 [00:00<00:00, 292.34it/s]
+scan repo2:   9%|▉         | 28/300 [00:00<00:01, 271.48it/s]
+scan repo2:  39%|███▉      | 118/300 [00:00<00:00, 292.90it/s]
+scan repo2:  19%|█▊        | 56/300 [00:00<00:00, 272.71it/s]
+scan repo2:  49%|████▉     | 148/300 [00:00<00:00, 283.31it/s]
+scan repo2:  29%|██▉       | 87/300 [00:00<00:00, 288.92it/s]
+scan repo2:  59%|█████▉    | 178/300 [00:00<00:00, 288.21it/s]
+scan repo2:  39%|███▉      | 117/300 [00:00<00:00, 291.10it/s]
+scan repo2:  70%|██████▉   | 209/300 [00:00<00:00, 295.11it/s]
+scan repo2:  49%|████▉     | 147/300 [00:00<00:00, 279.65it/s]
+scan repo2:  80%|████████  | 241/300 [00:00<00:00, 300.44it/s]
+scan repo2:  59%|█████▊    | 176/300 [00:00<00:00, 282.66it/s]
+scan repo2:  91%|█████████ | 273/300 [00:00<00:00, 305.50it/s]
+scan repo2:  69%|██████▉   | 208/300 [00:00<00:00, 292.53it/s]
+                                                              
+[IQL data] frames=1091 episodes=7 repos=3 action_dim=7 horizon=5 success_frames=491 terminal_frames=7
+[IQL train] state_dim=8, action_dim=7, horizon=5
+
+scan repo2:  80%|███████▉  | 239/300 [00:00<00:00, 297.85it/s]
+scan repo2:  90%|█████████ | 270/300 [00:00<00:00, 300.92it/s]
+                                                              
+[IQL data] frames=1091 episodes=7 repos=3 action_dim=7 horizon=5 success_frames=491 terminal_frames=7
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+[load light-vl critic] finish !!!!
+
+iql:   0%|          | 0/1 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+
+================================================================================
+>>> PI0-INPUT LIGHT-VL CHUNK-IQL DEBUG <<<
+Chunk H      : 5
+Actions      : (64, 5, 7) mean=-0.1323 std=1.4491
+Rewards      : (64, 5) mean=-1.2219 min=-100.0000 max=10.0000
+Terminal     : 0.0281
+critic_td_loss  : 7.630337
+q_l2_loss       : 0.005607
+critic_loss     : 7.669889
+value_loss      : 0.001809
+rank_coef       : 0.500000
+q_target_mean   : -1.209674
+online_q_mean   : 0.051855
+target_q_mean   : 0.026690
+v_mean          : 0.006341
+adv_mean        : 0.020349
+adv_std         : 0.049979
+reward_mean     : -1.221875
+terminal_ratio  : 0.028125
+rank_loss       : 0.079105
+rank_good_ratio : 0.375000
+rank_num_good   : 24.000000
+rank_q_real_mean: 0.014006
+rank_q_noisy_mean: 0.043111
+rank_margin_violation: 1.000000
+================================================================================
+
+
+iql: 100%|██████████| 1/1 [00:04<00:00,  4.51s/it]
+                                                  
+[IQL train] final checkpoint: /data/aoss/heliqun/pi0-ours/goal-6/iter2/iql/final.pt
+[2026-06-12 11:55:45] [done] iter=2 stage=train_iql next=label
+[2026-06-12 11:55:45] [start] iter=2 stage=label
+[2026-06-12 11:55:45] [pool] repo_dirs=["/data/aoss/heliqun/pi0-ours/goal-6/pool/raw", "/data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect", "/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect"]
+[2026-06-12 11:55:45] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/IQL/label.py --repo-dirs /data/aoss/heliqun/pi0-ours/goal-6/pool/raw /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect --output-repo-id labeled --critic-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/iql/final.pt --horizon 5 --batch-size 128 --seed 7 --overwrite
+[2026-06-12 11:55:45] [cwd] /data/huangdi/heliqun/pi0/ours/IQL
+[label] pool scan: repos=3 raw_frames=1091
+[label] repo[0] /data/aoss/heliqun/pi0-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:   1%|          | 3/491 [00:00<00:27, 17.61it/s]
+scan repo0:   1%|▏         | 7/491 [00:00<00:17, 27.54it/s]
+scan repo0:   2%|▏         | 11/491 [00:00<00:15, 31.86it/s]
+scan repo0:   3%|▎         | 15/491 [00:00<00:14, 33.06it/s]
+scan repo0:   4%|▍         | 19/491 [00:00<00:16, 28.35it/s]
+scan repo0:   5%|▍         | 23/491 [00:00<00:15, 31.17it/s]
+scan repo0:   5%|▌         | 27/491 [00:00<00:14, 32.77it/s]
+scan repo0:   6%|▋         | 31/491 [00:01<00:16, 28.04it/s]
+scan repo0:   7%|▋         | 35/491 [00:01<00:14, 30.59it/s]
+scan repo0:   8%|▊         | 39/491 [00:01<00:13, 32.64it/s]
+scan repo0:   9%|▉         | 43/491 [00:01<00:16, 27.86it/s]
+scan repo0:  10%|▉         | 47/491 [00:01<00:14, 30.33it/s]
+scan repo0:  10%|█         | 51/491 [00:01<00:13, 32.39it/s]
+scan repo0:  11%|█         | 55/491 [00:01<00:15, 27.81it/s]
+scan repo0:  12%|█▏        | 59/491 [00:01<00:14, 30.14it/s]
+scan repo0:  13%|█▎        | 63/491 [00:02<00:13, 32.37it/s]
+scan repo0:  14%|█▎        | 67/491 [00:02<00:15, 27.85it/s]
+scan repo0:  14%|█▍        | 71/491 [00:02<00:13, 30.25it/s]
+scan repo0:  15%|█▌        | 75/491 [00:02<00:12, 32.09it/s]
+scan repo0:  16%|█▌        | 79/491 [00:02<00:14, 27.88it/s]
+scan repo0:  17%|█▋        | 83/491 [00:02<00:13, 30.31it/s]
+scan repo0:  18%|█▊        | 87/491 [00:02<00:12, 32.25it/s]
+scan repo0:  19%|█▊        | 91/491 [00:03<00:14, 27.85it/s]
+scan repo0:  19%|█▉        | 95/491 [00:03<00:13, 30.15it/s]
+scan repo0:  20%|██        | 99/491 [00:03<00:12, 32.33it/s]
+scan repo0:  21%|██        | 103/491 [00:03<00:13, 27.81it/s]
+scan repo0:  22%|██▏       | 107/491 [00:03<00:12, 30.29it/s]
+scan repo0:  23%|██▎       | 111/491 [00:03<00:11, 32.27it/s]
+scan repo0:  23%|██▎       | 115/491 [00:03<00:13, 27.81it/s]
+scan repo0:  24%|██▍       | 119/491 [00:03<00:12, 30.14it/s]
+scan repo0:  25%|██▌       | 123/491 [00:04<00:11, 32.37it/s]
+scan repo0:  26%|██▌       | 127/491 [00:04<00:13, 27.85it/s]
+scan repo0:  27%|██▋       | 131/491 [00:04<00:11, 30.18it/s]
+scan repo0:  27%|██▋       | 135/491 [00:04<00:11, 32.33it/s]
+scan repo0:  28%|██▊       | 139/491 [00:04<00:12, 27.73it/s]
+scan repo0:  29%|██▉       | 143/491 [00:04<00:11, 30.34it/s]
+scan repo0:  30%|██▉       | 147/491 [00:04<00:10, 32.40it/s]
+scan repo0:  31%|███       | 151/491 [00:05<00:12, 27.79it/s]
+scan repo0:  32%|███▏      | 155/491 [00:05<00:11, 30.21it/s]
+scan repo0:  32%|███▏      | 159/491 [00:05<00:10, 32.31it/s]
+scan repo0:  33%|███▎      | 163/491 [00:05<00:11, 27.82it/s]
+scan repo0:  34%|███▍      | 167/491 [00:05<00:10, 30.29it/s]
+scan repo0:  35%|███▍      | 171/491 [00:05<00:09, 32.27it/s]
+scan repo0:  36%|███▌      | 175/491 [00:05<00:11, 26.74it/s]
+scan repo0:  37%|███▋      | 181/491 [00:06<00:10, 28.82it/s]
+scan repo0:  38%|███▊      | 185/491 [00:06<00:09, 30.97it/s]
+scan repo0:  38%|███▊      | 189/491 [00:06<00:09, 32.63it/s]
+scan repo0:  39%|███▉      | 193/491 [00:06<00:10, 28.19it/s]
+scan repo0:  40%|████      | 197/491 [00:06<00:09, 30.57it/s]
+scan repo0:  41%|████      | 201/491 [00:06<00:08, 32.42it/s]
+scan repo0:  42%|████▏     | 205/491 [00:06<00:10, 27.99it/s]
+scan repo0:  43%|████▎     | 209/491 [00:06<00:09, 30.19it/s]
+scan repo0:  43%|████▎     | 213/491 [00:07<00:08, 32.36it/s]
+scan repo0:  44%|████▍     | 217/491 [00:07<00:09, 27.65it/s]
+scan repo0:  45%|████▌     | 221/491 [00:07<00:08, 30.24it/s]
+scan repo0:  46%|████▌     | 225/491 [00:07<00:08, 32.48it/s]
+scan repo0:  47%|████▋     | 229/491 [00:07<00:09, 27.92it/s]
+scan repo0:  47%|████▋     | 233/491 [00:07<00:08, 30.37it/s]
+scan repo0:  48%|████▊     | 237/491 [00:07<00:07, 32.36it/s]
+scan repo0:  49%|████▉     | 241/491 [00:08<00:08, 27.84it/s]
+scan repo0:  50%|████▉     | 245/491 [00:08<00:08, 30.30it/s]
+scan repo0:  51%|█████     | 249/491 [00:08<00:07, 31.72it/s]
+scan repo0:  52%|█████▏    | 253/491 [00:08<00:08, 27.67it/s]
+scan repo0:  52%|█████▏    | 256/491 [00:08<00:08, 28.12it/s]
+scan repo0:  53%|█████▎    | 260/491 [00:08<00:07, 30.78it/s]
+scan repo0:  54%|█████▍    | 264/491 [00:08<00:06, 33.00it/s]
+scan repo0:  55%|█████▍    | 268/491 [00:08<00:07, 28.16it/s]
+scan repo0:  55%|█████▌    | 272/491 [00:09<00:07, 30.57it/s]
+scan repo0:  56%|█████▌    | 276/491 [00:09<00:06, 32.55it/s]
+scan repo0:  57%|█████▋    | 280/491 [00:09<00:07, 27.90it/s]
+scan repo0:  58%|█████▊    | 284/491 [00:09<00:06, 30.32it/s]
+scan repo0:  59%|█████▊    | 288/491 [00:09<00:07, 26.54it/s]
+scan repo0:  59%|█████▉    | 291/491 [00:09<00:07, 27.05it/s]
+scan repo0:  60%|█████▉    | 294/491 [00:09<00:07, 27.61it/s]
+scan repo0:  60%|██████    | 297/491 [00:09<00:06, 28.07it/s]
+scan repo0:  61%|██████▏   | 301/491 [00:10<00:06, 30.96it/s]
+scan repo0:  62%|██████▏   | 305/491 [00:10<00:06, 26.85it/s]
+scan repo0:  63%|██████▎   | 309/491 [00:10<00:06, 29.76it/s]
+scan repo0:  64%|██████▎   | 313/491 [00:10<00:05, 31.90it/s]
+scan repo0:  65%|██████▍   | 317/491 [00:10<00:06, 27.55it/s]
+scan repo0:  65%|██████▌   | 321/491 [00:10<00:05, 30.13it/s]
+scan repo0:  66%|██████▌   | 325/491 [00:10<00:05, 32.11it/s]
+scan repo0:  67%|██████▋   | 329/491 [00:11<00:05, 27.75it/s]
+scan repo0:  68%|██████▊   | 333/491 [00:11<00:05, 30.24it/s]
+scan repo0:  69%|██████▊   | 337/491 [00:11<00:04, 32.28it/s]
+scan repo0:  69%|██████▉   | 341/491 [00:11<00:04, 33.93it/s]
+scan repo0:  70%|███████   | 345/491 [00:11<00:05, 28.67it/s]
+scan repo0:  71%|███████   | 349/491 [00:11<00:04, 30.79it/s]
+scan repo0:  72%|███████▏  | 353/491 [00:11<00:05, 27.07it/s]
+scan repo0:  73%|███████▎  | 356/491 [00:11<00:04, 27.68it/s]
+scan repo0:  73%|███████▎  | 360/491 [00:12<00:04, 30.21it/s]
+scan repo0:  74%|███████▍  | 364/491 [00:12<00:04, 26.46it/s]
+scan repo0:  75%|███████▍  | 367/491 [00:12<00:04, 27.26it/s]
+scan repo0:  75%|███████▌  | 370/491 [00:12<00:04, 27.90it/s]
+scan repo0:  76%|███████▌  | 373/491 [00:12<00:04, 28.43it/s]
+scan repo0:  77%|███████▋  | 376/491 [00:12<00:03, 28.79it/s]
+scan repo0:  77%|███████▋  | 380/491 [00:12<00:03, 31.36it/s]
+scan repo0:  78%|███████▊  | 384/491 [00:12<00:03, 26.81it/s]
+scan repo0:  79%|███████▉  | 387/491 [00:13<00:03, 27.29it/s]
+scan repo0:  80%|███████▉  | 391/491 [00:13<00:03, 30.38it/s]
+scan repo0:  80%|████████  | 395/491 [00:13<00:02, 32.38it/s]
+scan repo0:  81%|████████▏ | 399/491 [00:13<00:03, 27.58it/s]
+scan repo0:  82%|████████▏ | 402/491 [00:13<00:03, 27.96it/s]
+scan repo0:  83%|████████▎ | 406/491 [00:13<00:02, 30.72it/s]
+scan repo0:  84%|████████▎ | 410/491 [00:13<00:03, 26.87it/s]
+scan repo0:  84%|████████▍ | 413/491 [00:13<00:02, 27.58it/s]
+scan repo0:  85%|████████▍ | 417/491 [00:14<00:02, 30.36it/s]
+scan repo0:  86%|████████▌ | 421/491 [00:14<00:02, 32.38it/s]
+scan repo0:  87%|████████▋ | 425/491 [00:14<00:02, 27.77it/s]
+scan repo0:  87%|████████▋ | 428/491 [00:14<00:02, 28.26it/s]
+scan repo0:  88%|████████▊ | 432/491 [00:14<00:01, 30.87it/s]
+scan repo0:  89%|████████▉ | 436/491 [00:14<00:01, 32.93it/s]
+scan repo0:  90%|████████▉ | 440/491 [00:14<00:01, 27.93it/s]
+scan repo0:  90%|█████████ | 444/491 [00:14<00:01, 30.49it/s]
+scan repo0:  91%|█████████▏| 449/491 [00:15<00:01, 35.00it/s]
+scan repo0:  92%|█████████▏| 453/491 [00:15<00:01, 35.27it/s]
+scan repo0:  93%|█████████▎| 458/491 [00:15<00:01, 32.32it/s]
+scan repo0:  94%|█████████▍| 462/491 [00:15<00:00, 33.75it/s]
+scan repo0:  95%|█████████▍| 466/491 [00:15<00:00, 34.84it/s]
+scan repo0:  96%|█████████▌| 470/491 [00:15<00:00, 29.29it/s]
+scan repo0:  97%|█████████▋| 474/491 [00:15<00:00, 31.40it/s]
+scan repo0:  97%|█████████▋| 478/491 [00:15<00:00, 33.12it/s]
+scan repo0:  98%|█████████▊| 482/491 [00:16<00:00, 28.35it/s]
+scan repo0:  99%|█████████▉| 486/491 [00:16<00:00, 30.67it/s]
+scan repo0: 100%|█████████▉| 490/491 [00:16<00:00, 32.37it/s]
+                                                             
+[label] repo[1] /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/collect: frames=300
+
+scan repo1:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo1:   1%|          | 3/300 [00:00<00:09, 29.84it/s]
+scan repo1:   2%|▏         | 7/300 [00:00<00:08, 34.97it/s]
+scan repo1:   4%|▎         | 11/300 [00:00<00:07, 36.35it/s]
+scan repo1:   5%|▌         | 15/300 [00:00<00:07, 36.77it/s]
+scan repo1:   6%|▋         | 19/300 [00:00<00:09, 29.45it/s]
+scan repo1:   8%|▊         | 23/300 [00:00<00:08, 31.95it/s]
+scan repo1:   9%|▉         | 27/300 [00:00<00:08, 33.97it/s]
+scan repo1:  10%|█         | 31/300 [00:00<00:07, 35.69it/s]
+scan repo1:  12%|█▏        | 35/300 [00:01<00:07, 36.91it/s]
+scan repo1:  13%|█▎        | 39/300 [00:01<00:06, 37.44it/s]
+scan repo1:  15%|█▍        | 44/300 [00:01<00:06, 40.98it/s]
+scan repo1:  16%|█▋        | 49/300 [00:01<00:07, 34.39it/s]
+scan repo1:  18%|█▊        | 53/300 [00:01<00:06, 35.53it/s]
+scan repo1:  19%|█▉        | 58/300 [00:01<00:06, 39.07it/s]
+scan repo1:  21%|██        | 63/300 [00:01<00:07, 33.35it/s]
+scan repo1:  22%|██▏       | 67/300 [00:01<00:06, 34.62it/s]
+scan repo1:  24%|██▎       | 71/300 [00:02<00:08, 28.22it/s]
+scan repo1:  25%|██▌       | 76/300 [00:02<00:07, 28.02it/s]
+scan repo1:  27%|██▋       | 80/300 [00:02<00:07, 30.53it/s]
+scan repo1:  28%|██▊       | 84/300 [00:02<00:06, 32.47it/s]
+scan repo1:  30%|██▉       | 89/300 [00:02<00:05, 36.46it/s]
+scan repo1:  31%|███       | 93/300 [00:02<00:05, 37.00it/s]
+scan repo1:  32%|███▏      | 97/300 [00:02<00:05, 37.49it/s]
+scan repo1:  34%|███▍      | 102/300 [00:02<00:05, 33.08it/s]
+scan repo1:  35%|███▌      | 106/300 [00:03<00:05, 34.62it/s]
+scan repo1:  37%|███▋      | 111/300 [00:03<00:04, 38.32it/s]
+scan repo1:  39%|███▊      | 116/300 [00:03<00:04, 40.72it/s]
+scan repo1:  40%|████      | 121/300 [00:03<00:04, 43.08it/s]
+scan repo1:  42%|████▏     | 126/300 [00:03<00:04, 35.78it/s]
+scan repo1:  44%|████▎     | 131/300 [00:03<00:04, 38.82it/s]
+scan repo1:  45%|████▌     | 136/300 [00:03<00:04, 33.14it/s]
+scan repo1:  47%|████▋     | 140/300 [00:04<00:04, 34.65it/s]
+scan repo1:  48%|████▊     | 144/300 [00:04<00:04, 35.67it/s]
+scan repo1:  49%|████▉     | 148/300 [00:04<00:05, 29.93it/s]
+scan repo1:  51%|█████     | 152/300 [00:04<00:04, 32.06it/s]
+scan repo1:  52%|█████▏    | 157/300 [00:04<00:03, 36.11it/s]
+scan repo1:  54%|█████▎    | 161/300 [00:04<00:04, 29.47it/s]
+scan repo1:  55%|█████▌    | 165/300 [00:04<00:05, 26.43it/s]
+scan repo1:  56%|█████▌    | 168/300 [00:04<00:04, 27.19it/s]
+scan repo1:  57%|█████▋    | 171/300 [00:05<00:04, 27.81it/s]
+scan repo1:  58%|█████▊    | 175/300 [00:05<00:04, 30.48it/s]
+scan repo1:  60%|█████▉    | 179/300 [00:05<00:03, 32.63it/s]
+scan repo1:  61%|██████    | 183/300 [00:05<00:03, 34.59it/s]
+scan repo1:  62%|██████▏   | 187/300 [00:05<00:03, 28.84it/s]
+scan repo1:  64%|██████▎   | 191/300 [00:05<00:03, 31.16it/s]
+scan repo1:  65%|██████▌   | 195/300 [00:05<00:03, 33.08it/s]
+scan repo1:  67%|██████▋   | 200/300 [00:05<00:02, 37.26it/s]
+scan repo1:  68%|██████▊   | 204/300 [00:06<00:03, 30.64it/s]
+scan repo1:  69%|██████▉   | 208/300 [00:06<00:02, 32.84it/s]
+scan repo1:  71%|███████   | 212/300 [00:06<00:02, 34.43it/s]
+scan repo1:  72%|███████▏  | 217/300 [00:06<00:02, 38.48it/s]
+scan repo1:  74%|███████▍  | 222/300 [00:06<00:01, 40.90it/s]
+scan repo1:  76%|███████▌  | 227/300 [00:06<00:01, 43.17it/s]
+scan repo1:  77%|███████▋  | 232/300 [00:06<00:01, 35.76it/s]
+scan repo1:  79%|███████▉  | 237/300 [00:06<00:01, 38.90it/s]
+scan repo1:  81%|████████  | 242/300 [00:07<00:01, 33.79it/s]
+scan repo1:  82%|████████▏ | 246/300 [00:07<00:01, 34.37it/s]
+scan repo1:  83%|████████▎ | 250/300 [00:07<00:01, 29.31it/s]
+scan repo1:  85%|████████▌ | 255/300 [00:07<00:01, 33.70it/s]
+scan repo1:  87%|████████▋ | 260/300 [00:07<00:01, 37.28it/s]
+scan repo1:  88%|████████▊ | 265/300 [00:07<00:00, 39.92it/s]
+scan repo1:  90%|█████████ | 270/300 [00:07<00:00, 34.66it/s]
+scan repo1:  91%|█████████▏| 274/300 [00:08<00:00, 35.77it/s]
+scan repo1:  93%|█████████▎| 279/300 [00:08<00:00, 39.09it/s]
+scan repo1:  95%|█████████▍| 284/300 [00:08<00:00, 41.56it/s]
+scan repo1:  96%|█████████▋| 289/300 [00:08<00:00, 35.10it/s]
+scan repo1:  98%|█████████▊| 293/300 [00:08<00:00, 35.89it/s]
+scan repo1:  99%|█████████▉| 297/300 [00:08<00:00, 36.89it/s]
+                                                             
+[label] repo[2] /data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect: frames=300
+
+scan repo2:   0%|          | 0/300 [00:00<?, ?it/s]
+scan repo2:   1%|          | 3/300 [00:00<00:10, 29.35it/s]
+scan repo2:   2%|▏         | 7/300 [00:00<00:08, 35.04it/s]
+scan repo2:   4%|▎         | 11/300 [00:00<00:08, 35.67it/s]
+scan repo2:   5%|▌         | 15/300 [00:00<00:09, 28.62it/s]
+scan repo2:   6%|▋         | 19/300 [00:00<00:08, 31.59it/s]
+scan repo2:   8%|▊         | 23/300 [00:00<00:08, 33.62it/s]
+scan repo2:   9%|▉         | 27/300 [00:00<00:09, 27.98it/s]
+scan repo2:  10%|█         | 31/300 [00:00<00:08, 30.64it/s]
+scan repo2:  12%|█▏        | 35/300 [00:01<00:08, 32.68it/s]
+scan repo2:  13%|█▎        | 39/300 [00:01<00:07, 34.28it/s]
+scan repo2:  14%|█▍        | 43/300 [00:01<00:08, 28.90it/s]
+scan repo2:  16%|█▌        | 47/300 [00:01<00:08, 31.28it/s]
+scan repo2:  17%|█▋        | 51/300 [00:01<00:07, 33.17it/s]
+scan repo2:  18%|█▊        | 55/300 [00:01<00:07, 34.65it/s]
+scan repo2:  20%|██        | 60/300 [00:01<00:07, 31.23it/s]
+scan repo2:  22%|██▏       | 65/300 [00:01<00:06, 35.50it/s]
+scan repo2:  23%|██▎       | 69/300 [00:02<00:06, 36.59it/s]
+scan repo2:  24%|██▍       | 73/300 [00:02<00:06, 37.49it/s]
+scan repo2:  26%|██▌       | 78/300 [00:02<00:05, 40.42it/s]
+scan repo2:  28%|██▊       | 83/300 [00:02<00:06, 34.12it/s]
+scan repo2:  29%|██▉       | 87/300 [00:02<00:06, 35.20it/s]
+scan repo2:  30%|███       | 91/300 [00:02<00:05, 36.25it/s]
+scan repo2:  32%|███▏      | 95/300 [00:02<00:05, 36.94it/s]
+scan repo2:  33%|███▎      | 99/300 [00:02<00:05, 37.55it/s]
+scan repo2:  34%|███▍      | 103/300 [00:03<00:06, 30.86it/s]
+scan repo2:  36%|███▌      | 108/300 [00:03<00:05, 35.24it/s]
+scan repo2:  37%|███▋      | 112/300 [00:03<00:05, 36.30it/s]
+scan repo2:  39%|███▊      | 116/300 [00:03<00:05, 36.78it/s]
+scan repo2:  40%|████      | 120/300 [00:03<00:04, 36.60it/s]
+scan repo2:  41%|████▏     | 124/300 [00:03<00:05, 30.66it/s]
+scan repo2:  43%|████▎     | 128/300 [00:03<00:05, 32.62it/s]
+scan repo2:  44%|████▍     | 132/300 [00:03<00:04, 34.21it/s]
+scan repo2:  45%|████▌     | 136/300 [00:04<00:04, 35.65it/s]
+scan repo2:  47%|████▋     | 140/300 [00:04<00:04, 35.96it/s]
+scan repo2:  48%|████▊     | 144/300 [00:04<00:05, 30.31it/s]
+scan repo2:  50%|████▉     | 149/300 [00:04<00:04, 34.87it/s]
+scan repo2:  51%|█████▏    | 154/300 [00:04<00:03, 38.56it/s]
+scan repo2:  53%|█████▎    | 159/300 [00:04<00:03, 40.84it/s]
+scan repo2:  55%|█████▍    | 164/300 [00:04<00:03, 34.91it/s]
+scan repo2:  56%|█████▌    | 168/300 [00:04<00:03, 36.12it/s]
+scan repo2:  57%|█████▋    | 172/300 [00:04<00:03, 36.81it/s]
+scan repo2:  59%|█████▊    | 176/300 [00:05<00:03, 37.48it/s]
+scan repo2:  60%|██████    | 181/300 [00:05<00:02, 40.67it/s]
+scan repo2:  62%|██████▏   | 186/300 [00:05<00:02, 42.86it/s]
+scan repo2:  64%|██████▎   | 191/300 [00:05<00:03, 35.78it/s]
+scan repo2:  65%|██████▌   | 195/300 [00:05<00:02, 36.19it/s]
+scan repo2:  66%|██████▋   | 199/300 [00:05<00:02, 37.13it/s]
+scan repo2:  68%|██████▊   | 203/300 [00:05<00:02, 37.82it/s]
+scan repo2:  69%|██████▉   | 208/300 [00:05<00:02, 40.99it/s]
+scan repo2:  71%|███████   | 213/300 [00:06<00:02, 34.45it/s]
+scan repo2:  72%|███████▏  | 217/300 [00:06<00:02, 35.65it/s]
+scan repo2:  74%|███████▍  | 222/300 [00:06<00:01, 39.15it/s]
+scan repo2:  76%|███████▌  | 227/300 [00:06<00:01, 41.68it/s]
+scan repo2:  77%|███████▋  | 232/300 [00:06<00:01, 35.27it/s]
+scan repo2:  79%|███████▊  | 236/300 [00:06<00:01, 36.36it/s]
+scan repo2:  81%|████████  | 242/300 [00:06<00:01, 42.08it/s]
+scan repo2:  82%|████████▏ | 247/300 [00:06<00:01, 43.84it/s]
+scan repo2:  84%|████████▍ | 252/300 [00:07<00:01, 45.05it/s]
+scan repo2:  86%|████████▌ | 257/300 [00:07<00:01, 37.02it/s]
+scan repo2:  87%|████████▋ | 262/300 [00:07<00:00, 39.56it/s]
+scan repo2:  89%|████████▉ | 267/300 [00:07<00:00, 34.15it/s]
+scan repo2:  91%|█████████ | 272/300 [00:07<00:00, 37.49it/s]
+scan repo2:  92%|█████████▏| 277/300 [00:07<00:00, 40.00it/s]
+scan repo2:  94%|█████████▍| 282/300 [00:07<00:00, 42.42it/s]
+scan repo2:  96%|█████████▌| 287/300 [00:07<00:00, 44.41it/s]
+scan repo2:  97%|█████████▋| 292/300 [00:08<00:00, 36.58it/s]
+scan repo2:  99%|█████████▉| 297/300 [00:08<00:00, 39.35it/s]
+                                                             
+[label] frames=1091 episodes=7 success_episodes=5 success_frames=491
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+label:   0%|          | 0/5 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+
+label:  20%|██        | 1/5 [00:05<00:22,  5.70s/it]
+label:  40%|████      | 2/5 [00:10<00:14,  4.93s/it]
+label:  60%|██████    | 3/5 [00:14<00:09,  4.65s/it]
+label:  80%|████████  | 4/5 [00:19<00:04,  4.80s/it]
+label: 100%|██████████| 5/5 [00:23<00:00,  4.63s/it]
+label: 100%|██████████| 5/5 [00:23<00:00,  4.76s/it]
+
+write:   0%|          | 0/5 [00:00<?, ?it/s]
+
+Map:   0%|          | 0/86 [00:00<?, ? examples/s][A
+
+Map:  85%|████████▍ | 73/86 [00:00<00:00, 718.97 examples/s][A
+Map: 100%|██████████| 86/86 [00:00<00:00, 671.75 examples/s]
+
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s][A
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 34.67ba/s]
+
+write:  20%|██        | 1/5 [00:00<00:03,  1.08it/s]
+
+Map:   0%|          | 0/105 [00:00<?, ? examples/s][A
+
+Map:  74%|███████▍  | 78/105 [00:00<00:00, 764.97 examples/s][A
+Map: 100%|██████████| 105/105 [00:00<00:00, 704.50 examples/s]
+
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s][A
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 79.06ba/s]
+
+write:  40%|████      | 2/5 [00:01<00:02,  1.08it/s]
+
+Map:   0%|          | 0/96 [00:00<?, ? examples/s][A
+
+Map:  80%|████████  | 77/96 [00:00<00:00, 756.08 examples/s][A
+Map: 100%|██████████| 96/96 [00:00<00:00, 636.04 examples/s]
+
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s][A
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 45.65ba/s]
+
+write:  60%|██████    | 3/5 [00:02<00:01,  1.15it/s]
+
+Map:   0%|          | 0/109 [00:00<?, ? examples/s][A
+
+Map:  71%|███████   | 77/109 [00:00<00:00, 755.73 examples/s][A
+Map: 100%|██████████| 109/109 [00:00<00:00, 695.15 examples/s]
+
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s][A
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 79.34ba/s]
+
+write:  80%|████████  | 4/5 [00:03<00:00,  1.13it/s]
+
+Map:   0%|          | 0/95 [00:00<?, ? examples/s][A
+
+Map:  86%|████████▋ | 82/95 [00:00<00:00, 811.40 examples/s][A
+Map: 100%|██████████| 95/95 [00:00<00:00, 753.16 examples/s]
+
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s][A
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 44.77ba/s]
+
+write: 100%|██████████| 5/5 [00:04<00:00,  1.15it/s]
+write: 100%|██████████| 5/5 [00:04<00:00,  1.14it/s]
+[label] saved: /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled
+{
+  "episodes": 5,
+  "frames": 491,
+  "adv_mean": -0.17821887135505676,
+  "adv_std": 0.03401053696870804,
+  "adv_min": -0.2288587987422943,
+  "adv_max": -0.10109919309616089
+}
+[2026-06-12 11:58:08] [done] iter=2 stage=label next=train_awbc
+[2026-06-12 11:58:08] [start] iter=2 stage=train_awbc
+[2026-06-12 11:58:08] [steps] AWBC num_train_steps=1 mode=single iter=2
+[2026-06-12 11:58:08] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/BC/train_awbc.py --data-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled --model-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model --base-policy-dir /data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final --pi0-root /data/huangdi/heliqun/pi0 --openpi-root /data/huangdi/heliqun/pi0/openpi --python-bin /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python --steps 1 --batch-size 16 --num-workers 4 --gpus 2 --seed 7 --log-file /data/aoss/heliqun/pi0-ours/goal-6/iter2/logs/train_awbc.log
+[2026-06-12 11:58:08] [cwd] /data/huangdi/heliqun/pi0
+[2026-06-12 11:58:08] ========== pi0 AWBC simple ==========
+[2026-06-12 11:58:08] data_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled
+[2026-06-12 11:58:08] repo_id=labeled
+[2026-06-12 11:58:08] model_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model
+[2026-06-12 11:58:08] HF_LEROBOT_HOME=/data/aoss/heliqun/pi0-ours/goal-6/iter2/data
+[2026-06-12 11:58:08] base_policy_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final
+[2026-06-12 11:58:08] steps=1 save_interval=2
+[2026-06-12 11:58:08] config=pi0_libero_awbc asset_id=physical-intelligence/libero
+[2026-06-12 11:58:08] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/train/compute_norm_stats_custom.py --repo-id labeled --asset-id physical-intelligence/libero --config-name pi0_libero_awbc --assets-base-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled/openpi_assets --checkpoint-base-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model --batch-size 16 --num-workers 4
+[2026-06-12 11:58:08] [cwd] /data/huangdi/heliqun/pi0/openpi
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 387 examples [00:00, 2930.55 examples/s]
+Generating train split: 491 examples [00:00, 3128.29 examples/s]
 
 Computing stats:   0%|          | 0/30 [00:00<?, ?it/s]
-Computing stats:   3%|▎         | 1/30 [00:53<26:02, 53.89s/it]
-Computing stats:  20%|██        | 6/30 [00:53<02:39,  6.64s/it]
-Computing stats:  37%|███▋      | 11/30 [00:54<00:56,  2.96s/it]
-Computing stats:  50%|█████     | 15/30 [00:54<00:27,  1.83s/it]
-Computing stats:  63%|██████▎   | 19/30 [00:54<00:13,  1.19s/it]
-Computing stats:  73%|███████▎  | 22/30 [00:54<00:07,  1.14it/s]
-Computing stats:  83%|████████▎ | 25/30 [00:54<00:03,  1.56it/s]
-Computing stats:  97%|█████████▋| 29/30 [00:54<00:00,  2.32it/s]
-Computing stats: 100%|██████████| 30/30 [00:55<00:00,  1.83s/it]
-Writing stats to: /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled/openpi_assets/pi0_libero_awbc/physical-intelligence/libero
-[2026-06-11 17:30:20] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u scripts/train.py pi0_libero_awbc --exp-name=awbc --project-name=openpi --assets-base-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled/openpi_assets --checkpoint-base-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model --checkpoint-dir-override=/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps --published-checkpoint-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/final --batch-size=16 --num-workers=4 --num-train-steps=1 --save-interval=2 --log-interval=100 --seed=7 --fsdp-devices=2 --data.repo-id=labeled --data.assets.asset-id=physical-intelligence/libero --weight-loader.params-path=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base/params --keep-period=None --no-wandb-enabled --overwrite
-[2026-06-11 17:30:20] [cwd] /data/huangdi/heliqun/pi0/openpi
-17:31:14.154 [I] Running on: app-96cf5bcb45fd435c90b64e76859a230b-8cd4b9bc4-n85g6                 (5212:train.py:215)
-INFO:2026-06-11 17:31:16,294:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
-17:31:16.294 [I] Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig' (5212:xla_bridge.py:925)
-INFO:2026-06-11 17:31:16,315:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
-17:31:16.315 [I] Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory (5212:xla_bridge.py:925)
-17:31:16.330 [I] JAX compilation cache: /data/huangdi/heliqun/pi0/cache/jax                       (5212:train.py:224)
-17:31:16.690 [I] Wiped checkpoint directory /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps (5212:checkpoints.py:32)
-17:31:16.690 [I] Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x7fa4ec159050> (5212:base_pytree_checkpoint_handler.py:334)
-17:31:16.691 [I] Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x7fa4ec159050> (5212:base_pytree_checkpoint_handler.py:334)
-17:31:16.691 [I] [thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID. (5212:multihost.py:390)
-17:31:16.691 [I] [process=0][thread=MainThread] CheckpointManager init: checkpointers=None, item_names=None, item_handlers={'assets': <openpi.training.checkpoints.CallbackHandler object at 0x7fa3490d2c50>, 'train_state': <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa348f09f50>, 'params': <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa349337e10>}, handler_registry=None (5212:checkpoint_manager.py:620)
-17:31:16.692 [I] Deferred registration for item: "assets". Adding handler `<openpi.training.checkpoints.CallbackHandler object at 0x7fa3490d2c50>` for item "assets" and save args `<class 'openpi.training.checkpoints.CallbackSave'>` and restore args `<class 'openpi.training.checkpoints.CallbackRestore'>` to `_handler_registry`. (5212:composite_checkpoint_handler.py:234)
-17:31:16.692 [I] Deferred registration for item: "train_state". Adding handler `<orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa348f09f50>` for item "train_state" and save args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>` and restore args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>` to `_handler_registry`. (5212:composite_checkpoint_handler.py:234)
-17:31:16.692 [I] Deferred registration for item: "params". Adding handler `<orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa349337e10>` for item "params" and save args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>` and restore args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>` to `_handler_registry`. (5212:composite_checkpoint_handler.py:234)
-17:31:16.692 [I] Deferred registration for item: "metrics". Adding handler `<orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fa34913d050>` for item "metrics" and save args `<class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonSaveArgs'>` and restore args `<class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonRestoreArgs'>` to `_handler_registry`. (5212:composite_checkpoint_handler.py:234)
-17:31:16.692 [I] Initialized registry DefaultCheckpointHandlerRegistry({('assets', <class 'openpi.training.checkpoints.CallbackSave'>): <openpi.training.checkpoints.CallbackHandler object at 0x7fa3490d2c50>, ('assets', <class 'openpi.training.checkpoints.CallbackRestore'>): <openpi.training.checkpoints.CallbackHandler object at 0x7fa3490d2c50>, ('train_state', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa348f09f50>, ('train_state', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa348f09f50>, ('params', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa349337e10>, ('params', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fa349337e10>, ('metrics', <class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonSaveArgs'>): <orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fa34913d050>, ('metrics', <class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonRestoreArgs'>): <orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fa34913d050>}). (5212:composite_checkpoint_handler.py:502)
-17:31:16.692 [I] orbax-checkpoint version: 0.11.13                                                (5212:abstract_checkpointer.py:35)
-17:31:16.692 [I] [process=0][thread=MainThread] Using barrier_sync_fn: <function get_barrier_sync_fn.<locals>.<lambda> at 0x7fa348dae520> timeout: 7200 secs and primary_host=0 for async checkpoint writes (5212:async_checkpointer.py:170)
-17:31:16.693 [I] Found 0 checkpoint steps in /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps (5212:checkpoint_manager.py:1701)
-17:31:16.693 [I] [process=0][thread=MainThread] CheckpointManager created,  primary_host=0, CheckpointManagerOptions=CheckpointManagerOptions(save_interval_steps=1, max_to_keep=1, keep_time_interval=None, keep_period=None, should_keep_fn=None, best_fn=None, best_mode='max', keep_checkpoints_without_metrics=True, step_prefix=None, step_format_fixed_length=None, step_name_format=None, create=False, cleanup_tmp_directories=False, save_on_steps=frozenset(), single_host_load_and_broadcast=False, todelete_subdir=None, enable_background_delete=False, read_only=False, enable_async_checkpointing=True, async_options=AsyncOptions(timeout_secs=7200, barrier_sync_fn=None, post_finalization_callback=None, create_directories_asynchronously=True), multiprocessing_options=MultiprocessingOptions(primary_host=0, active_processes=None, barrier_sync_key_prefix=None), should_save_fn=None, file_options=FileOptions(path_permission_mode=None), save_root_metadata=True, temporary_path_class=None, save_decision_policy=None, prevent_write_metrics=False), root_directory=/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps: <orbax.checkpoint.checkpoint_manager.CheckpointManager object at 0x7fa34906f5d0> (5212:checkpoint_manager.py:801)
-17:31:17.035 [I] Loaded norm stats from /data/aoss/heliqun/pi0-ours/goal-6/iter0/data/labeled/openpi_assets/pi0_libero_awbc/physical-intelligence/libero (5212:config.py:197)
-17:31:17.036 [I] data_config: DataConfig(repo_id='labeled', asset_id='physical-intelligence/libero', norm_stats={'state': NormStats(mean=array([-7.91363716e-02,  7.30247498e-02,  1.02862239e+00,  3.14017725e+00,
+Computing stats:   3%|▎         | 1/30 [01:05<31:43, 65.63s/it]
+Computing stats:  27%|██▋       | 8/30 [01:05<02:11,  5.98s/it]
+Computing stats:  50%|█████     | 15/30 [01:06<00:39,  2.63s/it]
+Computing stats:  63%|██████▎   | 19/30 [01:06<00:19,  1.81s/it]
+Computing stats:  77%|███████▋  | 23/30 [01:06<00:08,  1.26s/it]
+Computing stats:  87%|████████▋ | 26/30 [01:06<00:03,  1.04it/s]
+Computing stats: 100%|██████████| 30/30 [01:06<00:00,  1.51it/s]
+Computing stats: 100%|██████████| 30/30 [01:06<00:00,  2.22s/it]
+Writing stats to: /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled/openpi_assets/pi0_libero_awbc/physical-intelligence/libero
+[2026-06-12 12:00:28] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u scripts/train.py pi0_libero_awbc --exp-name=awbc --project-name=openpi --assets-base-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled/openpi_assets --checkpoint-base-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model --checkpoint-dir-override=/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps --published-checkpoint-dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/final --batch-size=16 --num-workers=4 --num-train-steps=1 --save-interval=2 --log-interval=100 --seed=7 --fsdp-devices=2 --data.repo-id=labeled --data.assets.asset-id=physical-intelligence/libero --weight-loader.params-path=/data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final/params --keep-period=None --no-wandb-enabled --overwrite --no-save-train-state
+[2026-06-12 12:00:28] [cwd] /data/huangdi/heliqun/pi0/openpi
+12:01:33.476 [I] Running on: app-96cf5bcb45fd435c90b64e76859a230b-8cd4b9bc4-n85g6                 (41711:train.py:215)
+INFO:2026-06-12 12:01:36,086:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+12:01:36.086 [I] Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig' (41711:xla_bridge.py:925)
+INFO:2026-06-12 12:01:36,106:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+12:01:36.106 [I] Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory (41711:xla_bridge.py:925)
+12:01:36.120 [I] JAX compilation cache: /data/huangdi/heliqun/pi0/cache/jax                       (41711:train.py:224)
+12:01:37.143 [I] Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x7fc45cd33690> (41711:base_pytree_checkpoint_handler.py:334)
+12:01:37.144 [I] [thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID. (41711:multihost.py:390)
+12:01:37.145 [I] [process=0][thread=MainThread] CheckpointManager init: checkpointers=None, item_names=None, item_handlers={'assets': <openpi.training.checkpoints.CallbackHandler object at 0x7fc2ba072810>, 'params': <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fc2ba0708d0>}, handler_registry=None (41711:checkpoint_manager.py:620)
+12:01:37.145 [I] Deferred registration for item: "assets". Adding handler `<openpi.training.checkpoints.CallbackHandler object at 0x7fc2ba072810>` for item "assets" and save args `<class 'openpi.training.checkpoints.CallbackSave'>` and restore args `<class 'openpi.training.checkpoints.CallbackRestore'>` to `_handler_registry`. (41711:composite_checkpoint_handler.py:234)
+12:01:37.145 [I] Deferred registration for item: "params". Adding handler `<orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fc2ba0708d0>` for item "params" and save args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>` and restore args `<class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>` to `_handler_registry`. (41711:composite_checkpoint_handler.py:234)
+12:01:37.145 [I] Deferred registration for item: "metrics". Adding handler `<orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fc2b9d7b090>` for item "metrics" and save args `<class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonSaveArgs'>` and restore args `<class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonRestoreArgs'>` to `_handler_registry`. (41711:composite_checkpoint_handler.py:234)
+12:01:37.145 [I] Initialized registry DefaultCheckpointHandlerRegistry({('assets', <class 'openpi.training.checkpoints.CallbackSave'>): <openpi.training.checkpoints.CallbackHandler object at 0x7fc2ba072810>, ('assets', <class 'openpi.training.checkpoints.CallbackRestore'>): <openpi.training.checkpoints.CallbackHandler object at 0x7fc2ba072810>, ('params', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeSaveArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fc2ba0708d0>, ('params', <class 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeRestoreArgs'>): <orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler object at 0x7fc2ba0708d0>, ('metrics', <class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonSaveArgs'>): <orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fc2b9d7b090>, ('metrics', <class 'orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonRestoreArgs'>): <orbax.checkpoint._src.handlers.json_checkpoint_handler.JsonCheckpointHandler object at 0x7fc2b9d7b090>}). (41711:composite_checkpoint_handler.py:502)
+12:01:37.146 [I] orbax-checkpoint version: 0.11.13                                                (41711:abstract_checkpointer.py:35)
+12:01:37.146 [I] [process=0][thread=MainThread] Using barrier_sync_fn: <function get_barrier_sync_fn.<locals>.<lambda> at 0x7fc2b99fb9c0> timeout: 7200 secs and primary_host=0 for async checkpoint writes (41711:async_checkpointer.py:170)
+12:01:37.146 [I] Found 0 checkpoint steps in /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps (41711:checkpoint_manager.py:1701)
+12:01:37.146 [I] [process=0][thread=MainThread] CheckpointManager created,  primary_host=0, CheckpointManagerOptions=CheckpointManagerOptions(save_interval_steps=1, max_to_keep=1, keep_time_interval=None, keep_period=None, should_keep_fn=None, best_fn=None, best_mode='max', keep_checkpoints_without_metrics=True, step_prefix=None, step_format_fixed_length=None, step_name_format=None, create=False, cleanup_tmp_directories=False, save_on_steps=frozenset(), single_host_load_and_broadcast=False, todelete_subdir=None, enable_background_delete=False, read_only=False, enable_async_checkpointing=True, async_options=AsyncOptions(timeout_secs=7200, barrier_sync_fn=None, post_finalization_callback=None, create_directories_asynchronously=True), multiprocessing_options=MultiprocessingOptions(primary_host=0, active_processes=None, barrier_sync_key_prefix=None), should_save_fn=None, file_options=FileOptions(path_permission_mode=None), save_root_metadata=True, temporary_path_class=None, save_decision_policy=None, prevent_write_metrics=False), root_directory=/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps: <orbax.checkpoint.checkpoint_manager.CheckpointManager object at 0x7fc2b9badb50> (41711:checkpoint_manager.py:801)
+12:01:37.670 [I] Loaded norm stats from /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/labeled/openpi_assets/pi0_libero_awbc/physical-intelligence/libero (41711:config.py:197)
+12:01:37.671 [I] data_config: DataConfig(repo_id='labeled', asset_id='physical-intelligence/libero', norm_stats={'state': NormStats(mean=array([-7.91363716e-02,  7.30247498e-02,  1.02862239e+00,  3.14017725e+00,
        -5.65994997e-05, -4.28942516e-02,  3.15808281e-02, -3.13230343e-02]), std=array([0.05465956, 0.05755276, 0.08456927, 0.03531864, 0.1250211 ,
        0.12933441, 0.00868007, 0.00881084]), q01=array([-0.21728976, -0.01381605,  0.90924539,  3.04076223, -0.28033094,
        -0.31236382,  0.01979477, -0.03983244]), q99=array([ 0.02600438,  0.15515153,  1.1798221 ,  3.21598339,  0.23272068,
-        0.33535345,  0.04049502, -0.01808275])), 'actions': NormStats(mean=array([ 0.09089024, -0.16146147, -1.02558875, -3.13549018,  0.03498942,
-        0.04054337, -0.20891666]), std=array([0.32673687, 0.31261653, 0.58522713, 0.0422864 , 0.12677874,
-       0.12935457, 0.97793347]), q01=array([-0.71456758, -1.0112416 , -2.10097889, -3.22041262, -0.22838456,
-       -0.33302052, -1.        ]), q99=array([ 1.09182227,  0.54554025,  0.02616141, -3.01829819,  0.36752039,
-        0.31221833,  1.        ]))}, repack_transforms=Group(inputs=[RepackTransform(structure={'observation/image': 'image', 'observation/wrist_image': 'wrist_image', 'observation/state': 'state', 'adv': 'adv', 'actions': 'actions', 'prompt': 'prompt'})], outputs=()), data_transforms=Group(inputs=(LiberoInputs(model_type=<ModelType.PI0: 'pi0'>), DeltaActions(mask=(True, True, True, True, True, True, False))), outputs=(AbsoluteActions(mask=(True, True, True, True, True, True, False)), LiberoOutputs())), model_transforms=Group(inputs=[InjectDefaultPrompt(prompt=None), ResizeImages(height=224, width=224), TokenizePrompt(tokenizer=<openpi.models.tokenizer.PaligemmaTokenizer object at 0x7fa4ee0ec690>, discrete_state_input=False), PadStatesAndActions(model_action_dim=32)], outputs=()), use_quantile_norm=False, action_sequence_keys=('actions',), prompt_from_task=True, rlds_data_dir=None, action_space=None, datasets=()) (5212:data_loader.py:243)
-17:31:18.064 [I] local_batch_size: 16                                                             (5212:data_loader.py:324)
-17:34:38.242 [I] Initialized data loader:
+        0.33535345,  0.04049502, -0.01808275])), 'actions': NormStats(mean=array([ 0.17011964, -0.09674238, -1.17415357, -3.13747287,  0.01221776,
+        0.0415889 , -0.19583333]), std=array([0.46946079, 0.3691012 , 0.60013461, 0.04394531, 0.13307698,
+       0.12437087, 0.98063719]), q01=array([-0.89459847, -1.01522892, -2.0534233 , -3.23815771, -0.23307001,
+       -0.33656996, -1.        ]), q99=array([ 1.08225177,  0.59600428,  0.01975594, -2.98924749,  0.38925768,
+        0.31228606,  0.9996    ]))}, repack_transforms=Group(inputs=[RepackTransform(structure={'observation/image': 'image', 'observation/wrist_image': 'wrist_image', 'observation/state': 'state', 'adv': 'adv', 'actions': 'actions', 'prompt': 'prompt'})], outputs=()), data_transforms=Group(inputs=(LiberoInputs(model_type=<ModelType.PI0: 'pi0'>), DeltaActions(mask=(True, True, True, True, True, True, False))), outputs=(AbsoluteActions(mask=(True, True, True, True, True, True, False)), LiberoOutputs())), model_transforms=Group(inputs=[InjectDefaultPrompt(prompt=None), ResizeImages(height=224, width=224), TokenizePrompt(tokenizer=<openpi.models.tokenizer.PaligemmaTokenizer object at 0x7fc45ece8890>, discrete_state_input=False), PadStatesAndActions(model_action_dim=32)], outputs=()), use_quantile_norm=False, action_sequence_keys=('actions',), prompt_from_task=True, rlds_data_dir=None, action_space=None, datasets=()) (41711:data_loader.py:243)
+12:01:38.751 [I] local_batch_size: 16                                                             (41711:data_loader.py:324)
+12:05:32.010 [I] Initialized data loader:
 [0].images['base_0_rgb']: (16, 224, 224, 3)@float32
 [0].images['left_wrist_0_rgb']: (16, 224, 224, 3)@float32
 [0].images['right_wrist_0_rgb']: (16, 224, 224, 3)@float32
@@ -83,96 +706,96 @@ INFO:2026-06-11 17:31:16,315:jax._src.xla_bridge:925: Unable to initialize backe
 [0].state: (16, 32)@float32
 [0].tokenized_prompt: (16, 48)@int32
 [0].tokenized_prompt_mask: (16, 48)@bool
-[1]: (16, 50, 32)@float32
-[2]: (16,)@float32 (5212:train.py:248)
-17:34:40.397 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.398 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .params['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.399 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.400 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].mu['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.401 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.402 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .opt_state[1][0].nu['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .opt_state[1][0].nu['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.403 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.404 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (5212:sharding.py:89)
-17:34:40.405 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.405 [I] Sharding .ema_params['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (5212:sharding.py:89)
-17:34:40.405 [I] Sharding .ema_params['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (5212:sharding.py:89)
-17:34:40.631 [I] Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x7fa4ec159050> (5212:base_pytree_checkpoint_handler.py:334)
-17:34:41.083 [I] Restoring checkpoint from /data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base/params. (5212:checkpointer.py:298)
-17:35:37.434 [I] [process=0] /jax/checkpoint/read/bytes_per_sec: 220.1 MiB/s (total bytes: 12.1 GiB) (time elapsed: 56 seconds) (per-host) (5212:base_pytree_checkpoint_handler.py:114)
-17:35:37.434 [I] Finished restoring checkpoint in 56.35 seconds from /data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base/params. (5212:checkpointer.py:309)
+[1]: (16, 5, 32)@float32
+[2]: (16,)@float32 (41711:train.py:249)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.102 [I] Sharding .params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .params['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.103 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.104 [I] Sharding .opt_state[1][0].mu['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].mu['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].mu['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.105 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .opt_state[1][0].nu['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_0']['kernel'].value of shape (27, 1152, 4304) (510.68 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MlpBlock_0']['Dense_1']['kernel'].value of shape (27, 4304, 1152) (510.68 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['key']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['out']['kernel'].value of shape (27, 16, 72, 1152) (136.69 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['query']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['Transformer']['encoderblock']['MultiHeadDotProductAttention_0']['value']['kernel'].value of shape (27, 1152, 16, 72) (136.69 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['img']['head']['kernel'].value of shape (1152, 2048) (9.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['llm']['embedder']['input_embedding'].value of shape (257152, 2048) (2009.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.106 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum']['w'].value of shape (18, 8, 256, 2048) (288.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['attn_vec_einsum_1']['w'].value of shape (18, 8, 256, 1024) (144.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['kv_einsum']['w'].value of shape (18, 2, 1, 2048, 256) (72.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['kv_einsum_1']['w'].value of shape (18, 2, 1, 1024, 256) (36.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['q_einsum']['w'].value of shape (18, 8, 2048, 256) (288.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['attn']['q_einsum_1']['w'].value of shape (18, 8, 1024, 256) (144.00 MiB) along axis 2 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp']['gating_einsum'].value of shape (18, 2, 2048, 16384) (4608.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp']['linear'].value of shape (18, 16384, 2048) (2304.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp_1']['gating_einsum'].value of shape (18, 2, 1024, 4096) (576.00 MiB) along axis 3 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['PaliGemma']['llm']['layers']['mlp_1']['linear'].value of shape (18, 4096, 1024) (288.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['action_time_mlp_in']['kernel'].value of shape (2048, 1024) (8.00 MiB) along axis 0 (41711:sharding.py:89)
+12:05:34.107 [I] Sharding .ema_params['action_time_mlp_out']['kernel'].value of shape (1024, 1024) (4.00 MiB) along axis 1 (41711:sharding.py:89)
+12:05:34.259 [I] Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x7fc45cd33690> (41711:base_pytree_checkpoint_handler.py:334)
+12:05:34.725 [I] Restoring checkpoint from /data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final/params. (41711:checkpointer.py:298)
+12:06:19.049 [I] [process=0] /jax/checkpoint/read/bytes_per_sec: 280.3 MiB/s (total bytes: 12.1 GiB) (time elapsed: 44 seconds) (per-host) (41711:base_pytree_checkpoint_handler.py:114)
+12:06:19.050 [I] Finished restoring checkpoint in 44.33 seconds from /data/aoss/heliqun/pi0-ours/goal-6/iter1/awbc_model/final/params. (41711:checkpointer.py:309)
 /data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/jax/_src/interpreters/mlir.py:1178: UserWarning: Some donated buffers were not usable: ShapedArray(float32[27,1152,4304]), ShapedArray(float32[27,4304,1152]), ShapedArray(float32[27,1152,16,72]), ShapedArray(float32[27,16,72,1152]), ShapedArray(float32[27,1152,16,72]), ShapedArray(float32[27,1152,16,72]), ShapedArray(float32[1152,2048]), ShapedArray(float32[257152,2048]), ShapedArray(float32[18,8,256,2048]), ShapedArray(float32[18,2,1,2048,256]), ShapedArray(float32[18,8,2048,256]), ShapedArray(float32[18,2,2048,16384]), ShapedArray(float32[18,16384,2048]), ShapedArray(float32[18,2,1024,4096]), ShapedArray(float32[18,4096,1024]), ShapedArray(float32[2048,1024]).
 See an explanation at https://jax.readthedocs.io/en/latest/faq.html#buffer-donation.
   warnings.warn("Some donated buffers were not usable:"
-17:35:41.631 [I] Initialized train state:
+12:06:21.935 [I] Initialized train state:
 ['PaliGemma']['img']['Transformer']['encoder_norm']['bias'].value: (1152,)@float32
 ['PaliGemma']['img']['Transformer']['encoder_norm']['scale'].value: (1152,)@float32
 ['PaliGemma']['img']['Transformer']['encoderblock']['LayerNorm_0']['bias'].value: (27, 1152)@float32
@@ -222,88 +845,159 @@ See an explanation at https://jax.readthedocs.io/en/latest/faq.html#buffer-donat
 ['action_time_mlp_out']['bias'].value: (1024,)@float32
 ['action_time_mlp_out']['kernel'].value: (1024, 1024)@float32
 ['state_proj']['bias'].value: (1024,)@float32
-['state_proj']['kernel'].value: (32, 1024)@float32 (5212:train.py:259)
-17:35:41.643 [I] Progress on: -/1 rate:- remaining:? elapsed:00:00 postfix:-                      (5212:tqdm_logging.py:145)
+['state_proj']['kernel'].value: (32, 1024)@float32 (41711:train.py:260)
+12:06:21.945 [I] Progress on: -/1 rate:- remaining:? elapsed:00:00 postfix:-                      (41711:tqdm_logging.py:145)
 
 
-Step 0: grad_norm=3.1548, loss=0.1731, param_norm=1377.8652
-17:36:29.946 [I] Progress on: -/1 rate:- remaining:? elapsed:00:48 postfix:-                      (5212:tqdm_logging.py:145)
-17:36:29.983 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (5212:checkpoint_manager.py:1987)
-17:36:29.984 [I] [process=0] Saving checkpoint at step 0                                          (5212:checkpoint_manager.py:1408)
-17:36:29.984 [I] [process=0] Started async saving checkpoint to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0. (5212:async_checkpointer.py:439)
-17:36:30.111 [I] Using ThreadSafeKeyValueSignalingClient                                          (5212:signaling_client.py:332)
-17:36:30.180 [I] Transferring arrays to host memory with options: use_replica_parallel=True, enable_pinned_host_transfer=False (5212:replica_slices.py:341)
-17:36:30.268 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0 (5212:atomicity.py:144)
-17:36:30.405 [I] Wrote Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781199390402711818, 'commit_timestamp_nsecs': None, 'custom_metadata': {}}, json={"item_handlers": null, "metrics": {}, "performance_metrics": {}, "init_timestamp_nsecs": 1781199390402711818, "commit_timestamp_nsecs": null, "custom_metadata": {}} to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (5212:checkpoint.py:186)
-17:36:30.407 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 (5212:atomicity.py:144)
-17:36:30.407 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 (5212:atomicity.py:144)
-17:36:30.407 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/train_state.orbax-checkpoint-tmp-3 (5212:atomicity.py:144)
-17:36:32.580 [I] Transferring arrays to host memory with options: use_replica_parallel=True, enable_pinned_host_transfer=False (5212:replica_slices.py:341)
-17:36:32.586 [I] Array name: 'params.PaliGemma.llm.layers.mlp.gating_einsum.value', global shape: (18, 2, 2048, 16384), write shape: (18, 2, 2048, 8192), chosen chunk shape: (18, 2, 2048, 4096) (5212:tensorstore_utils.py:408)
-17:36:32.604 [I] [process=0][thread=array_type_handler] Wrote 50 array_metadata.ArrayMetadata to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2/array_metadatas/process_0 (5212:array_metadata_store.py:198)
-17:36:40.313 [I] Array name: 'params.PaliGemma.llm.layers.mlp.gating_einsum.value', global shape: (18, 2, 2048, 16384), write shape: (18, 2, 2048, 8192), chosen chunk shape: (18, 2, 2048, 4096) (5212:tensorstore_utils.py:408)
-17:36:40.315 [I] Array name: 'opt_state.1.0.mu.PaliGemma.llm.layers.mlp.gating_einsum.value', global shape: (18, 2, 2048, 16384), write shape: (18, 2, 2048, 8192), chosen chunk shape: (18, 2, 2048, 4096) (5212:tensorstore_utils.py:408)
-17:36:40.316 [I] Array name: 'opt_state.1.0.nu.PaliGemma.llm.layers.mlp.gating_einsum.value', global shape: (18, 2, 2048, 16384), write shape: (18, 2, 2048, 8192), chosen chunk shape: (18, 2, 2048, 4096) (5212:tensorstore_utils.py:408)
-17:36:40.319 [I] [process=0] /jax/checkpoint/write/blocking_bytes_per_sec: 1.2 GiB/s (total bytes: 12.1 GiB) (time elapsed: 10 seconds) (per-host) (5212:base_pytree_checkpoint_handler.py:114)
-17:36:40.337 [I] [process=0] /jax/checkpoint/write/blocking_bytes_per_sec: 3.5 GiB/s (total bytes: 36.2 GiB) (time elapsed: 10 seconds) (per-host) (5212:base_pytree_checkpoint_handler.py:114)
-17:36:40.342 [I] [process=0][thread=async_save] Background save thread started.                   (5212:async_checkpointer.py:77)
-17:36:40.342 [I] Finished blocking save in 10.36 seconds. Continuing to save asynchronously to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0. (5212:async_checkpointer.py:548)
-17:36:40.342 [I] [process=0][thread=MainThread][step=0] Starting CheckpointManager Save Finalize thread=save_finalize (5212:checkpoint_manager.py:1453)
-17:36:40.343 [I] [process=0][thread=save_finalize] Waiting for background save thread=async_save. (5212:async_checkpointer.py:258)
-17:36:40.343 [I] {'step': 0, 'event_type': 'save', 'directory': '/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps', 'reached_preemption': False, 'preemption_received_at': None, 'synchronous': False, 'wait_for_prev_start_time': 1781199389.9835277, 'wait_for_prev_duration_secs': 0.00011897087097167969, 'checkpointer_blocking_start_time': 1781199389.984128, 'checkpointer_blocking_duration_secs': 10.358584642410278, 'get_old_steps_start_time': 1781199400.3427594, 'get_old_steps_duration_secs': 5.0067901611328125e-05, 'checkpoint_manager_blocking_start_time': 1781199389.9832475, 'checkpoint_manager_blocking_duration_secs': 10.360280752182007} (5212:standard_logger.py:34)
-17:36:40.343 [I] [process=0][thread=MainThread][step=0][wait_until_finished] Waiting for Save Finalize thread (save_finalize) to complete. (5212:checkpoint_manager.py:1998)
-17:36:40.364 [I] [process=0][thread=array_type_handler] Wrote 153 array_metadata.ArrayMetadata to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/train_state.orbax-checkpoint-tmp-3/array_metadatas/process_0 (5212:array_metadata_store.py:198)
-17:38:10.770 [I] [process=0] /jax/checkpoint/write/bytes_per_sec: 122.7 MiB/s (total bytes: 12.1 GiB) (time elapsed: a minute) (per-host) (5212:base_pytree_checkpoint_handler.py:114)
-17:39:00.398 [I] [process=0] /jax/checkpoint/write/bytes_per_sec: 246.6 MiB/s (total bytes: 36.2 GiB) (time elapsed: 2 minutes) (per-host) (5212:base_pytree_checkpoint_handler.py:114)
-17:39:00.398 [I] [process=0][thread=async_save] 5 Handler Commit operations completed.            (5212:async_checkpointer.py:87)
-17:39:00.474 [I] Read Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781199390402711818, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} from /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (5212:checkpoint.py:226)
-17:39:00.475 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets (5212:atomicity.py:289)
-17:39:00.610 [I] Updated Metadata={'item_handlers': {'assets': 'openpi.training.checkpoints.CallbackHandler', 'params': 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler', 'train_state': 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler'}, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781199390402711818, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (5212:checkpoint.py:245)
-17:39:00.772 [I] [process=0][thread=async_save] Skipped cross-host ArrayMetadata validation because only one process is found: process_index=0. (5212:array_metadata_store.py:362)
-17:39:01.190 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/train_state.orbax-checkpoint-tmp-3 to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/train_state (5212:atomicity.py:289)
-17:39:01.549 [I] [process=0][thread=async_save] Skipped cross-host ArrayMetadata validation because only one process is found: process_index=0. (5212:array_metadata_store.py:362)
-17:39:02.087 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0/params (5212:atomicity.py:289)
-17:39:02.692 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0.orbax-checkpoint-tmp-0 to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0 (5212:atomicity.py:289)
-17:39:03.276 [I] [process=0][thread=async_save] Finished saving checkpoint (finalized tmp dir) to `/data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0`. (5212:atomicity.py:573)
-17:39:03.276 [I] Finished asynchronous save (blocking + background) in 153.29 seconds to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0 (5212:async_checkpointer.py:412)
-17:39:03.276 [I] [process=0][thread=async_save] Background save thread done.                      (5212:async_checkpointer.py:143)
-17:39:03.276 [I] [process=0][thread=save_finalize] Done with waiting for background save thread=async_save. (5212:async_checkpointer.py:266)
-17:39:03.277 [I] [process=0][thread=save_finalize] No errors found in background save thread=async_save. (5212:async_checkpointer.py:276)
-17:39:03.277 [I] [process=0][thread=save_finalize][step=0] CheckpointManager Save Finalize is syncing with other hosts... (5212:checkpoint_manager.py:2095)
-17:39:03.277 [I] [process=0][thread=save_finalize][step=0] CheckpointManager Save Finalize is done on all hosts. (5212:checkpoint_manager.py:2110)
-17:39:03.277 [I] [process=0][thread=MainThread][step=0][wait_until_finished] Done waiting for Save Finalize thread (save_finalize) running at step=0. (5212:checkpoint_manager.py:2010)
-17:54:09.216 [I] Published checkpoint step /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/steps/0 to /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/final (5212:checkpoints.py:117)
-17:54:09.216 [I] Progress on: 1.00it/1.00it rate:1,107.6s/it remaining:00:00 elapsed:18:27 postfix:- (5212:tqdm_logging.py:145)
-17:54:09.216 [I] Progress on: 1.00it/1.00it rate:1,107.6s/it remaining:00:00 elapsed:18:27 postfix:- (5212:tqdm_logging.py:145)
-17:54:09.216 [I] Waiting for checkpoint manager to finish                                         (5212:train.py:300)
-17:54:09.216 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (5212:checkpoint_manager.py:1987)
-[2026-06-11 17:54:16] AWBC final checkpoint: /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/final
-[2026-06-11 17:54:17] [done] iter=0 stage=train_awbc next=collect
-[2026-06-11 17:54:17] [start] iter=0 stage=collect
-[2026-06-11 17:54:17] [server] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/server.py --policy-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/awbc_model/final --sample-mode qselect --num-action-samples 16 --seed 7 --critic-path /data/aoss/heliqun/pi0-ours/goal-6/iter0/iql/final.pt
-[2026-06-11 17:54:17] [collect] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 50 --initial-state-offset 0 --seed 7 --repo-id collect --video-out-path /data/aoss/heliqun/pi0-ours/goal-6/iter0/collect_videos --metrics-path /data/aoss/heliqun/pi0-ours/goal-6/iter0/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+Step 0: grad_norm=6.3069, loss=0.2406, param_norm=1377.8652
+12:06:31.427 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (41711:checkpoint_manager.py:1987)
+12:06:31.427 [I] [process=0] Saving checkpoint at step 0                                          (41711:checkpoint_manager.py:1408)
+12:06:31.428 [I] [process=0] Started async saving checkpoint to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0. (41711:async_checkpointer.py:439)
+12:06:31.429 [I] Using ThreadSafeKeyValueSignalingClient                                          (41711:signaling_client.py:332)
+12:06:31.431 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0 (41711:atomicity.py:144)
+12:06:31.439 [I] Transferring arrays to host memory with options: use_replica_parallel=True, enable_pinned_host_transfer=False (41711:replica_slices.py:341)
+12:06:31.448 [I] Wrote Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781265991446642504, 'commit_timestamp_nsecs': None, 'custom_metadata': {}}, json={"item_handlers": null, "metrics": {}, "performance_metrics": {}, "init_timestamp_nsecs": 1781265991446642504, "commit_timestamp_nsecs": null, "custom_metadata": {}} to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (41711:checkpoint.py:186)
+12:06:31.449 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 (41711:atomicity.py:144)
+12:06:31.449 [I] Creating tmp directory /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 (41711:atomicity.py:144)
+12:06:33.577 [I] Array name: 'params.PaliGemma.llm.layers.mlp.gating_einsum.value', global shape: (18, 2, 2048, 16384), write shape: (18, 2, 2048, 8192), chosen chunk shape: (18, 2, 2048, 4096) (41711:tensorstore_utils.py:408)
+12:06:33.585 [I] [process=0] /jax/checkpoint/write/blocking_bytes_per_sec: 5.6 GiB/s (total bytes: 12.1 GiB) (time elapsed: 2 seconds) (per-host) (41711:base_pytree_checkpoint_handler.py:114)
+12:06:33.592 [I] [process=0][thread=async_save] Background save thread started.                   (41711:async_checkpointer.py:77)
+12:06:33.592 [I] Finished blocking save in 2.16 seconds. Continuing to save asynchronously to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0. (41711:async_checkpointer.py:548)
+12:06:33.592 [I] [process=0][thread=MainThread][step=0] Starting CheckpointManager Save Finalize thread=save_finalize (41711:checkpoint_manager.py:1453)
+12:06:33.593 [I] [process=0][thread=save_finalize] Waiting for background save thread=async_save. (41711:async_checkpointer.py:258)
+12:06:33.594 [I] {'step': 0, 'event_type': 'save', 'directory': '/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps', 'reached_preemption': False, 'preemption_received_at': None, 'synchronous': False, 'wait_for_prev_start_time': 1781265991.4271777, 'wait_for_prev_duration_secs': 0.00018358230590820312, 'checkpointer_blocking_start_time': 1781265991.4277525, 'checkpointer_blocking_duration_secs': 2.164943218231201, 'get_old_steps_start_time': 1781265993.5927243, 'get_old_steps_duration_secs': 5.245208740234375e-06, 'checkpoint_manager_blocking_start_time': 1781265991.4268858, 'checkpoint_manager_blocking_duration_secs': 2.167630910873413} (41711:standard_logger.py:34)
+12:06:33.594 [I] [process=0][thread=MainThread][step=0][wait_until_finished] Waiting for Save Finalize thread (save_finalize) to complete. (41711:checkpoint_manager.py:1998)
+12:06:33.600 [I] [process=0][thread=array_type_handler] Wrote 50 array_metadata.ArrayMetadata to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2/array_metadatas/process_0 (41711:array_metadata_store.py:198)
+12:07:17.768 [I] [process=0] /jax/checkpoint/write/bytes_per_sec: 266.6 MiB/s (total bytes: 12.1 GiB) (time elapsed: 46 seconds) (per-host) (41711:base_pytree_checkpoint_handler.py:114)
+12:07:17.769 [I] [process=0][thread=async_save] 4 Handler Commit operations completed.            (41711:async_checkpointer.py:87)
+12:07:17.811 [I] Read Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781265991446642504, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} from /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (41711:checkpoint.py:226)
+12:07:17.812 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/assets (41711:atomicity.py:289)
+12:07:17.850 [I] Updated Metadata={'item_handlers': {'assets': 'openpi.training.checkpoints.CallbackHandler', 'params': 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler'}, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781265991446642504, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (41711:checkpoint.py:245)
+12:07:17.852 [I] [process=0][thread=async_save] Skipped cross-host ArrayMetadata validation because only one process is found: process_index=0. (41711:array_metadata_store.py:362)
+12:07:18.230 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0/params (41711:atomicity.py:289)
+12:07:18.293 [I] Renaming /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0.orbax-checkpoint-tmp-0 to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0 (41711:atomicity.py:289)
+12:07:18.736 [I] [process=0][thread=async_save] Finished saving checkpoint (finalized tmp dir) to `/data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0`. (41711:atomicity.py:573)
+12:07:18.736 [I] Finished asynchronous save (blocking + background) in 47.31 seconds to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0 (41711:async_checkpointer.py:412)
+12:07:18.736 [I] [process=0][thread=async_save] Background save thread done.                      (41711:async_checkpointer.py:143)
+12:07:18.737 [I] [process=0][thread=save_finalize] Done with waiting for background save thread=async_save. (41711:async_checkpointer.py:266)
+12:07:18.737 [I] [process=0][thread=save_finalize] No errors found in background save thread=async_save. (41711:async_checkpointer.py:276)
+12:07:18.737 [I] [process=0][thread=save_finalize][step=0] CheckpointManager Save Finalize is syncing with other hosts... (41711:checkpoint_manager.py:2095)
+12:07:18.737 [I] [process=0][thread=save_finalize][step=0] CheckpointManager Save Finalize is done on all hosts. (41711:checkpoint_manager.py:2110)
+12:07:18.737 [I] [process=0][thread=MainThread][step=0][wait_until_finished] Done waiting for Save Finalize thread (save_finalize) running at step=0. (41711:checkpoint_manager.py:2010)
+12:13:35.131 [I] Published checkpoint step /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/steps/0 to /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/final (41711:checkpoints.py:122)
+12:13:35.132 [I] Progress on: 1.00it/1.00it rate:433.2s/it remaining:00:00 elapsed:07:13 postfix:- (41711:tqdm_logging.py:145)
+12:13:35.133 [I] Progress on: 1.00it/1.00it rate:433.2s/it remaining:00:00 elapsed:07:13 postfix:- (41711:tqdm_logging.py:145)
+12:13:35.133 [I] Waiting for checkpoint manager to finish                                         (41711:train.py:301)
+12:13:35.133 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (41711:checkpoint_manager.py:1987)
+[2026-06-12 12:13:39] AWBC final checkpoint: /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/final
+[2026-06-12 12:13:39] [done] iter=2 stage=train_awbc next=collect
+[2026-06-12 12:13:39] [start] iter=2 stage=collect
+[2026-06-12 12:13:39] [server] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/server.py --policy-dir /data/aoss/heliqun/pi0-ours/goal-6/iter2/awbc_model/final --sample-mode qselect --num-action-samples 16 --seed 7 --critic-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/iql/final.pt
+[2026-06-12 12:13:39] [collect_raw] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 1 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_videos --metrics-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-12 12:13:39] [collect_raw_dir] /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect_tmp
+[2026-06-12 12:13:39] [collect_final_dir] /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect
+[2026-06-12 12:13:39] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=0.0s
+[2026-06-12 12:14:09] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=30.0s
+[2026-06-12 12:14:39] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=60.0s
+[2026-06-12 12:15:09] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=90.0s
+[2026-06-12 12:15:39] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=120.1s
+[2026-06-12 12:16:09] [server] still waiting for 127.0.0.1:8000; server_pid=43160; elapsed=150.1s
+[2026-06-12 12:16:16] [server] ready at 127.0.0.1:8000
+[2026-06-12 12:16:16] [cmd] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 1 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_videos --metrics-path /data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-12 12:16:16] [cwd] /data/huangdi/heliqun/pi0/openpi
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+2026-06-12 12:16:28,360 [INFO] Args: Args(host='127.0.0.1', port=8000, resize_size=224, replan_steps=5, task_suite_name='libero_goal', task_id=6, num_steps_wait=10, num_trials_per_task=1, initial_state_offset=0, seed=7, max_steps_override=-1, repo_id='collect_tmp', overwrite=True, fps=10, image_writer_threads=10, image_writer_processes=5, save_success=True, save_failure=True, video_out_path='/data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_videos', save_videos=True, metrics_path='/data/aoss/heliqun/pi0-ours/goal-6/iter2/collect_metrics.jsonl')
+2026-06-12 12:16:28,360 [INFO] Connecting to policy server at 127.0.0.1:8000
+2026-06-12 12:16:28,360 [INFO] Waiting for server at ws://127.0.0.1:8000...
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2026-06-12 12:16:28,374 [INFO] Task suite: libero_goal, num_tasks=10, max_steps=300
+
+tasks:   0%|          | 0/10 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/numba/np/arraymath.py:3845: DeprecationWarning: `np.MachAr` is deprecated (NumPy 1.22).
+  @overload(np.MachAr)
+
+
+task6:   0%|          | 0/1 [00:00<?, ?it/s][A2026-06-12 12:16:31,940 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-12 12:16:31,940 [INFO] Starting episode 1...
+2026-06-12 12:17:40,501 [INFO] Success: False
+2026-06-12 12:17:40,502 [INFO] # episodes completed so far: 1
+2026-06-12 12:17:40,502 [INFO] # successes: 0 (0.0%)
+2026-06-12 12:17:40,502 [INFO] Current task success rate: 0.000
+2026-06-12 12:17:40,502 [INFO] Current total success rate: 0.000
+2026-06-12 12:17:40,502 [INFO] Saved episodes=1 frames=300
+
+
+task6: 100%|██████████| 1/1 [01:08<00:00, 68.56s/it][A
+
+                                                    [A
+tasks:  70%|███████   | 7/10 [01:12<00:30, 10.30s/it]
+tasks: 100%|██████████| 10/10 [01:12<00:00,  7.21s/it]
+2026-06-12 12:17:40,503 [INFO] Saved tmp dataset to: /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect_tmp
+2026-06-12 12:17:40,503 [INFO] Total episodes=1 successes=0 success_rate=0.000
+2026-06-12 12:17:40,503 [INFO] Saved episodes=1 frames=300
+Exception ignored in: <function MjRenderContext.__del__ at 0x7fb66d3eed30>
 Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 326, in wait_for_port
-    with socket.create_connection((connect_host, int(port)), timeout=2.0):
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/venv/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/socket.py", line 863, in create_connection
-    raise exceptions[0]
-  File "/data/huangdi/heliqun/pi0/venv/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/socket.py", line 848, in create_connection
-    sock.connect(sa)
-ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+    self.gl_ctx.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: 2026-06-12 12:17:40,670 [INFO] Failed to load library ( 'libGLU.so.0' ): libGLU.so.0: cannot open shared object file: No such file or directory
+EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fb6598c56c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fb6599d3b40>,
+	),
+	result = 0
+)
+Exception ignored in: <function EGLGLContext.__del__ at 0x7fb66d3eeb80>
 Traceback (most recent call last):
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 912, in <module>
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+    self.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fb6598c56c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fb6599d3b40>,
+	),
+	result = 0
+)
+[2026-06-12 12:17:42] [convert] raw tmp -> LeRobot: /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect_tmp -> /data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect
+[2026-06-12 12:17:42] [raw_to_lerobot] input_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect_tmp
+[2026-06-12 12:17:42] [raw_to_lerobot] output_dir=/data/aoss/heliqun/pi0-ours/goal-6/iter2/data/collect
+[2026-06-12 12:17:42] [raw_to_lerobot] discovered_episodes=1
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 954, in <module>
     main()
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 908, in main
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 950, in main
     iter_train(parse_args())
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 900, in iter_train
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 942, in iter_train
     state = STAGE_EXECUTORS[stage](args, state, p)
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 785, in stage_collect
-    wait_for_port(QSELECT_HOST, QSELECT_PORT, proc, QSELECT_SERVER_WAIT_TIMEOUT, server_log)
-  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 330, in wait_for_port
-    time.sleep(1.0)
-KeyboardInterrupt
+  File "/data/huangdi/heliqun/pi0/ours/iter.py", line 824, in stage_collect
+    convert_summary = convert_raw_collect_to_lerobot(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/huangdi/heliqun/pi0/ours/Qselect/raw_collect_to_lerobot.py", line 373, in convert_raw_collect_to_lerobot
+    dataset = create_lerobot_dataset(
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/huangdi/heliqun/pi0/ours/Qselect/raw_collect_to_lerobot.py", line 190, in create_lerobot_dataset
+    return LeRobotDataset.create(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 1004, in create
+    obj.meta = LeRobotDatasetMetadata.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 318, in create
+    obj.root.mkdir(parents=True, exist_ok=False)
+  File "/data/huangdi/heliqun/pi0/venv/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+FileExistsError: [Errno 17] File exists: '/data/aoss/heliqun/pi0-ours/goal-6/iter1/data/collect'

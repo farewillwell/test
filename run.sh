@@ -36,6 +36,6 @@ ${PI_PYTHON} -u ours/iter.py \
   --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
-  --num-trials-per-task 50 \
+  --num-trials-per-task 1 \
   --iql-use-q-aug \
   > "iter-${task_id}-rank-qselect.log" 2>&1

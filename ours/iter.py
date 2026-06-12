@@ -40,7 +40,7 @@ import socket
 import subprocess
 import time
 from typing import Any
-
+from Qselect.raw_collect_to_lerobot import convert_raw_collect_to_lerobot
 
 STAGE_TRAIN_IQL = "train_iql"
 STAGE_LABEL = "label"
@@ -57,7 +57,7 @@ SUCCESS_TERMINAL_REWARD = 10.0
 FAILURE_TERMINAL_REWARD = -100.0
 QSELECT_HOST = "127.0.0.1"
 QSELECT_PORT = 8000
-QSELECT_SERVER_WAIT_TIMEOUT = 180.0
+QSELECT_SERVER_WAIT_TIMEOUT = 900.0
 
 
 def _task_mode(task_id: int) -> str:
@@ -317,6 +317,7 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -
 def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: float, log_path: Path) -> None:
     connect_host = "127.0.0.1" if host in {"0.0.0.0", ""} else host
     deadline = time.time() + timeout
+    last_log_time = 0.0
 
     while time.time() < deadline:
         if proc.poll() is not None:
@@ -327,10 +328,23 @@ def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: fl
                 log_line(log_path, f"[server] ready at {connect_host}:{port}")
                 return
         except OSError:
+            now_t = time.time()
+            if now_t - last_log_time > 30:
+                log_line(
+                    log_path,
+                    f"[server] still waiting for {connect_host}:{port}; "
+                    f"server_pid={proc.pid}; elapsed={timeout - (deadline - now_t):.1f}s"
+                )
+                last_log_time = now_t
             time.sleep(1.0)
 
-    raise TimeoutError(f"Timed out waiting for policy server at {connect_host}:{port}. See {log_path}")
+    if proc.poll() is None:
+        raise TimeoutError(
+            f"Timed out waiting for policy server at {connect_host}:{port} after {timeout}s. "
+            f"Server process is still alive, pid={proc.pid}. See {log_path}"
+        )
 
+    raise RuntimeError(f"Policy server exited with code {proc.returncode}. See {log_path}")
 
 def remove_path(path: Path) -> None:
     if path.exists():
@@ -714,6 +728,8 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
     log_path = p["logs"] / f"{STAGE_COLLECT}.log"
     server_log = p["logs"] / "policy_server.log"
     mode = "qselect" if args.use_q_select else "simple"
+    tmp_collect_dir = p["data"] / "collect_tmp"
+    final_collect_dir = p["collect_data"]
     server_cmd = [
         args.pi_python,
         "-u",
@@ -746,7 +762,7 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         "--seed",
         str(args.seed),
         "--repo-id",
-        "collect",
+        "collect_tmp",
         "--video-out-path",
         str(p["videos"]),
         "--metrics-path",
@@ -755,15 +771,21 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
 
     if args.overwrite_repos:
         collect_cmd.append("--overwrite")
-
-    collect_cmd.append("--save-videos" if args.save_videos else "--no-save-videos")
-    collect_cmd.append("--save-success" if args.save_success else "--no-save-success")
-    collect_cmd.append("--save-failure" if args.save_failure else "--no-save-failure")
+    if args.save_videos:
+        collect_cmd.append("--save-videos")
+    if args.save_success:
+        collect_cmd.append("--save-success")
+    if args.save_failure:
+        collect_cmd.append("--save-failure")
 
     log_line(log_path, f"[server] {quote_cmd(server_cmd)}")
-    log_line(log_path, f"[collect] {quote_cmd(collect_cmd)}")
+    log_line(log_path, f"[collect_raw] {quote_cmd(collect_cmd)}")
+    log_line(log_path, f"[collect_raw_dir] {tmp_collect_dir}")
+    log_line(log_path, f"[collect_final_dir] {final_collect_dir}")
 
     env_server = base_env(args)
+    env_server["CUDA_VISIBLE_DEVICES"] = "0"
+
     env_collect = libero_env(args, p["data"])
 
     server_log.parent.mkdir(parents=True, exist_ok=True)
@@ -793,10 +815,28 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
                     proc.kill()
                     proc.wait(timeout=20)
 
-    if not p["collect_data"].exists():
-        raise RuntimeError(f"Expected collect data not found: {p['collect_data']}")
+    # Convert raw tmp data -> final LeRobot repo.
+    #
+    # This direct import assumes iter.py itself is running under pi_env.
+    # If iter.py is run under libero_env, this will fail because lerobot is unavailable.
+    log_line(log_path, f"[convert] raw tmp -> LeRobot: {tmp_collect_dir} -> {final_collect_dir}")
 
-    state["last_collect_data_dir"] = str(p["collect_data"])
+    convert_summary = convert_raw_collect_to_lerobot(
+        input_dir=tmp_collect_dir,
+        output_dir=final_collect_dir,
+        fps=10,
+        resize_size=224,
+        overwrite=bool(args.overwrite_repos),
+        cleanup_input_on_success=True,
+        log_fn=lambda msg: log_line(log_path, msg),
+    )
+
+    log_line(log_path, f"[convert_summary] {json.dumps(convert_summary, ensure_ascii=False)}")
+
+    if not final_collect_dir.exists():
+        raise RuntimeError(f"Expected collect data not found after conversion: {final_collect_dir}")
+
+    state["last_collect_data_dir"] = str(final_collect_dir)
     state["next_stage"] = STAGE_APPEND_POOL
 
     append_history(
@@ -804,8 +844,10 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         iter_index,
         STAGE_COLLECT,
         {
-            "collect_data_dir": str(p["collect_data"]),
+            "collect_data_dir": str(final_collect_dir),
+            "raw_tmp_collect_dir": str(tmp_collect_dir),
             "sample_mode": mode,
+            "convert_summary": convert_summary,
         },
     )
     return state
