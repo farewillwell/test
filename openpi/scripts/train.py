@@ -293,7 +293,7 @@ def main(config: _config.TrainConfig):
 
         is_final_step = step == config.num_train_steps - 1
         if (step % config.save_interval == 0 and step > start_step) or is_final_step:
-            _checkpoints.save_state(checkpoint_manager, train_state, data_loader, step)
+            _checkpoints.save_state(checkpoint_manager, train_state, data_loader, step,save_train_state=config.save_train_state)
             if config.published_checkpoint_dir and is_final_step:
                 checkpoint_manager.wait_until_finished()
                 _checkpoints.publish_checkpoint_step(config.checkpoint_dir / str(step), config.published_checkpoint_dir)

@@ -593,6 +593,7 @@ class TrainConfig:
     awbc_weight_min: float = 0.2
     awbc_weight_max: float = 3.0
     default_libero_replan_steps:int = LIBERO_REPLAN_STEPS
+    save_train_state:bool = True
 
     @property
     def assets_dirs(self) -> pathlib.Path:
@@ -616,6 +617,8 @@ class TrainConfig:
     def __post_init__(self) -> None:
         if self.resume and self.overwrite:
             raise ValueError("Cannot resume and overwrite at the same time.")
+        if self.resume and not self.save_train_state:
+            raise ValueError("Cannot resume when save_train_state=False.")
 
 
 # Use `get_config` if you need to get a config by name in your code.
@@ -783,8 +786,6 @@ _CONFIGS = [
         num_train_steps=30_000,
         use_awbc=True,
         save_train_state=False,
-        # 建议：不需要 EMA，减少内存和保存体积
-        ema_decay=None,
     ),
     TrainConfig(
         name="pi0_fast_libero",
