@@ -4,25 +4,12 @@
 Minimal pi0/OpenPI SFT launcher for the iterative SFT baseline.
 
 Required:
-  --data-dir         local ordinary SFT LeRobot repo, e.g. iter0/data/sft
-  --model-dir        output checkpoint dir, e.g. iter0/sft_model
-  --base-policy-dir  checkpoint dir containing params/, e.g. pi0_base or previous final/
+  --data-dir          local ordinary SFT LeRobot repo, e.g. iter0/data/sft
+  --model-dir         output checkpoint dir, e.g. iter0/sft_model
+  --base-policy-dir   checkpoint dir containing params/, e.g. pi0_base or previous final/
 
-Fixed defaults:
-  config-name: pi0_libero_low_mem_finetune
-  asset-id: physical-intelligence/libero
-  project-name: openpi
-  exp-name: sft
-  HF_LEROBOT_HOME: dirname(data-dir)
-  assets-base-dir: data-dir/openpi_assets
-  overwrite: true
-  wandb: disabled
-  save-interval: steps, so only the final training boundary is saved/published
-
-This wrapper intentionally does not require or read any AWBC/IQL-only fields such
-as adv, reward, terminal, success, task_id, trial_id, or step_index. The input
-repo is expected to contain the ordinary OpenPI SFT fields:
-  image, wrist_image, state, actions, task
+This intentionally mirrors ours/BC/train_awbc.py, except it uses ordinary SFT
+configs such as pi0_libero / pi05_libero rather than *_awbc configs.
 """
 
 from __future__ import annotations
@@ -36,33 +23,40 @@ import time
 from typing import Any
 
 
-CONFIG_NAME = "pi0_libero"
 ASSET_ID = "physical-intelligence/libero"
 PROJECT_NAME = "openpi"
-EXP_NAME = "sft"
+DEFAULT_CONFIG_NAME = "pi0_libero"
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Minimal pi0/OpenPI SFT training launcher.")
-
     p.add_argument("--data-dir", required=True, help="Local ordinary SFT LeRobot repo directory.")
     p.add_argument("--model-dir", required=True, help="Output checkpoint directory.")
     p.add_argument("--base-policy-dir", required=True, help="Checkpoint directory containing params/.")
-
+    p.add_argument("--config-name", default=DEFAULT_CONFIG_NAME)
+    p.add_argument("--asset-id", default=ASSET_ID)
+    p.add_argument("--project-name", default=PROJECT_NAME)
+    p.add_argument("--exp-name", default="sft")
     p.add_argument("--steps", "--num-train-steps", dest="steps", type=int, default=5000)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--num-workers", type=int, default=4)
     p.add_argument("--gpus", "--fsdp-devices", dest="gpus", type=int, default=1)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--log-file", default="")
-
+    p.add_argument("--save-interval", type=int, default=0)
+    p.add_argument("--log-interval", type=int, default=100)
+    p.add_argument("--keep-period", default="None")
+    p.add_argument("--norm-max-frames", type=int, default=0)
+    p.add_argument("--compute-norm-stats", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--overwrite", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--resume", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--wandb-enabled", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--pi0-root", default="")
     p.add_argument("--openpi-root", default="")
     p.add_argument("--python-bin", default="")
-
     args, unknown = p.parse_known_args()
     if unknown:
-        print(f"[warn] ignoring unknown args: {' '.join(unknown)}", flush=True)
+        raise RuntimeError(f"unknown args: {' '.join(unknown)}")
     return args
 
 
@@ -89,7 +83,6 @@ def check_env(env: dict[str, str], log_file: Path | None) -> None:
         for k in sorted(bad_none):
             log(log_file, f"[env-error] {k}=None")
         raise RuntimeError("env contains None values: " + ", ".join(sorted(bad_none)))
-
     bad_type = [k for k, v in env.items() if not isinstance(v, (str, bytes, os.PathLike))]
     if bad_type:
         for k in sorted(bad_type):
@@ -101,7 +94,6 @@ def run(cmd: list[Any], *, cwd: Path, env: dict[str, str], log_file: Path | None
     log(log_file, f"[cmd] {quote_cmd(cmd)}")
     log(log_file, f"[cwd] {cwd}")
     check_env(env, log_file)
-
     with subprocess.Popen(
         [str(x) for x in cmd],
         cwd=str(cwd),
@@ -118,13 +110,12 @@ def run(cmd: list[Any], *, cwd: Path, env: dict[str, str], log_file: Path | None
                 with log_file.open("a", encoding="utf-8") as f:
                     f.write(line)
         rc = proc.wait()
-
     if rc != 0:
         raise subprocess.CalledProcessError(rc, cmd)
 
 
 def infer_roots(args: argparse.Namespace) -> tuple[Path, Path, Path]:
-    script_path = Path(__file__)
+    script_path = Path(__file__).absolute()
     pi0_root = Path(args.pi0_root) if args.pi0_root else script_path.parents[2]
     openpi_root = Path(args.openpi_root) if args.openpi_root else pi0_root / "openpi"
     python_bin = Path(args.python_bin) if args.python_bin else openpi_root / "pi_env" / "bin" / "python"
@@ -139,12 +130,10 @@ def require_lerobot_repo(data_dir: Path) -> None:
         raise FileNotFoundError(f"Invalid local LeRobot repo: {data_dir}\nExpected: {info_path}")
 
 
-def build_env(data_dir) -> dict[str, str]:
+def build_env(data_dir: Path) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
-    env["JAX_COMPILATION_CACHE_DIR"] = env.get("JAX_COMPILATION_CACHE_DIR")
     env["HF_LEROBOT_HOME"] = str(data_dir.parent)
-    env["CUDA_CACHE_PATH"] = env.get("CUDA_CACHE_PATH")
     env["CUDA_CACHE_MAXSIZE"] = env.get("CUDA_CACHE_MAXSIZE", "2147483648")
     env["JAX_ENABLE_COMPILATION_CACHE"] = env.get("JAX_ENABLE_COMPILATION_CACHE", "true")
     env["JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS"] = env.get("JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS", "0")
@@ -153,6 +142,8 @@ def build_env(data_dir) -> dict[str, str]:
 
 def main() -> None:
     args = parse_args()
+    if "awbc" in str(args.config_name).lower():
+        raise ValueError(f"SFT baseline must not use an AWBC config: {args.config_name}")
 
     pi0_root, openpi_root, python_bin = infer_roots(args)
     data_dir = Path(args.data_dir)
@@ -160,7 +151,6 @@ def main() -> None:
     base_policy_dir = Path(args.base_policy_dir)
 
     require_lerobot_repo(data_dir)
-
     params_path = base_policy_dir / "params"
     if not params_path.exists():
         raise FileNotFoundError(f"Base policy params not found: {params_path}")
@@ -170,47 +160,51 @@ def main() -> None:
     final_dir = model_dir / "final"
     step_dir = model_dir / "steps"
     log_file = Path(args.log_file) if args.log_file else model_dir / "train_sft.log"
+    save_interval = int(args.save_interval) if int(args.save_interval) > 0 else int(args.steps) + 1
 
     model_dir.mkdir(parents=True, exist_ok=True)
     env = build_env(data_dir)
 
-    log(log_file, "========== pi0 SFT baseline ==========")
+    log(log_file, "========== pi0 SFT simple ==========")
     log(log_file, f"data_dir={data_dir}")
     log(log_file, f"repo_id={repo_id}")
     log(log_file, f"HF_LEROBOT_HOME={env['HF_LEROBOT_HOME']}")
     log(log_file, f"model_dir={model_dir}")
     log(log_file, f"base_policy_dir={base_policy_dir}")
-    log(log_file, f"steps={args.steps} save_interval={args.steps}")
-    log(log_file, f"config={CONFIG_NAME} asset_id={ASSET_ID}")
+    log(log_file, f"steps={args.steps} save_interval={save_interval}")
+    log(log_file, f"config={args.config_name} asset_id={args.asset_id}")
 
-    norm_cmd = [
-        str(python_bin),
-        "-u",
-        str(pi0_root / "train" / "compute_norm_stats_custom.py"),
-        "repo-id",
-        repo_id,
-        "--asset-id",
-        ASSET_ID,
-        "--config-name",
-        CONFIG_NAME,
-        "--assets-base-dir",
-        str(assets_base_dir),
-        "--checkpoint-base-dir",
-        str(model_dir),
-        "--batch-size",
-        str(args.batch_size),
-        "--num-workers",
-        str(args.num_workers),
-    ]
-    run(norm_cmd, cwd=openpi_root, env=env, log_file=log_file)
+    if args.compute_norm_stats:
+        norm_cmd = [
+            str(python_bin),
+            "-u",
+            str(pi0_root / "train" / "compute_norm_stats_custom.py"),
+            "--repo-id",
+            repo_id,
+            "--asset-id",
+            args.asset_id,
+            "--config-name",
+            args.config_name,
+            "--assets-base-dir",
+            str(assets_base_dir),
+            "--checkpoint-base-dir",
+            str(model_dir),
+            "--batch-size",
+            str(args.batch_size),
+            "--num-workers",
+            str(args.num_workers),
+        ]
+        if args.norm_max_frames > 0:
+            norm_cmd.extend(["--max-frames", str(args.norm_max_frames)])
+        run(norm_cmd, cwd=openpi_root, env=env, log_file=log_file)
 
     train_cmd = [
         str(python_bin),
         "-u",
         "scripts/train.py",
-        CONFIG_NAME,
-        "--exp-name=sft",
-        f"--project-name={PROJECT_NAME}",
+        args.config_name,
+        f"--exp-name={args.exp_name}",
+        f"--project-name={args.project_name}",
         f"--assets-base-dir={assets_base_dir}",
         f"--checkpoint-base-dir={model_dir}",
         f"--checkpoint-dir-override={step_dir}",
@@ -218,22 +212,30 @@ def main() -> None:
         f"--batch-size={args.batch_size}",
         f"--num-workers={args.num_workers}",
         f"--num-train-steps={args.steps}",
-        f"--save-interval={args.steps}",
-        "--log-interval=100",
+        f"--save-interval={save_interval}",
+        f"--log-interval={args.log_interval}",
         f"--seed={args.seed}",
         f"--fsdp-devices={args.gpus}",
         f"--data.repo-id={repo_id}",
-        f"--data.assets.asset-id={ASSET_ID}",
+        f"--data.assets.asset-id={args.asset_id}",
         f"--weight-loader.params-path={params_path}",
         "--keep-period=None",
         "--no-wandb-enabled",
         "--overwrite",
+        "--no-save-train-state",
     ]
+    if args.resume:
+        train_cmd = [x for x in train_cmd if x != "--overwrite"]
+        train_cmd.append("--resume")
+    elif not args.overwrite:
+        train_cmd = [x for x in train_cmd if x != "--overwrite"]
+
     run(train_cmd, cwd=openpi_root, env=env, log_file=log_file)
 
     if not (final_dir / "params").exists():
         raise RuntimeError(f"Expected final params not found: {final_dir / 'params'}")
-
+    if not (final_dir / "assets").exists():
+        raise RuntimeError(f"Expected final assets not found: {final_dir / 'assets'}")
     log(log_file, f"SFT final checkpoint: {final_dir}")
 
 

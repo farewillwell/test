@@ -3,7 +3,6 @@ source /data/huangdi/heliqun/pi0/openpi/pi_env/bin/activate
 git config --global --add safe.directory /data/huangdi/heliqun/pi0
 
 export WANDB_MODE=offline
-export WANDB_API_KEY=fb160cb6ca8fb120eeb3ce568a89ae77677a01f6
 export TOKENIZERS_PARALLELISM=false
 export LIBERO_CONFIG_PATH=/data/huangdi/heliqun/openvla-oft/openvla-oft/LIBERO/.libero
 export MUJOCO_GL=egl
@@ -17,14 +16,18 @@ PI0_ROOT=/data/huangdi/heliqun/pi0
 OPENPI_ROOT=${PI0_ROOT}/openpi
 PI_PYTHON=${OPENPI_ROOT}/pi_env/bin/python
 LIBERO_PYTHON=${OPENPI_ROOT}/examples/libero/libero_env/bin/python
+
 export PI0_CACHE_ROOT="${PI0_CACHE_ROOT:-${PI0_ROOT}/cache}"
 export JAX_COMPILATION_CACHE_DIR="${JAX_COMPILATION_CACHE_DIR:-${PI0_CACHE_ROOT}/jax}"
 export CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-${PI0_CACHE_ROOT}/cuda}"
-WORKSPACE=/data/aoss/heliqun/pi0-ours/goal-6
+
+WORKSPACE=/data/aoss/heliqun/pi0-sft-baseline/goal-6
 SRC_DIR=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
 BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
+
 unset LD_LIBRARY_PATH
-${PI_PYTHON} -u ours/iter.py \
+
+${PI_PYTHON} -u ours/iter_baseline.py \
   --workspace "${WORKSPACE}" \
   --src-dir "${SRC_DIR}" \
   --base-model "${BASE_MODEL}" \
@@ -33,13 +36,9 @@ ${PI_PYTHON} -u ours/iter.py \
   --pi-python "${PI_PYTHON}" \
   --libero-python "${LIBERO_PYTHON}" \
   --iters 4 \
-  --gpus 4 \
-  --iql-batch-size 256 \
-  --awbc-batch-size 64 \
-  --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
+  --gpus 2 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
   --num-trials-per-task 1 \
-  --iql-use-q-aug \
-  --policy-config-name pi0_libero_awbc \
-  > "iter-${task_id}-rank-qselect.log" 2>&1
+  --policy-config-name pi0_libero \
+  > "iter-${task_id}-baseline-sft.log" 2>&1

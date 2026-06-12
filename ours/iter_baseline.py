@@ -4,20 +4,20 @@
 Stage-resumable iterative SFT baseline for pi0/OpenPI on LIBERO.
 
 This baseline deliberately excludes IQL, advantage labeling, AWBC, and Q-select.
-The only state-machine stages are:
+Its state machine is:
 
     train_sft -> collect -> append_success_sft
 
 Per iteration:
-  1. materialize the virtual success-only SFT pool into iterN/data/sft
-  2. train ordinary SFT into iterN/sft_model/final/params
-  3. collect success + failure rollouts through the existing server/collector in
-     server sample-mode=simple, without selector-side scoring
-  4. extract only successful episodes into iterN/data/collect_success_sft and add
-     that repo to pool/meta/sft_sources.jsonl
+1. materialize the virtual success-only SFT pool into iterN/data/sft;
+2. train ordinary SFT into iterN/sft_model/final;
+3. collect success + failure rollouts through Qselect/server.py in sample-mode=simple;
+4. convert raw collect tmp -> LeRobot repo;
+5. extract successful episodes only into iterN/data/collect_success_sft;
+6. append that success-only repo to pool/meta/sft_sources.jsonl.
 
-The pool manifest records success-only ordinary SFT repos. Failures can remain in
-iterN/data/collect for metrics/statistics, but they never enter the SFT pool.
+Failures remain available in iterN/data/collect and collect_metrics.jsonl, but never
+enter the SFT training pool.
 """
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ import numpy as np
 import torch
 from PIL import Image
 
+from Qselect.raw_collect_to_lerobot import convert_raw_collect_to_lerobot
+
 
 STAGE_TRAIN_SFT = "train_sft"
 STAGE_COLLECT = "collect"
@@ -47,9 +49,13 @@ STAGE_FINISHED = "finished"
 STAGES = (STAGE_TRAIN_SFT, STAGE_COLLECT, STAGE_APPEND_SUCCESS_SFT)
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 
-CONFIG_NAME = "pi0_libero"
 ASSET_ID = "physical-intelligence/libero"
 PROJECT_NAME = "openpi"
+FPS = 10
+
+QSELECT_HOST = "127.0.0.1"
+QSELECT_PORT = 8000
+QSELECT_SERVER_WAIT_TIMEOUT = 900.0
 
 IMAGE_KEY = "image"
 WRIST_IMAGE_KEY = "wrist_image"
@@ -58,7 +64,10 @@ ACTION_KEY = "actions"
 TASK_KEY = "task"
 EPISODE_KEY = "episode_index"
 SUCCESS_KEY = "success"
-FPS = 10
+
+
+def _task_mode(task_id: int) -> str:
+    return "single" if int(task_id) >= 0 else "multi"
 
 
 def get_sft_steps(iter_index: int, task_id: int) -> int:
@@ -70,41 +79,47 @@ def get_sft_steps(iter_index: int, task_id: int) -> int:
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Run a pi0/OpenPI iterative SFT baseline.")
+    p = argparse.ArgumentParser(description="Run pi0 iterative SFT baseline with a virtual success-only data pool.")
 
-    p.add_argument("--workspace", required=True)
-    p.add_argument("--src-dir", required=True)
-    p.add_argument("--base-model", required=True)
+    # Core paths, matching ours/iter.py.
+    p.add_argument("--workspace", required=True, help="Experiment root. All generated data/checkpoints/logs stay under it.")
+    p.add_argument("--src-dir", required=True, help="Initial success-only ordinary OpenPI/LeRobot SFT dataset directory.")
+    p.add_argument("--base-model", required=True, help="Initial pi0 checkpoint directory containing params/.")
 
-    p.add_argument("--pi0-root", default="")
-    p.add_argument("--openpi-root", default="")
-    p.add_argument("--pi-python", default="")
-    p.add_argument("--libero-python", default="")
+    # Repository / environment roots, matching ours/iter.py.
+    p.add_argument("--pi0-root", default="", help="Defaults to parent of this script.")
+    p.add_argument("--openpi-root", default="", help="Defaults to <pi0-root>/openpi.")
+    p.add_argument("--pi-python", default="", help="Defaults to <openpi-root>/pi_env/bin/python.")
+    p.add_argument("--libero-python", default="", help="Defaults to <openpi-root>/examples/libero/libero_env/bin/python.")
 
+    # Iteration / resume.
     p.add_argument("--iters", type=int, default=4)
     p.add_argument("--gpus", type=int, default=2)
+    p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)
+
+    # Time scale. These are kept for CLI compatibility with ours/iter.py.
+    # collect.py currently obtains action_horizon from the shell environment.
+    p.add_argument("--horizon", type=int, default=5)
+    p.add_argument("--replan-steps", type=int, default=5)
+
+    # SFT.
     p.add_argument("--sft-batch-size", type=int, default=16)
     p.add_argument("--sft-num-workers", type=int, default=4)
-    p.add_argument("--seed", type=int, default=7)
+    p.add_argument("--norm-max-frames", type=int, default=0)
+    p.add_argument("--asset-id", default=ASSET_ID)
+    p.add_argument("--project-name", default=PROJECT_NAME)
+    p.add_argument("--policy-config-name", default="pi0_libero")
 
+    # Collect, matching ours/iter.py.
+    p.add_argument("--num-action-samples", type=int, default=16)
     p.add_argument("--task-suite-name", default="libero_goal")
     p.add_argument("--task-id", type=int, default=-1)
     p.add_argument("--num-trials-per-task", type=int, default=50)
     p.add_argument("--initial-state-offset", type=int, default=0)
-    p.add_argument("--num-steps-wait", type=int, default=10)
-    p.add_argument("--replan-steps", type=int, default=5)
-
-    p.add_argument("--num-action-samples", type=int, default=16)
-    p.add_argument("--qselect-num-steps", type=int, default=10)
-    p.add_argument("--noise-scale", type=float, default=1.0)
-    p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--server-wait-timeout", type=float, default=180.0)
-
-    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--save-videos", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
-    p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)
-
+    p.add_argument("--seed", type=int, default=7)
     return p.parse_args()
 
 
@@ -135,6 +150,7 @@ def workspace_paths(args: argparse.Namespace, iter_index: int) -> dict[str, Path
         "logs": root / "logs",
         "data": root / "data",
         "sft_data": root / "data" / "sft",
+        "collect_tmp": root / "data" / "collect_tmp",
         "collect_data": root / "data" / "collect",
         "collect_success_sft": root / "data" / "collect_success_sft",
         "model_dir": root / "sft_model",
@@ -180,9 +196,9 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
     env["PYTHONUNBUFFERED"] = "1"
     env["TOKENIZERS_PARALLELISM"] = env.get("TOKENIZERS_PARALLELISM", "false")
     env["WANDB_MODE"] = env.get("WANDB_MODE", "offline")
-    env.setdefault("CUDA_CACHE_MAXSIZE", "2147483648")
-    env.setdefault("JAX_ENABLE_COMPILATION_CACHE", "true")
-    env.setdefault("JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS", "0")
+    env["CUDA_CACHE_MAXSIZE"] = env.get("CUDA_CACHE_MAXSIZE", "2147483648")
+    env["JAX_ENABLE_COMPILATION_CACHE"] = env.get("JAX_ENABLE_COMPILATION_CACHE", "true")
+    env["JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS"] = env.get("JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS", "0")
     env.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
     env.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.90")
     return env
@@ -190,12 +206,10 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
 
 def libero_env(args: argparse.Namespace, data_root: Path) -> dict[str, str]:
     env = base_env(args)
-
     if not env.get("LIBERO_CONFIG_PATH", ""):
         raise RuntimeError("LIBERO_CONFIG_PATH must be set in the shell environment.")
     if not env.get("MUJOCO_GL", ""):
         raise RuntimeError("MUJOCO_GL must be set in the shell environment, e.g. export MUJOCO_GL=egl")
-
     env["HF_LEROBOT_HOME"] = str(data_root)
     third_party_libero = str(Path(args.openpi_root) / "third_party" / "libero")
     env["PYTHONPATH"] = third_party_libero + os.pathsep + env.get("PYTHONPATH", "")
@@ -206,7 +220,6 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -
     log_line(log_path, f"[cmd] {quote_cmd(cmd)}")
     log_line(log_path, f"[cwd] {cwd}")
     check_env_for_subprocess(env, log_path=log_path)
-
     with subprocess.Popen(
         [str(x) for x in cmd],
         cwd=str(cwd),
@@ -222,7 +235,6 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -
             with log_path.open("a", encoding="utf-8") as f:
                 f.write(line)
         rc = proc.wait()
-
     if rc != 0:
         raise subprocess.CalledProcessError(rc, cmd)
 
@@ -230,7 +242,7 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -
 def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: float, log_path: Path) -> None:
     connect_host = "127.0.0.1" if host in {"0.0.0.0", ""} else host
     deadline = time.time() + float(timeout)
-
+    last_log_time = 0.0
     while time.time() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(f"Policy server exited early with code {proc.returncode}. See {log_path}")
@@ -239,8 +251,11 @@ def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: fl
                 log_line(log_path, f"[server] ready at {connect_host}:{port}")
                 return
         except OSError:
+            now_t = time.time()
+            if now_t - last_log_time > 30:
+                log_line(log_path, f"[server] still waiting for {connect_host}:{port}; server_pid={proc.pid}")
+                last_log_time = now_t
             time.sleep(1.0)
-
     raise TimeoutError(f"Timed out waiting for policy server at {connect_host}:{port}. See {log_path}")
 
 
@@ -332,9 +347,7 @@ def assert_lerobot_repo_dir(repo_dir: Path, *, name: str) -> None:
     if not repo_dir.exists():
         raise FileNotFoundError(f"{name} directory does not exist: {repo_dir}")
     if not info_path.exists():
-        raise FileNotFoundError(
-            f"{name} is not a valid local LeRobot repo: {repo_dir}\nExpected metadata file: {info_path}"
-        )
+        raise FileNotFoundError(f"{name} is not a valid local LeRobot repo: {repo_dir}\nExpected metadata file: {info_path}")
 
 
 def open_lerobot_dataset(repo_dir: Path):
@@ -363,7 +376,6 @@ def _create_lerobot_dataset_with_root(
         image_writer_threads=10,
         image_writer_processes=5,
     )
-
     try:
         return LeRobotDataset.create(root=root, **create_kwargs)
     except TypeError as e:
@@ -384,41 +396,20 @@ def create_sft_output_dataset(
     action_dim: int,
 ):
     output_dir = Path(output_dir)
-    output_repo_id = output_dir.name
-
     if output_dir.exists():
         if not overwrite:
             raise FileExistsError(f"{output_dir} already exists. Pass --overwrite-repos.")
         shutil.rmtree(output_dir)
-
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     os.environ["HF_LEROBOT_HOME"] = str(output_dir.parent)
-
     features = {
-        "image": {
-            "dtype": "image",
-            "shape": tuple(image_shape),
-            "names": ["height", "width", "channel"],
-        },
-        "wrist_image": {
-            "dtype": "image",
-            "shape": tuple(wrist_shape),
-            "names": ["height", "width", "channel"],
-        },
-        "state": {
-            "dtype": "float32",
-            "shape": (state_dim,),
-            "names": ["state"],
-        },
-        "actions": {
-            "dtype": "float32",
-            "shape": (action_dim,),
-            "names": ["actions"],
-        },
+        "image": {"dtype": "image", "shape": tuple(image_shape), "names": ["height", "width", "channel"]},
+        "wrist_image": {"dtype": "image", "shape": tuple(wrist_shape), "names": ["height", "width", "channel"]},
+        "state": {"dtype": "float32", "shape": (state_dim,), "names": ["state"]},
+        "actions": {"dtype": "float32", "shape": (action_dim,), "names": ["actions"]},
     }
-
     return _create_lerobot_dataset_with_root(
-        repo_id=output_repo_id,
+        repo_id=output_dir.name,
         root=output_dir,
         robot_type="libero",
         fps=fps,
@@ -459,12 +450,10 @@ def infer_sft_shapes(sample: dict[str, Any]) -> tuple[tuple[int, int, int], tupl
     wrist_shape = image_hwc_uint8(require_key(sample, WRIST_IMAGE_KEY)).shape
     state_dim = float_vec(require_key(sample, STATE_KEY), STATE_KEY).shape[0]
     action_dim = float_vec(require_key(sample, ACTION_KEY), ACTION_KEY).shape[0]
-
     if state_dim != 8:
         raise ValueError(f"Expected state dim 8, got {state_dim}")
     if action_dim != 7:
         raise ValueError(f"Expected action dim 7, got {action_dim}")
-
     return image_shape, wrist_shape, state_dim, action_dim
 
 
@@ -472,7 +461,6 @@ def add_sft_frame(dst: Any, sample: dict[str, Any], *, src_desc: str, frame_idx:
     task = decode_task(require_key(sample, TASK_KEY)).strip()
     if not task:
         raise ValueError(f"Empty task at {src_desc} frame {frame_idx}")
-
     dst.add_frame(
         {
             "image": image_hwc_uint8(require_key(sample, IMAGE_KEY)),
@@ -488,14 +476,12 @@ def materialize_sft_pool(source_dirs: list[Path], output_dir: Path, *, overwrite
     """Merge success-only ordinary SFT LeRobot repos into one ordinary SFT repo."""
     if not source_dirs:
         raise ValueError("materialize_sft_pool requires at least one source repo")
-
     source_dirs = [Path(x) for x in source_dirs]
     for source_dir in source_dirs:
         assert_lerobot_repo_dir(source_dir, name="SFT source")
 
     first_sample = first_sample_from_sources(source_dirs)
     image_shape, wrist_shape, state_dim, action_dim = infer_sft_shapes(first_sample)
-
     dst = create_sft_output_dataset(
         output_dir,
         overwrite=overwrite,
@@ -508,7 +494,6 @@ def materialize_sft_pool(source_dirs: list[Path], output_dir: Path, *, overwrite
 
     total_episodes = 0
     total_frames = 0
-
     try:
         for source_dir in source_dirs:
             src = open_lerobot_dataset(source_dir)
@@ -524,7 +509,6 @@ def materialize_sft_pool(source_dirs: list[Path], output_dir: Path, *, overwrite
                 total_episodes += 1
     finally:
         stop_image_writer(dst)
-
     assert_output_created(output_dir)
     return {"episodes": int(total_episodes), "frames": int(total_frames)}
 
@@ -542,17 +526,15 @@ def episode_is_success(src: Any, indices: list[int]) -> bool:
 
 
 def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: bool = True) -> dict[str, int]:
-    """Extract only successful episodes from a collector-style repo into an ordinary SFT repo."""
+    """Extract only successful episodes from a converted collector LeRobot repo into ordinary SFT."""
     collect_dir = Path(collect_dir)
     assert_lerobot_repo_dir(collect_dir, name="collect-dir")
-
     src = open_lerobot_dataset(collect_dir)
     if len(src) == 0:
         raise RuntimeError(f"Collect dataset is empty: {collect_dir}")
 
     first_sample = src[0]
     image_shape, wrist_shape, state_dim, action_dim = infer_sft_shapes(first_sample)
-
     dst = create_sft_output_dataset(
         output_dir,
         overwrite=overwrite,
@@ -564,10 +546,9 @@ def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: 
     )
 
     by_ep = group_indices_by_episode(src)
+    total_seen_episodes = 0
     total_success_episodes = 0
     total_frames = 0
-    total_seen_episodes = 0
-
     try:
         for src_ep in sorted(by_ep):
             indices = by_ep[src_ep]
@@ -583,7 +564,6 @@ def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: 
             total_success_episodes += 1
     finally:
         stop_image_writer(dst)
-
     assert_output_created(output_dir)
     return {
         "seen_episodes": int(total_seen_episodes),
@@ -606,7 +586,6 @@ def sft_pool_source_dirs(args: argparse.Namespace) -> list[Path]:
     path = pools["sft_sources"]
     if not path.exists():
         raise FileNotFoundError(f"SFT pool source manifest not found: {path}")
-
     repo_dirs: list[Path] = []
     seen: set[str] = set()
     with path.open("r", encoding="utf-8") as f:
@@ -624,7 +603,6 @@ def sft_pool_source_dirs(args: argparse.Namespace) -> list[Path]:
             if key not in seen:
                 repo_dirs.append(repo_path)
                 seen.add(key)
-
     if not repo_dirs:
         raise RuntimeError(f"No valid SFT sources found in {path}")
     return repo_dirs
@@ -634,12 +612,9 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
     pools = pool_paths(args)
     pools["root"].mkdir(parents=True, exist_ok=True)
     pools["meta"].mkdir(parents=True, exist_ok=True)
-
     remove_path(pools["sft_sources"])
-
     src_dir = Path(args.src_dir)
     assert_lerobot_repo_dir(src_dir, name="initial --src-dir")
-
     append_sft_source_record(
         args,
         {
@@ -654,7 +629,7 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
 def build_initial_state(args: argparse.Namespace) -> dict[str, Any]:
     pools = pool_paths(args)
     return {
-        "version": 1,
+        "version": 2,
         "iter_index": 0,
         "next_stage": STAGE_TRAIN_SFT,
         "current_policy_dir": str(Path(args.base_model)),
@@ -683,14 +658,12 @@ def save_state(args: argparse.Namespace, state: dict[str, Any]) -> None:
 def load_or_init_state(args: argparse.Namespace) -> dict[str, Any]:
     save_path = Path(args.workspace) / "save.json"
     log = main_log(args)
-
     if save_path.exists():
         state = json.loads(save_path.read_text(encoding="utf-8"))
         if state.get("next_stage") not in VALID_STAGES:
             raise ValueError(f"Invalid next_stage in save.json: {state.get('next_stage')}")
         log_line(log, f"[resume] {save_path}: iter={state.get('iter_index')} next_stage={state.get('next_stage')}")
         return state
-
     ensure_pool_initialized(args, log)
     state = build_initial_state(args)
     save_state(args, state)
@@ -701,7 +674,6 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
     workspace = Path(args.workspace)
     src_dir = Path(args.src_dir)
     base_model = Path(args.base_model)
-
     if not src_dir.exists():
         raise FileNotFoundError(f"--src-dir does not exist: {src_dir}")
     if not (src_dir / "meta" / "info.json").exists():
@@ -710,10 +682,10 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
         raise FileNotFoundError(f"--base-model does not exist: {base_model}")
     if not (base_model / "params").exists():
         raise FileNotFoundError(f"--base-model must contain params/: {base_model}")
-    if int(args.replan_steps) <= 0:
-        raise ValueError(f"--replan-steps must be positive, got {args.replan_steps}")
     if int(args.iters) <= 0:
         raise ValueError(f"--iters must be positive, got {args.iters}")
+    if "awbc" in str(args.policy_config_name).lower():
+        raise ValueError("baseline SFT must use an ordinary SFT config, not an AWBC config: " + str(args.policy_config_name))
 
     args.workspace = str(workspace)
     args.src_dir = str(src_dir)
@@ -722,7 +694,6 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
     this_file = Path(__file__)
     pi0_root = Path(args.pi0_root) if args.pi0_root else this_file.parents[1]
     args.pi0_root = str(pi0_root)
-
     openpi_root = Path(args.openpi_root) if args.openpi_root else pi0_root / "openpi"
     args.openpi_root = str(openpi_root)
     args.pi_python = str(Path(args.pi_python) if args.pi_python else openpi_root / "pi_env" / "bin" / "python")
@@ -736,11 +707,11 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
         Path(args.pi0_root) / "ours" / "BC" / "train_sft.py",
         Path(args.pi0_root) / "ours" / "Qselect" / "server.py",
         Path(args.pi0_root) / "ours" / "Qselect" / "collect.py",
+        Path(args.pi0_root) / "ours" / "Qselect" / "raw_collect_to_lerobot.py",
     )
     for script in required_scripts:
         if not script.exists():
             raise FileNotFoundError(f"Required script not found: {script}")
-
     return args
 
 
@@ -749,11 +720,10 @@ def stage_train_sft(args: argparse.Namespace, state: dict[str, Any], p: dict[str
     iter_index = int(state["iter_index"])
     sft_steps = get_sft_steps(iter_index, args.task_id)
     source_dirs = sft_pool_source_dirs(args)
-
     log_line(log_path, f"[pool] source_dirs={json.dumps([str(x) for x in source_dirs], ensure_ascii=False)}")
     mat_stats = materialize_sft_pool(source_dirs, p["sft_data"], overwrite=bool(args.overwrite_repos))
     log_line(log_path, f"[materialize_sft_data] output={p['sft_data']} stats={mat_stats}")
-    log_line(log_path, f"[steps] SFT num_train_steps={sft_steps} iter={iter_index} task_id={args.task_id}")
+    log_line(log_path, f"[steps] SFT num_train_steps={sft_steps} mode={_task_mode(args.task_id)} iter={iter_index}")
 
     cmd = [
         args.pi_python,
@@ -771,6 +741,12 @@ def stage_train_sft(args: argparse.Namespace, state: dict[str, Any], p: dict[str
         str(Path(args.openpi_root)),
         "--python-bin",
         args.pi_python,
+        "--config-name",
+        args.policy_config_name,
+        "--asset-id",
+        args.asset_id,
+        "--project-name",
+        args.project_name,
         "--steps",
         str(sft_steps),
         "--batch-size",
@@ -784,16 +760,15 @@ def stage_train_sft(args: argparse.Namespace, state: dict[str, Any], p: dict[str
         "--log-file",
         str(log_path),
     ]
+    if args.norm_max_frames > 0:
+        cmd.extend(["--norm-max-frames", str(args.norm_max_frames)])
 
     run_cmd(cmd, log_path=log_path, cwd=Path(args.pi0_root), env=base_env(args))
-
     next_policy = p["model_dir"] / "final"
     if not (next_policy / "params").exists():
         raise RuntimeError(f"Expected SFT final checkpoint with params/ not found: {next_policy}")
-
     state["current_policy_dir"] = str(next_policy)
     state["next_stage"] = STAGE_COLLECT
-
     append_history(
         state,
         iter_index,
@@ -803,6 +778,7 @@ def stage_train_sft(args: argparse.Namespace, state: dict[str, Any], p: dict[str
             "source_dirs": [str(x) for x in source_dirs],
             "materialize_stats": mat_stats,
             "policy_dir": str(next_policy),
+            "policy_config": args.policy_config_name,
             "sft_steps": int(sft_steps),
             "batch_size": int(args.sft_batch_size),
             "num_workers": int(args.sft_num_workers),
@@ -817,82 +793,69 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
     iter_index = int(state["iter_index"])
     log_path = p["logs"] / f"{STAGE_COLLECT}.log"
     server_log = p["logs"] / "policy_server.log"
+    tmp_collect_dir = p["collect_tmp"]
+    final_collect_dir = p["collect_data"]
 
     server_cmd = [
         args.pi_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "Qselect" / "server.py"),
         "--policy-config",
-        CONFIG_NAME,
+        args.policy_config_name,
         "--policy-dir",
         state["current_policy_dir"],
         "--sample-mode",
         "simple",
         "--num-action-samples",
         str(args.num_action_samples),
-        "--num-steps",
-        str(args.qselect_num_steps),
-        "--noise-scale",
-        str(args.noise_scale),
         "--seed",
         str(args.seed),
-        "--score-horizon",
-        "0",
-        "--port",
-        str(args.port),
     ]
 
     collect_cmd = [
         args.libero_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "Qselect" / "collect.py"),
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(args.port),
-        "--resize-size",
-        "224",
-        "--replan-steps",
-        str(args.replan_steps),
         "--task-suite-name",
         args.task_suite_name,
         "--task-id",
         str(args.task_id),
-        "--num-steps-wait",
-        str(args.num_steps_wait),
         "--num-trials-per-task",
         str(args.num_trials_per_task),
         "--initial-state-offset",
         str(args.initial_state_offset),
         "--seed",
         str(args.seed),
-        "--max-steps-override",
-        str(args.max_steps_override),
         "--repo-id",
-        "collect",
+        "collect_tmp",
         "--video-out-path",
         str(p["videos"]),
         "--metrics-path",
         str(p["metrics"]),
     ]
-
     if args.overwrite_repos:
         collect_cmd.append("--overwrite")
-    collect_cmd.append("--save-videos" if args.save_videos else "--no-save-videos")
-    collect_cmd.append("--save-success" if args.save_success else "--no-save-success")
-    collect_cmd.append("--save-failure" if args.save_failure else "--no-save-failure")
+    if args.save_videos:
+        collect_cmd.append("--save-videos")
+    if args.save_success:
+        collect_cmd.append("--save-success")
+    if args.save_failure:
+        collect_cmd.append("--save-failure")
 
     log_line(log_path, f"[server] {quote_cmd(server_cmd)}")
-    log_line(log_path, f"[collect] {quote_cmd(collect_cmd)}")
+    log_line(log_path, f"[collect_raw] {quote_cmd(collect_cmd)}")
+    log_line(log_path, f"[collect_raw_dir] {tmp_collect_dir}")
+    log_line(log_path, f"[collect_final_dir] {final_collect_dir}")
 
     env_server = base_env(args)
+    env_server["CUDA_VISIBLE_DEVICES"] = "0"
     env_collect = libero_env(args, p["data"])
+    log_line(log_path, f"[collect_env] action_horizon={env_collect.get('action_horizon', '')}")
 
     server_log.parent.mkdir(parents=True, exist_ok=True)
     with server_log.open("a", encoding="utf-8") as server_fp:
         server_fp.write(f"\n[{now()}] [server start] {quote_cmd(server_cmd)}\n")
         server_fp.flush()
-
         proc = subprocess.Popen(
             [str(x) for x in server_cmd],
             cwd=str(Path(args.openpi_root)),
@@ -901,9 +864,8 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
             stderr=subprocess.STDOUT,
             text=True,
         )
-
         try:
-            wait_for_port("127.0.0.1", args.port, proc, args.server_wait_timeout, server_log)
+            wait_for_port(QSELECT_HOST, QSELECT_PORT, proc, QSELECT_SERVER_WAIT_TIMEOUT, server_log)
             run_cmd(collect_cmd, log_path=log_path, cwd=Path(args.openpi_root), env=env_collect)
         finally:
             if proc.poll() is None:
@@ -914,21 +876,34 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
                     proc.kill()
                     proc.wait(timeout=20)
 
-    if not p["collect_data"].exists():
-        raise RuntimeError(f"Expected collect data not found: {p['collect_data']}")
+    log_line(log_path, f"[convert] raw tmp -> LeRobot: {tmp_collect_dir} -> {final_collect_dir}")
+    convert_summary = convert_raw_collect_to_lerobot(
+        input_dir=tmp_collect_dir,
+        output_dir=final_collect_dir,
+        fps=FPS,
+        resize_size=224,
+        overwrite=bool(args.overwrite_repos),
+        cleanup_input_on_success=True,
+        log_fn=lambda msg: log_line(log_path, msg),
+    )
+    log_line(log_path, f"[convert_summary] {json.dumps(convert_summary, ensure_ascii=False)}")
 
-    state["last_collect_data_dir"] = str(p["collect_data"])
+    if not final_collect_dir.exists():
+        raise RuntimeError(f"Expected collect data not found after conversion: {final_collect_dir}")
+
+    state["last_collect_data_dir"] = str(final_collect_dir)
     state["next_stage"] = STAGE_APPEND_SUCCESS_SFT
-
     append_history(
         state,
         iter_index,
         STAGE_COLLECT,
         {
-            "collect_data_dir": str(p["collect_data"]),
+            "collect_data_dir": str(final_collect_dir),
+            "raw_tmp_collect_dir": str(tmp_collect_dir),
             "sample_mode": "simple",
-            "policy_config": CONFIG_NAME,
+            "policy_config": args.policy_config_name,
             "policy_dir": state["current_policy_dir"],
+            "convert_summary": convert_summary,
         },
     )
     return state
@@ -938,7 +913,6 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
     log_path = p["logs"] / f"{STAGE_APPEND_SUCCESS_SFT}.log"
     iter_index = int(state["iter_index"])
     collect_dir = Path(state["last_collect_data_dir"])
-
     if not collect_dir.exists():
         raise FileNotFoundError(f"Collect data does not exist: {collect_dir}")
 
@@ -970,7 +944,6 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
 
     source_dirs = sft_pool_source_dirs(args)
     log_line(log_path, f"[pool] sources now={json.dumps([str(x) for x in source_dirs], ensure_ascii=False)}")
-
     append_history(
         state,
         iter_index,
@@ -984,7 +957,6 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
             "num_pool_sources": int(len(source_dirs)),
         },
     )
-
     state["iter_index"] = iter_index + 1
     state["next_stage"] = STAGE_FINISHED if state["iter_index"] >= int(args.iters) else STAGE_TRAIN_SFT
     return state
@@ -999,10 +971,8 @@ STAGE_EXECUTORS = {
 
 def iter_train(args: argparse.Namespace) -> None:
     args = resolve_args(args)
-
     workspace = Path(args.workspace)
     (workspace / "logs").mkdir(parents=True, exist_ok=True)
-
     log_line(main_log(args), "=" * 80)
     log_line(main_log(args), "pi0/OpenPI iterative SFT baseline")
     log_line(main_log(args), f"workspace={args.workspace}")
@@ -1010,26 +980,22 @@ def iter_train(args: argparse.Namespace) -> None:
     log_line(main_log(args), f"base_model={args.base_model}")
     log_line(main_log(args), f"iters={args.iters} task={args.task_suite_name}:{args.task_id}")
     log_line(main_log(args), f"gpus={args.gpus}")
-    log_line(main_log(args), f"policy_config={CONFIG_NAME}")
+    log_line(main_log(args), f"policy_config={args.policy_config_name}")
     log_line(main_log(args), "collect_sample_mode=simple")
-    log_line(main_log(args), f"replan_steps={args.replan_steps}")
+    log_line(main_log(args), f"horizon={args.horizon} replan_steps={args.replan_steps}")
 
     state = load_or_init_state(args)
-
     while state.get("next_stage") != STAGE_FINISHED:
         stage = str(state["next_stage"])
         if stage not in STAGE_EXECUTORS:
             raise ValueError(f"Unknown stage: {stage}")
-
         iter_index = int(state["iter_index"])
         p = workspace_paths(args, iter_index)
         mkdir_stage_dirs(p)
-
         log_line(main_log(args), f"[start] iter={iter_index} stage={stage}")
         state = STAGE_EXECUTORS[stage](args, state, p)
         save_state(args, state)
         log_line(main_log(args), f"[done] iter={iter_index} stage={stage} next={state.get('next_stage')}")
-
     log_line(main_log(args), "[finished]")
 
 
