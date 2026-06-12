@@ -33,7 +33,7 @@ import time
 from typing import Any
 
 
-CONFIG_NAME = "pi0_libero_awbc"
+# CONFIG_NAME = "pi0_libero_awbc"
 ASSET_ID = "physical-intelligence/libero"
 PROJECT_NAME = "openpi"
 
@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
     # path is --data-dir.
     p.add_argument("--awbc-repo-id", default="")
     p.add_argument("--hf-lerobot-home", default="")
-    p.add_argument("--config-name", default=CONFIG_NAME)
+    p.add_argument("--config-name", default="")
     p.add_argument("--asset-id", default=ASSET_ID)
     p.add_argument("--project-name", default=PROJECT_NAME)
     p.add_argument("--exp-name", default="awbc")

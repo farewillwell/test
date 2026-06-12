@@ -60,6 +60,7 @@ train_args=(
   "--seed=${SEED}"
   "--fsdp-devices=${FSDP_DEVICES}"
   "--data.repo-id=${REPO_ID}"
+  "--overwrite"
 )
 
 if [[ -n "${ASSET_ID}" ]]; then

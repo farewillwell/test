@@ -9,6 +9,7 @@ export LIBERO_CONFIG_PATH=/data/huangdi/heliqun/openvla-oft/openvla-oft/LIBERO/.
 export MUJOCO_GL=egl
 
 export task_id=6
+export action_horizon=10
 
 cd /data/huangdi/heliqun/pi0
 
@@ -22,7 +23,7 @@ export CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-${PI0_CACHE_ROOT}/cuda}"
 WORKSPACE=/data/aoss/heliqun/pi0-ours/goal-6
 SRC_DIR=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
 BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
-
+unset LD_LIBRARY_PATH
 ${PI_PYTHON} -u ours/iter.py \
   --workspace "${WORKSPACE}" \
   --src-dir "${SRC_DIR}" \
@@ -33,9 +34,12 @@ ${PI_PYTHON} -u ours/iter.py \
   --libero-python "${LIBERO_PYTHON}" \
   --iters 4 \
   --gpus 2 \
+  --iql-batch-size 256 \
+  --awbc-batch-size 32 \
   --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
   --num-trials-per-task 1 \
   --iql-use-q-aug \
+  --policy-config-name pi0_libero_awbc \
   > "iter-${task_id}-rank-qselect.log" 2>&1

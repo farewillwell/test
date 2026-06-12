@@ -51,7 +51,7 @@ STAGE_FINISHED = "finished"
 
 STAGES = (STAGE_TRAIN_IQL, STAGE_LABEL, STAGE_TRAIN_AWBC, STAGE_COLLECT, STAGE_APPEND_POOL)
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
-
+LIBERO_REPLAN_STEPS = int(os.environ['action_horizon'])
 STEP_REWARD = -1.0
 SUCCESS_TERMINAL_REWARD = 10.0
 FAILURE_TERMINAL_REWARD = -100.0
@@ -124,8 +124,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--overwrite-repos", action=argparse.BooleanOptionalAction, default=True)
 
     # Time scale. These are intentionally fixed to 5.
-    p.add_argument("--horizon", type=int, default=5)
-    p.add_argument("--replan-steps", type=int, default=5)
+    p.add_argument("--horizon", type=int, default=LIBERO_REPLAN_STEPS)
+    p.add_argument("--replan-steps", type=int, default=LIBERO_REPLAN_STEPS)
 
     # Initial demo conversion reward.
     p.add_argument("--demo-step-reward", type=float, default=STEP_REWARD)
@@ -149,7 +149,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--norm-max-frames", type=int, default=0)
     p.add_argument("--asset-id", default="physical-intelligence/libero")
     p.add_argument("--project-name", default="openpi")
-    p.add_argument("--policy-config-name", default="pi0_libero_awbc")
+    p.add_argument("--policy-config-name", default="")
 
     # Q-select / collect.
     p.add_argument("--use-q-select", action=argparse.BooleanOptionalAction, default=True)
@@ -177,8 +177,8 @@ def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
         raise FileNotFoundError(f"--base-model does not exist: {base_model}")
     if not (base_model / "params").exists():
         raise FileNotFoundError(f"--base-model must contain params/: {base_model}")
-    if args.horizon != 5 or args.replan_steps != 5:
-        raise ValueError("pi0 action_horizon, IQL horizon and replan_steps must all be 5.")
+    if args.horizon != LIBERO_REPLAN_STEPS or args.replan_steps != LIBERO_REPLAN_STEPS:
+        raise ValueError(f"pi action_horizon{args.horizon}, IQL horizon and replan_steps{args.replan_steps} must all be {LIBERO_REPLAN_STEPS}.")
 
     args.workspace = str(workspace)
     args.src_dir = str(src_dir)
@@ -469,7 +469,6 @@ def ensure_pool_initialized(args: argparse.Namespace, log_path: Path) -> None:
 def build_initial_state(args: argparse.Namespace) -> dict[str, Any]:
     pools = pool_paths(args)
     return {
-        "version": 5,
         "iter_index": 0,
         "next_stage": STAGE_TRAIN_IQL,
         "pool_raw_dir": str(pools["raw"]),
@@ -667,14 +666,12 @@ def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[st
         args.pi_python,
         "-u",
         str(Path(args.pi0_root) / "ours" / "BC" / "train_awbc.py"),
-
         "--data-dir",
         str(p["labeled_data"]),
         "--model-dir",
         str(p["model_dir"]),
         "--base-policy-dir",
         state["current_policy_dir"],
-
         "--pi0-root",
         str(Path(args.pi0_root)),
         "--openpi-root",
@@ -694,6 +691,8 @@ def stage_train_awbc(args: argparse.Namespace, state: dict[str, Any], p: dict[st
         str(args.seed),
         "--log-file",
         str(log_path),
+        "--config-name",
+        str(args.policy_config_name),
     ]
     if args.norm_max_frames > 0:
         cmd.extend(["--norm-max-frames", str(args.norm_max_frames)])

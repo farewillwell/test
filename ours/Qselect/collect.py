@@ -69,7 +69,7 @@ import os
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 DEFAULT_RESIZE_SIZE = 224
-DEFAULT_REPLAN_STEPS = 5
+LIBERO_REPLAN_STEPS = int(os.environ['action_horizon'])
 DEFAULT_NUM_STEPS_WAIT = 10
 DEFAULT_FPS = 10
 DEFAULT_IMAGE_WRITER_THREADS = 10
@@ -179,7 +179,7 @@ def parse_args() -> Args:
         host=DEFAULT_HOST,
         port=DEFAULT_PORT,
         resize_size=DEFAULT_RESIZE_SIZE,
-        replan_steps=DEFAULT_REPLAN_STEPS,
+        replan_steps=LIBERO_REPLAN_STEPS,
         num_steps_wait=DEFAULT_NUM_STEPS_WAIT,
         fps=DEFAULT_FPS,
         image_writer_threads=DEFAULT_IMAGE_WRITER_THREADS,

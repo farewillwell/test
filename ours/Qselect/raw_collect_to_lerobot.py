@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Tool utilities for converting raw LIBERO collect tmp data to a LeRobot dataset.
+Convert raw LIBERO collect tmp data to a LeRobot dataset.
 
-Input format is produced by ours/Qselect/collect.py:
+Input produced by ours/Qselect/collect.py:
 
 input_dir/
 ├── meta.json
 ├── episodes.jsonl
 └── episodes/
     ├── episode_task6_trial0.npz
-    ├── episode_task6_trial1.npz
     └── ...
 
-Output is a LeRobot repo directory, usually:
+Output:
 
 iterN/data/collect/
 
-This module is intentionally importable and has no argparse/main entrypoint.
-It should be imported by iter.py running under pi_env.
+Design:
+    - No argparse/main.
+    - No HF_LEROBOT_HOME mutation.
+    - LeRobotDataset.create must support explicit root=output_dir.
+    - Any root/path mismatch is fatal.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import shutil
 from pathlib import Path
 from typing import Any, Callable
@@ -36,7 +37,6 @@ DEFAULT_FPS = 10
 DEFAULT_RESIZE_SIZE = 224
 DEFAULT_IMAGE_WRITER_THREADS = 10
 DEFAULT_IMAGE_WRITER_PROCESSES = 5
-
 
 LogFn = Callable[[str], None] | None
 
@@ -56,10 +56,7 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
             line = line.strip()
             if not line:
                 continue
-            try:
-                records.append(json.loads(line))
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid jsonl at {path}:{line_no}: {e}") from e
+            records.append(json.loads(line))
 
     return records
 
@@ -68,17 +65,13 @@ def discover_episode_files(input_dir: Path) -> list[Path]:
     manifest = input_dir / "episodes.jsonl"
     records = load_jsonl(manifest)
 
-    files: list[Path] = []
     if records:
+        files: list[Path] = []
         for rec in records:
-            rel = rec.get("file")
-            if not rel:
-                raise KeyError(f"Manifest record missing 'file': {rec}")
-
+            rel = rec["file"]
             path = input_dir / str(rel)
             if not path.exists():
                 raise FileNotFoundError(f"Episode listed in manifest does not exist: {path}")
-
             files.append(path)
     else:
         files = sorted((input_dir / "episodes").glob("*.npz"))
@@ -100,8 +93,10 @@ def scalar_str(x: Any) -> str:
 
 
 def _ensure_shape(path: Path, key: str, actual: tuple[int, ...], expected_tail: tuple[int, ...]) -> None:
-    if actual[1:] != expected_tail:
-        raise ValueError(f"{path} {key} shape should be [T,{','.join(map(str, expected_tail))}], got {actual}")
+    if len(actual) < 1 or actual[1:] != expected_tail:
+        raise ValueError(
+            f"{path} key={key} shape should be [T,{','.join(map(str, expected_tail))}], got {actual}"
+        )
 
 
 def validate_episode(ep: dict[str, np.ndarray], path: Path, resize_size: int) -> int:
@@ -126,7 +121,7 @@ def validate_episode(ep: dict[str, np.ndarray], path: Path, resize_size: int) ->
     if n <= 0:
         raise ValueError(f"{path} has empty actions")
 
-    expected_first_dim_keys = [
+    for key in (
         "image",
         "wrist_image",
         "state",
@@ -137,8 +132,7 @@ def validate_episode(ep: dict[str, np.ndarray], path: Path, resize_size: int) ->
         "task_id",
         "trial_id",
         "step_index",
-    ]
-    for key in expected_first_dim_keys:
+    ):
         if int(ep[key].shape[0]) != n:
             raise ValueError(
                 f"{path} key={key} has inconsistent first dim: "
@@ -150,7 +144,6 @@ def validate_episode(ep: dict[str, np.ndarray], path: Path, resize_size: int) ->
     _ensure_shape(path, "state", tuple(ep["state"].shape), (8,))
     _ensure_shape(path, "actions", tuple(ep["actions"].shape), (7,))
 
-    # These are saved as [T, 1] by collect.py. Be strict here, because IQL expects this layout.
     for key in ("reward", "terminal", "success", "task_id", "trial_id", "step_index"):
         _ensure_shape(path, key, tuple(ep[key].shape), (1,))
 
@@ -175,78 +168,108 @@ def should_convert_episode(
     return True
 
 
+def lerobot_features(resize_size: int) -> dict[str, dict[str, Any]]:
+    return {
+        "image": {
+            "dtype": "image",
+            "shape": (resize_size, resize_size, 3),
+            "names": ["height", "width", "channel"],
+        },
+        "wrist_image": {
+            "dtype": "image",
+            "shape": (resize_size, resize_size, 3),
+            "names": ["height", "width", "channel"],
+        },
+        "state": {
+            "dtype": "float32",
+            "shape": (8,),
+            "names": ["state"],
+        },
+        "actions": {
+            "dtype": "float32",
+            "shape": (7,),
+            "names": ["actions"],
+        },
+        "reward": {
+            "dtype": "float32",
+            "shape": (1,),
+            "names": ["reward"],
+        },
+        "terminal": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["terminal"],
+        },
+        "success": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["success"],
+        },
+        "task_id": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["task_id"],
+        },
+        "trial_id": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["trial_id"],
+        },
+        "step_index": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["step_index"],
+        },
+    }
+
+
+def dataset_root(dataset: Any) -> Path:
+    for attr in ("root", "root_path", "local_dir"):
+        if hasattr(dataset, attr):
+            value = getattr(dataset, attr)
+            if value:
+                return Path(value).expanduser().resolve()
+
+    raise RuntimeError(
+        "Cannot verify LeRobotDataset root: dataset exposes none of root/root_path/local_dir."
+    )
+
+
 def create_lerobot_dataset(
     *,
+    output_dir: Path,
     repo_id: str,
     fps: int,
     resize_size: int,
     image_writer_threads: int,
     image_writer_processes: int,
+    log_fn: LogFn,
 ):
-    # Import lazily. This lets the module be imported without immediately requiring lerobot.
-    # The actual conversion still must run under pi_env or another env with lerobot installed.
     from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 
-    return LeRobotDataset.create(
+    output_dir = output_dir.expanduser().resolve()
+
+    _log(log_fn, f"[raw_to_lerobot] create root={output_dir} repo_id={repo_id}")
+
+    dataset = LeRobotDataset.create(
         repo_id=repo_id,
+        root=output_dir,
         robot_type="libero",
-        fps=fps,
-        features={
-            "image": {
-                "dtype": "image",
-                "shape": (resize_size, resize_size, 3),
-                "names": ["height", "width", "channel"],
-            },
-            "wrist_image": {
-                "dtype": "image",
-                "shape": (resize_size, resize_size, 3),
-                "names": ["height", "width", "channel"],
-            },
-            "state": {
-                "dtype": "float32",
-                "shape": (8,),
-                "names": ["state"],
-            },
-            "actions": {
-                "dtype": "float32",
-                "shape": (7,),
-                "names": ["actions"],
-            },
-            "reward": {
-                "dtype": "float32",
-                "shape": (1,),
-                "names": ["reward"],
-            },
-            "terminal": {
-                "dtype": "int64",
-                "shape": (1,),
-                "names": ["terminal"],
-            },
-            "success": {
-                "dtype": "int64",
-                "shape": (1,),
-                "names": ["success"],
-            },
-            "task_id": {
-                "dtype": "int64",
-                "shape": (1,),
-                "names": ["task_id"],
-            },
-            "trial_id": {
-                "dtype": "int64",
-                "shape": (1,),
-                "names": ["trial_id"],
-            },
-            "step_index": {
-                "dtype": "int64",
-                "shape": (1,),
-                "names": ["step_index"],
-            },
-        },
+        fps=int(fps),
+        features=lerobot_features(int(resize_size)),
         use_videos=False,
-        image_writer_threads=image_writer_threads,
-        image_writer_processes=image_writer_processes,
+        image_writer_threads=int(image_writer_threads),
+        image_writer_processes=int(image_writer_processes),
     )
+
+    actual_root = dataset_root(dataset)
+    if actual_root != output_dir:
+        raise RuntimeError(
+            "LeRobotDataset root mismatch: "
+            f"expected={output_dir}, actual={actual_root}"
+        )
+
+    return dataset
 
 
 def add_episode_to_lerobot(
@@ -285,14 +308,12 @@ def validate_raw_collect_dir(input_dir: str | Path) -> Path:
 
     if not input_dir.exists():
         raise FileNotFoundError(f"Raw collect input_dir does not exist: {input_dir}")
-
     if not input_dir.is_dir():
         raise NotADirectoryError(f"Raw collect input_dir is not a directory: {input_dir}")
 
     episodes_dir = input_dir / "episodes"
     if not episodes_dir.exists():
         raise FileNotFoundError(f"Raw collect input must contain episodes/: {episodes_dir}")
-
     if not episodes_dir.is_dir():
         raise NotADirectoryError(f"Raw collect episodes path is not a directory: {episodes_dir}")
 
@@ -304,11 +325,24 @@ def prepare_output_dir(output_dir: str | Path, *, overwrite: bool) -> Path:
 
     if output_dir.exists():
         if not overwrite:
-            raise FileExistsError(f"Output LeRobot dir already exists: {output_dir}. Use overwrite=True.")
+            raise FileExistsError(f"Output LeRobot dir already exists: {output_dir}")
         shutil.rmtree(output_dir)
 
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     return output_dir
+
+
+def assert_output_repo_created(output_dir: Path) -> None:
+    if not output_dir.exists():
+        raise RuntimeError(f"Expected output LeRobot repo not found: {output_dir}")
+
+    if not (output_dir / "meta").exists():
+        raise RuntimeError(f"Output exists but is not a LeRobot repo, missing meta/: {output_dir}")
+
+
+def stop_image_writer(dataset: Any) -> None:
+    if dataset is not None and hasattr(dataset, "stop_image_writer"):
+        dataset.stop_image_writer()
 
 
 def convert_raw_collect_to_lerobot(
@@ -325,58 +359,25 @@ def convert_raw_collect_to_lerobot(
     cleanup_input_on_success: bool = False,
     log_fn: LogFn = None,
 ) -> dict[str, Any]:
-    """
-    Convert raw tmp collect data to a LeRobot repo.
-
-    This function performs all checks internally:
-      - validates raw input layout;
-      - validates every episode's required keys and shapes;
-      - handles output overwrite;
-      - sets HF_LEROBOT_HOME so LeRobotDataset.create writes exactly to output_dir;
-      - writes a conversion summary into output_dir;
-      - optionally deletes input_dir after successful conversion.
-
-    Args:
-        input_dir: Raw tmp dir, e.g. iterN/data/.collect_tmp.
-        output_dir: Final LeRobot repo dir, e.g. iterN/data/collect.
-        cleanup_input_on_success: If True, delete input_dir only after output_dir is successfully created.
-
-    Returns:
-        A summary dict suitable for logging into iter history.
-    """
     if int(fps) <= 0:
         raise ValueError(f"fps must be positive, got {fps}")
-
     if int(resize_size) <= 0:
         raise ValueError(f"resize_size must be positive, got {resize_size}")
-
     if success_only and failure_only:
         raise ValueError("success_only and failure_only cannot both be True.")
 
     input_dir = validate_raw_collect_dir(input_dir)
     output_dir = prepare_output_dir(output_dir, overwrite=overwrite)
-
-    episode_files = discover_episode_files(input_dir)
-    _log(log_fn, f"[raw_to_lerobot] input_dir={input_dir}")
-    _log(log_fn, f"[raw_to_lerobot] output_dir={output_dir}")
-    _log(log_fn, f"[raw_to_lerobot] discovered_episodes={len(episode_files)}")
-
-    # Make LeRobotDataset.create(repo_id=...) write exactly to output_dir.
-    #
-    # Example:
-    #   output_dir = iter0/data/collect
-    #   HF_LEROBOT_HOME = iter0/data
-    #   repo_id = collect
-    os.environ["HF_LEROBOT_HOME"] = str(output_dir.parent)
     repo_id = output_dir.name
 
-    dataset = create_lerobot_dataset(
-        repo_id=repo_id,
-        fps=int(fps),
-        resize_size=int(resize_size),
-        image_writer_threads=int(image_writer_threads),
-        image_writer_processes=int(image_writer_processes),
-    )
+    episode_files = discover_episode_files(input_dir)
+
+    _log(log_fn, f"[raw_to_lerobot] input_dir={input_dir}")
+    _log(log_fn, f"[raw_to_lerobot] output_dir={output_dir}")
+    _log(log_fn, f"[raw_to_lerobot] repo_id={repo_id}")
+    _log(log_fn, f"[raw_to_lerobot] discovered_episodes={len(episode_files)}")
+
+    dataset: Any = None
 
     num_input_episodes = 0
     num_output_episodes = 0
@@ -386,6 +387,16 @@ def convert_raw_collect_to_lerobot(
     skipped_episodes = 0
 
     try:
+        dataset = create_lerobot_dataset(
+            output_dir=output_dir,
+            repo_id=repo_id,
+            fps=int(fps),
+            resize_size=int(resize_size),
+            image_writer_threads=int(image_writer_threads),
+            image_writer_processes=int(image_writer_processes),
+            log_fn=log_fn,
+        )
+
         for ep_path in episode_files:
             num_input_episodes += 1
 
@@ -397,10 +408,8 @@ def convert_raw_collect_to_lerobot(
                 continue
 
             success = bool(int(np.asarray(ep["success"])[0].reshape(-1)[0]))
-            if success:
-                success_episodes += 1
-            else:
-                failure_episodes += 1
+            success_episodes += int(success)
+            failure_episodes += int(not success)
 
             frames = add_episode_to_lerobot(
                 dataset,
@@ -408,11 +417,12 @@ def convert_raw_collect_to_lerobot(
                 ep_path,
                 resize_size=int(resize_size),
             )
-            num_output_frames += int(frames)
+
             num_output_episodes += 1
+            num_output_frames += int(frames)
+
     finally:
-        if hasattr(dataset, "stop_image_writer"):
-            dataset.stop_image_writer()
+        stop_image_writer(dataset)
 
     if num_output_episodes <= 0:
         raise RuntimeError(
@@ -420,8 +430,7 @@ def convert_raw_collect_to_lerobot(
             f"input_dir={input_dir}, success_only={success_only}, failure_only={failure_only}"
         )
 
-    if not output_dir.exists():
-        raise RuntimeError(f"Expected output LeRobot repo not found after conversion: {output_dir}")
+    assert_output_repo_created(output_dir)
 
     summary = {
         "input_dir": str(input_dir),
