@@ -235,6 +235,7 @@ def main(config: _config.TrainConfig):
         keep_period=config.keep_period,
         overwrite=config.overwrite,
         resume=config.resume,
+        save_train_state=config.save_train_state,
     )
     init_wandb(config, resuming=resuming, enabled=config.wandb_enabled)
 

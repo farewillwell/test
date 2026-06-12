@@ -765,7 +765,7 @@ _CONFIGS = [
         # Here you define the dataset you are training on. In this example we use the Libero
         # dataset. For your own dataset, you can change the repo_id to point to your dataset.
         # Also modify the DataConfig to use the new config you made for your dataset above.
-        data=LeRobotLiberoDataConfig(
+        data=LeRobotLiberoDataAWBCConfig(
             repo_id="physical-intelligence/libero",
             base_config=DataConfig(
                 # This flag determines whether we load the prompt (i.e. the task instruction) from the
@@ -782,7 +782,9 @@ _CONFIGS = [
         # Check the base TrainConfig class for a full list of available hyperparameters.
         num_train_steps=30_000,
         use_awbc=True,
-
+        save_train_state=False,
+        # 建议：不需要 EMA，减少内存和保存体积
+        ema_decay=None,
     ),
     TrainConfig(
         name="pi0_fast_libero",
