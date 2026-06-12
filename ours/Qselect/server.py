@@ -69,7 +69,6 @@ if str(THIS_DIR) not in sys.path:
 
 from selector import QSelector
 
-DEFAULT_POLICY_CONFIG = "pi0_libero_awbc"
 DEFAULT_PORT = 8000
 DEFAULT_NUM_STEPS = 10
 DEFAULT_NOISE_SCALE = 1.0
@@ -87,7 +86,7 @@ class Args:
     seed: int = 0
 
     # Fixed defaults. Usually do not expose from iter.py.
-    policy_config: str = DEFAULT_POLICY_CONFIG
+    policy_config: str = ""
     port: int = DEFAULT_PORT
     num_steps: int = DEFAULT_NUM_STEPS
     noise_scale: float = DEFAULT_NOISE_SCALE
@@ -109,7 +108,7 @@ def parse_args() -> Args:
     p.add_argument("--seed", type=int, default=0)
 
     # Keep these as escape hatches, but iter.py normally does not pass them.
-    p.add_argument("--policy-config", default=DEFAULT_POLICY_CONFIG)
+    p.add_argument("--policy-config", default="")
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
 
     return Args(**vars(p.parse_args()))

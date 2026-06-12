@@ -9,3 +9,136 @@
 [2026-06-12 18:28:45] horizon=10 replan_steps=10
 [2026-06-12 18:28:45] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/convert_demo.py --input-dir /data/huangdi/heliqun/pi0/sft_runs/lerobot_data --output-dir /data/aoss/heliqun/pi0-ours/goal-6/pool/raw --fps 10 --task-id 6 --step-reward -1.0 --success-terminal-reward 10.0 --overwrite
 [2026-06-12 18:28:45] [cwd] /data/huangdi/heliqun/pi0/ours
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 186 examples [00:00, 1353.60 examples/s]
+Generating train split: 387 examples [00:00, 1483.07 examples/s]
+Generating train split: 491 examples [00:00, 1530.43 examples/s]
+[convert] requested output root: /data/aoss/heliqun/pi0-ours/goal-6/pool/raw
+[convert] actual dataset root: /data/aoss/heliqun/pi0-ours/goal-6/pool/raw
+
+Map:   0%|          | 0/86 [00:00<?, ? examples/s]
+Map:  85%|████████▍ | 73/86 [00:00<00:00, 711.27 examples/s]
+Map: 100%|██████████| 86/86 [00:00<00:00, 653.65 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 35.27ba/s]
+[convert] src_ep=0 out_ep=0 len=86 success=1
+
+Map:   0%|          | 0/105 [00:00<?, ? examples/s]
+Map:  71%|███████▏  | 75/105 [00:00<00:00, 735.89 examples/s]
+Map: 100%|██████████| 105/105 [00:00<00:00, 689.28 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 57.02ba/s]
+[convert] src_ep=1 out_ep=1 len=105 success=1
+
+Map:   0%|          | 0/96 [00:00<?, ? examples/s]
+Map:  78%|███████▊  | 75/96 [00:00<00:00, 735.56 examples/s]
+Map: 100%|██████████| 96/96 [00:00<00:00, 669.16 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 34.64ba/s]
+[convert] src_ep=2 out_ep=2 len=96 success=1
+
+Map:   0%|          | 0/109 [00:00<?, ? examples/s]
+Map:  69%|██████▉   | 75/109 [00:00<00:00, 728.74 examples/s]
+Map: 100%|██████████| 109/109 [00:00<00:00, 676.80 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 63.35ba/s]
+[convert] src_ep=3 out_ep=3 len=109 success=1
+
+Map:   0%|          | 0/95 [00:00<?, ? examples/s]
+Map:  81%|████████  | 77/95 [00:00<00:00, 756.14 examples/s]
+Map: 100%|██████████| 95/95 [00:00<00:00, 693.53 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 31.44ba/s]
+[convert] src_ep=4 out_ep=4 len=95 success=1
+[convert] saved: /data/aoss/heliqun/pi0-ours/goal-6/pool/raw
+[convert] episodes=5 frames=491
+[convert] reward step=-1.0 success_terminal=10.0
+[2026-06-12 18:29:50] [start] iter=0 stage=train_iql
+[2026-06-12 18:29:50] [steps] IQL max_steps=1 mode=single iter=0
+[2026-06-12 18:29:50] [pool] repo_dirs=["/data/aoss/heliqun/pi0-ours/goal-6/pool/raw"]
+[2026-06-12 18:29:50] [batch] gpus=2 per_gpu_batch_size=256 effective_global_batch_size=512
+[2026-06-12 18:29:50] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u -m torch.distributed.run --standalone --nnodes 1 --nproc-per-node 2 /data/huangdi/heliqun/pi0/ours/IQL/train.py --repo-dirs /data/aoss/heliqun/pi0-ours/goal-6/pool/raw --output-dir /data/aoss/heliqun/pi0-ours/goal-6/iter0/iql --encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 --horizon 10 --batch-size 256 --num-workers 4 --max-steps 1 --seed 7 --use-q-aug
+[2026-06-12 18:29:50] [cwd] /data/huangdi/heliqun/pi0/ours/IQL
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank1]:[W612 18:30:46.680376624 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W612 18:30:46.682736301 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 491 examples [00:00, 3346.06 examples/s]
+Generating train split: 491 examples [00:00, 3336.07 examples/s]
+[IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi0-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s][IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi0-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:   3%|▎         | 13/491 [00:00<00:03, 124.80it/s]
+scan repo0:   3%|▎         | 17/491 [00:00<00:02, 166.44it/s]
+scan repo0:   7%|▋         | 36/491 [00:00<00:02, 185.17it/s]
+scan repo0:   8%|▊         | 41/491 [00:00<00:02, 204.58it/s]
+scan repo0:  12%|█▏        | 59/491 [00:00<00:02, 202.12it/s]
+scan repo0:  13%|█▎        | 65/491 [00:00<00:01, 216.92it/s]
+scan repo0:  17%|█▋        | 82/491 [00:00<00:01, 211.81it/s]
+scan repo0:  18%|█▊        | 88/491 [00:00<00:01, 221.20it/s]
+scan repo0:  21%|██▏       | 105/491 [00:00<00:01, 216.17it/s]
+scan repo0:  23%|██▎       | 111/491 [00:00<00:01, 223.94it/s]
+scan repo0:  26%|██▋       | 129/491 [00:00<00:01, 221.34it/s]
+scan repo0:  27%|██▋       | 134/491 [00:00<00:01, 224.94it/s]
+scan repo0:  31%|███       | 152/491 [00:00<00:01, 223.18it/s]
+scan repo0:  32%|███▏      | 157/491 [00:00<00:01, 226.47it/s]
+scan repo0:  36%|███▌      | 175/491 [00:00<00:01, 223.75it/s]
+scan repo0:  37%|███▋      | 180/491 [00:00<00:01, 227.22it/s]
+scan repo0:  40%|████      | 198/491 [00:00<00:01, 224.33it/s]
+scan repo0:  41%|████▏     | 203/491 [00:00<00:01, 227.43it/s]
+scan repo0:  45%|████▌     | 222/491 [00:01<00:01, 227.38it/s]
+scan repo0:  46%|████▌     | 227/491 [00:01<00:01, 230.68it/s]
+scan repo0:  50%|█████     | 246/491 [00:01<00:01, 228.17it/s]
+scan repo0:  51%|█████     | 251/491 [00:01<00:01, 231.40it/s]
+scan repo0:  55%|█████▍    | 269/491 [00:01<00:00, 227.48it/s]
+scan repo0:  56%|█████▌    | 275/491 [00:01<00:00, 230.07it/s]
+scan repo0:  59%|█████▉    | 292/491 [00:01<00:00, 226.15it/s]
+scan repo0:  61%|██████    | 299/491 [00:01<00:00, 228.59it/s]
+scan repo0:  64%|██████▍   | 315/491 [00:01<00:00, 226.93it/s]
+scan repo0:  66%|██████▌   | 323/491 [00:01<00:00, 230.63it/s]
+scan repo0:  69%|██████▉   | 339/491 [00:01<00:00, 227.99it/s]
+scan repo0:  71%|███████   | 347/491 [00:01<00:00, 230.49it/s]
+scan repo0:  74%|███████▎  | 362/491 [00:01<00:00, 227.03it/s]
+scan repo0:  76%|███████▌  | 371/491 [00:01<00:00, 229.23it/s]
+scan repo0:  78%|███████▊  | 385/491 [00:01<00:00, 225.46it/s]
+scan repo0:  80%|████████  | 394/491 [00:01<00:00, 228.13it/s]
+scan repo0:  83%|████████▎ | 408/491 [00:01<00:00, 225.62it/s]
+scan repo0:  85%|████████▍ | 417/491 [00:01<00:00, 228.31it/s]
+scan repo0:  88%|████████▊ | 432/491 [00:01<00:00, 227.60it/s]
+scan repo0:  90%|████████▉ | 441/491 [00:01<00:00, 230.46it/s]
+scan repo0:  93%|█████████▎| 456/491 [00:02<00:00, 229.13it/s]
+scan repo0:  95%|█████████▍| 465/491 [00:02<00:00, 230.98it/s]
+scan repo0:  98%|█████████▊| 479/491 [00:02<00:00, 227.45it/s]
+scan repo0: 100%|█████████▉| 489/491 [00:02<00:00, 229.34it/s]
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+[IQL train] state_dim=8, action_dim=7, horizon=10
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+[load light-vl critic] finish !!!!
+

@@ -741,6 +741,8 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         str(args.num_action_samples),
         "--seed",
         str(args.seed),
+        "--policy-config",
+        str(args.policy_config_name),
     ]
 
     if mode == "qselect":

@@ -858,7 +858,7 @@ _CONFIGS = [
     TrainConfig(
         name="pi05_libero_awbc",
         model=pi0_config.Pi0Config(pi05=True, action_horizon=10, discrete_state_input=False),
-        data=LeRobotLiberoDataConfig(
+        data=LeRobotLiberoDataAWBCConfig(
             repo_id="physical-intelligence/libero",
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
