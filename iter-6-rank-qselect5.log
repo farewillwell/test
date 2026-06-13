@@ -1,0 +1,275 @@
+[2026-06-13 07:38:49] ================================================================================
+[2026-06-13 07:38:49] workspace=/data/aoss/heliqun/pi05-ours/goal-6
+[2026-06-13 07:38:49] src_dir=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
+[2026-06-13 07:38:49] base_model=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi05_base
+[2026-06-13 07:38:49] iters=4 task=libero_goal:6
+[2026-06-13 07:38:49] gpus=4
+[2026-06-13 07:38:49] use_q_select=True num_action_samples=16
+[2026-06-13 07:38:49] iql_use_q_aug=True
+[2026-06-13 07:38:49] horizon=10 replan_steps=10
+[2026-06-13 07:38:49] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/convert_demo.py --input-dir /data/huangdi/heliqun/pi0/sft_runs/lerobot_data --output-dir /data/aoss/heliqun/pi05-ours/goal-6/pool/raw --fps 10 --task-id 6 --step-reward -1.0 --success-terminal-reward 10.0 --overwrite
+[2026-06-13 07:38:49] [cwd] /data/huangdi/heliqun/pi0/ours
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 186 examples [00:00, 1368.38 examples/s]
+Generating train split: 387 examples [00:00, 1548.17 examples/s]
+Generating train split: 491 examples [00:00, 1574.93 examples/s]
+[convert] requested output root: /data/aoss/heliqun/pi05-ours/goal-6/pool/raw
+[convert] actual dataset root: /data/aoss/heliqun/pi05-ours/goal-6/pool/raw
+
+Map:   0%|          | 0/86 [00:00<?, ? examples/s]
+Map:  79%|███████▉  | 68/86 [00:00<00:00, 673.07 examples/s]
+Map: 100%|██████████| 86/86 [00:00<00:00, 622.42 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 35.23ba/s]
+[convert] src_ep=0 out_ep=0 len=86 success=1
+
+Map:   0%|          | 0/105 [00:00<?, ? examples/s]
+Map:  68%|██████▊   | 71/105 [00:00<00:00, 695.72 examples/s]
+Map: 100%|██████████| 105/105 [00:00<00:00, 648.28 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 61.20ba/s]
+[convert] src_ep=1 out_ep=1 len=105 success=1
+
+Map:   0%|          | 0/96 [00:00<?, ? examples/s]
+Map:  73%|███████▎  | 70/96 [00:00<00:00, 692.90 examples/s]
+Map: 100%|██████████| 96/96 [00:00<00:00, 639.25 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 39.21ba/s]
+[convert] src_ep=2 out_ep=2 len=96 success=1
+
+Map:   0%|          | 0/109 [00:00<?, ? examples/s]
+Map:  69%|██████▉   | 75/109 [00:00<00:00, 733.14 examples/s]
+Map: 100%|██████████| 109/109 [00:00<00:00, 681.77 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/2 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 2/2 [00:00<00:00, 65.93ba/s]
+[convert] src_ep=3 out_ep=3 len=109 success=1
+
+Map:   0%|          | 0/95 [00:00<?, ? examples/s]
+Map:  63%|██████▎   | 60/95 [00:00<00:00, 582.57 examples/s]
+Map: 100%|██████████| 95/95 [00:00<00:00, 570.89 examples/s]
+
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 35.74ba/s]
+[convert] src_ep=4 out_ep=4 len=95 success=1
+[convert] saved: /data/aoss/heliqun/pi05-ours/goal-6/pool/raw
+[convert] episodes=5 frames=491
+[convert] reward step=-1.0 success_terminal=10.0
+[2026-06-13 07:39:44] [start] iter=0 stage=train_iql
+[2026-06-13 07:39:44] [steps] IQL max_steps=5000 mode=single iter=0
+[2026-06-13 07:39:44] [pool] repo_dirs=["/data/aoss/heliqun/pi05-ours/goal-6/pool/raw"]
+[2026-06-13 07:39:44] [batch] gpus=4 per_gpu_batch_size=64 effective_global_batch_size=256
+[2026-06-13 07:39:44] [cmd] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u -m torch.distributed.run --standalone --nnodes 1 --nproc-per-node 4 /data/huangdi/heliqun/pi0/ours/IQL/train.py --repo-dirs /data/aoss/heliqun/pi05-ours/goal-6/pool/raw --output-dir /data/aoss/heliqun/pi05-ours/goal-6/iter0/iql --encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 --horizon 10 --batch-size 64 --num-workers 4 --max-steps 5000 --seed 7 --use-q-aug
+[2026-06-13 07:39:44] [cwd] /data/huangdi/heliqun/pi0/ours/IQL
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W613 07:40:33.470081390 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank1]:[W613 07:40:33.486177027 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank3]:[W613 07:40:33.488176900 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank2]:[W613 07:40:33.497103538 ProcessGroupNCCL.cpp:4718] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 387 examples [00:00, 2939.88 examples/s]
+Generating train split: 491 examples [00:00, 3202.93 examples/s]
+[IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi05-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s][IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi05-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:   3%|▎         | 13/491 [00:00<00:03, 126.07it/s]
+scan repo0:   3%|▎         | 15/491 [00:00<00:03, 144.42it/s]
+scan repo0:   8%|▊         | 37/491 [00:00<00:02, 187.91it/s]
+scan repo0:   8%|▊         | 38/491 [00:00<00:02, 193.73it/s][IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi05-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:  12%|█▏        | 61/491 [00:00<00:02, 207.41it/s]
+scan repo0:  12%|█▏        | 61/491 [00:00<00:02, 208.55it/s]
+scan repo0:   4%|▎         | 18/491 [00:00<00:02, 175.66it/s][IQL data] pool scan: repos=1 raw_frames=491
+[IQL data] repo[0] /data/aoss/heliqun/pi05-ours/goal-6/pool/raw: frames=491
+
+scan repo0:   0%|          | 0/491 [00:00<?, ?it/s]
+scan repo0:  17%|█▋        | 84/491 [00:00<00:01, 212.88it/s]
+scan repo0:  17%|█▋        | 84/491 [00:00<00:01, 213.42it/s]
+scan repo0:   8%|▊         | 41/491 [00:00<00:02, 205.96it/s]
+scan repo0:   3%|▎         | 17/491 [00:00<00:02, 165.19it/s]
+scan repo0:  22%|██▏       | 107/491 [00:00<00:01, 216.73it/s]
+scan repo0:  22%|██▏       | 107/491 [00:00<00:01, 217.17it/s]
+scan repo0:  13%|█▎        | 65/491 [00:00<00:01, 217.17it/s]
+scan repo0:   8%|▊         | 40/491 [00:00<00:02, 202.41it/s]
+scan repo0:  26%|██▋       | 130/491 [00:00<00:01, 220.94it/s]
+scan repo0:  26%|██▋       | 130/491 [00:00<00:01, 219.29it/s]
+scan repo0:  18%|█▊        | 88/491 [00:00<00:01, 220.24it/s]
+scan repo0:  13%|█▎        | 62/491 [00:00<00:02, 209.09it/s]
+scan repo0:  31%|███       | 153/491 [00:00<00:01, 219.79it/s]
+scan repo0:  31%|███       | 153/491 [00:00<00:01, 219.91it/s]
+scan repo0:  23%|██▎       | 111/491 [00:00<00:01, 222.60it/s]
+scan repo0:  17%|█▋        | 85/491 [00:00<00:01, 213.68it/s]
+scan repo0:  36%|███▌      | 176/491 [00:00<00:01, 220.57it/s]
+scan repo0:  36%|███▌      | 175/491 [00:00<00:01, 219.73it/s]
+scan repo0:  27%|██▋       | 135/491 [00:00<00:01, 225.21it/s]
+scan repo0:  22%|██▏       | 108/491 [00:00<00:01, 217.82it/s]
+scan repo0:  41%|████      | 199/491 [00:00<00:01, 222.29it/s]
+scan repo0:  40%|████      | 197/491 [00:00<00:01, 218.86it/s]
+scan repo0:  32%|███▏      | 158/491 [00:00<00:01, 225.85it/s]
+scan repo0:  27%|██▋       | 131/491 [00:00<00:01, 220.96it/s]
+scan repo0:  45%|████▌     | 223/491 [00:01<00:01, 226.39it/s]
+scan repo0:  45%|████▌     | 221/491 [00:01<00:01, 223.12it/s]
+scan repo0:  37%|███▋      | 181/491 [00:00<00:01, 225.80it/s]
+scan repo0:  31%|███▏      | 154/491 [00:00<00:01, 223.16it/s]
+scan repo0:  50%|█████     | 246/491 [00:01<00:01, 226.09it/s]
+scan repo0:  50%|████▉     | 244/491 [00:01<00:01, 223.91it/s]
+scan repo0:  42%|████▏     | 204/491 [00:00<00:01, 225.35it/s]
+scan repo0:  36%|███▌      | 177/491 [00:00<00:01, 223.67it/s]
+scan repo0:  55%|█████▍    | 269/491 [00:01<00:00, 225.82it/s]
+scan repo0:  54%|█████▍    | 267/491 [00:01<00:00, 224.26it/s]
+scan repo0:  46%|████▋     | 228/491 [00:01<00:01, 228.76it/s]
+scan repo0:  41%|████      | 200/491 [00:00<00:01, 224.06it/s]
+scan repo0:  59%|█████▉    | 292/491 [00:01<00:00, 224.36it/s]
+scan repo0:  59%|█████▉    | 290/491 [00:01<00:00, 221.52it/s]
+scan repo0:  51%|█████▏    | 252/491 [00:01<00:01, 229.31it/s]
+scan repo0:  45%|████▌     | 223/491 [00:01<00:01, 225.46it/s]
+scan repo0:  64%|██████▍   | 315/491 [00:01<00:00, 225.61it/s]
+scan repo0:  64%|██████▎   | 313/491 [00:01<00:00, 222.17it/s]
+scan repo0:  56%|█████▌    | 275/491 [00:01<00:00, 228.05it/s]
+scan repo0:  50%|█████     | 247/491 [00:01<00:01, 227.11it/s]
+scan repo0:  69%|██████▉   | 338/491 [00:01<00:00, 226.55it/s]
+scan repo0:  68%|██████▊   | 336/491 [00:01<00:00, 224.09it/s]
+scan repo0:  61%|██████    | 298/491 [00:01<00:00, 226.52it/s]
+scan repo0:  55%|█████▍    | 270/491 [00:01<00:01, 219.85it/s]
+scan repo0:  74%|███████▎  | 361/491 [00:01<00:00, 217.13it/s]
+scan repo0:  73%|███████▎  | 359/491 [00:01<00:00, 216.97it/s]
+scan repo0:  65%|██████▌   | 321/491 [00:01<00:00, 225.72it/s]
+scan repo0:  60%|█████▉    | 293/491 [00:01<00:00, 218.88it/s]
+scan repo0:  78%|███████▊  | 384/491 [00:01<00:00, 218.44it/s]
+scan repo0:  78%|███████▊  | 382/491 [00:01<00:00, 218.02it/s]
+scan repo0:  70%|███████   | 344/491 [00:01<00:00, 224.09it/s]
+scan repo0:  64%|██████▍   | 316/491 [00:01<00:00, 221.76it/s]
+scan repo0:  83%|████████▎ | 406/491 [00:01<00:00, 218.58it/s]
+scan repo0:  82%|████████▏ | 404/491 [00:01<00:00, 217.94it/s]
+scan repo0:  75%|███████▍  | 367/491 [00:01<00:00, 221.27it/s]
+scan repo0:  69%|██████▉   | 339/491 [00:01<00:00, 222.48it/s]
+scan repo0:  87%|████████▋ | 429/491 [00:01<00:00, 221.53it/s]
+scan repo0:  87%|████████▋ | 427/491 [00:01<00:00, 221.04it/s]
+scan repo0:  79%|███████▉  | 390/491 [00:01<00:00, 218.30it/s]
+scan repo0:  74%|███████▎  | 362/491 [00:01<00:00, 222.94it/s]
+scan repo0:  92%|█████████▏| 453/491 [00:02<00:00, 225.13it/s]
+scan repo0:  92%|█████████▏| 451/491 [00:02<00:00, 224.61it/s]
+scan repo0:  84%|████████▍ | 412/491 [00:01<00:00, 218.66it/s]
+scan repo0:  78%|███████▊  | 385/491 [00:01<00:00, 221.54it/s]
+scan repo0:  97%|█████████▋| 476/491 [00:02<00:00, 224.25it/s]
+scan repo0:  97%|█████████▋| 474/491 [00:02<00:00, 223.10it/s]
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+
+scan repo0:  89%|████████▉ | 436/491 [00:01<00:00, 222.92it/s]
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+
+scan repo0:  83%|████████▎ | 408/491 [00:01<00:00, 222.79it/s][IQL train] state_dim=8, action_dim=7, horizon=10
+
+scan repo0:  94%|█████████▎| 460/491 [00:02<00:00, 225.78it/s]
+scan repo0:  88%|████████▊ | 432/491 [00:01<00:00, 225.69it/s]
+scan repo0:  98%|█████████▊| 483/491 [00:02<00:00, 224.60it/s]
+scan repo0:  93%|█████████▎| 456/491 [00:02<00:00, 227.54it/s]
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+
+scan repo0:  98%|█████████▊| 479/491 [00:02<00:00, 226.05it/s]
+                                                              
+[IQL data] frames=491 episodes=5 repos=1 action_dim=7 horizon=10 success_frames=491 terminal_frames=5
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+/data/huangdi/heliqun/pi0/openpi/pi_env/lib/python3.11/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+[load light-vl critic] finish !!!!
+
+iql:   0%|          | 0/5000 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+/data/huangdi/heliqun/pi0/ours/IQL/model.py:231: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  amp_ctx = torch.cuda.amp.autocast(dtype=torch.bfloat16) if use_amp else nullcontext()
+
+================================================================================
+>>> PI0-INPUT LIGHT-VL CHUNK-IQL DEBUG <<<
+Chunk H      : 10
+Actions      : (64, 10, 7) mean=-0.0486 std=0.4844
+Rewards      : (64, 10) mean=-0.8406 min=-1.0000 max=10.0000
+Terminal     : 0.0500
+critic_td_loss  : 0.930673
+q_l2_loss       : 0.003572
+critic_loss     : 0.973662
+value_loss      : 0.001501
+rank_coef       : 0.500000
+q_target_mean   : -0.829222
+online_q_mean   : 0.011975
+target_q_mean   : -0.028010
+v_mean          : 0.016749
+adv_mean        : -0.044759
+adv_std         : 0.052829
+reward_mean     : -0.840625
+terminal_ratio  : 0.050000
+rank_loss       : 0.085976
+rank_good_ratio : 1.000000
+rank_num_good   : 64.000000
+rank_q_real_mean: -0.024461
+rank_q_noisy_mean: 0.011515
+rank_margin_violation: 1.000000
+================================================================================
+
+
+iql:   0%|          | 1/5000 [00:04<5:57:38,  4.29s/it]
+iql:   0%|          | 2/5000 [00:06<4:01:44,  2.90s/it]
+iql:   0%|          | 3/5000 [00:08<3:22:28,  2.43s/it]
+iql:   0%|          | 4/5000 [00:09<3:04:40,  2.22s/it]
+iql:   0%|          | 5/5000 [00:11<2:55:51,  2.11s/it]
+iql:   0%|          | 6/5000 [00:13<2:48:43,  2.03s/it]
+iql:   0%|          | 7/5000 [00:15<2:44:08,  1.97s/it]
+iql:   0%|          | 8/5000 [00:17<2:41:20,  1.94s/it]
+iql:   0%|          | 9/5000 [00:19<2:39:44,  1.92s/it]
+iql:   0%|          | 10/5000 [00:21<2:38:34,  1.91s/it]
+iql:   0%|          | 11/5000 [00:23<2:37:59,  1.90s/it]
+iql:   0%|          | 12/5000 [00:24<2:36:58,  1.89s/it]
+iql:   0%|          | 13/5000 [00:26<2:36:33,  1.88s/it]
+iql:   0%|          | 14/5000 [00:28<2:36:08,  1.88s/it]
+iql:   0%|          | 15/5000 [00:30<2:35:39,  1.87s/it]
+iql:   0%|          | 16/5000 [00:32<2:36:08,  1.88s/it]
+iql:   0%|          | 17/5000 [00:34<2:36:12,  1.88s/it]
+iql:   0%|          | 18/5000 [00:36<2:35:40,  1.87s/it]
+iql:   0%|          | 19/5000 [00:38<2:35:05,  1.87s/it]
+iql:   0%|          | 20/5000 [00:39<2:34:28,  1.86s/it]
+iql:   0%|          | 21/5000 [00:41<2:34:40,  1.86s/it]
+iql:   0%|          | 22/5000 [00:43<2:35:06,  1.87s/it]
+iql:   0%|          | 23/5000 [00:45<2:35:09,  1.87s/it]
+iql:   0%|          | 24/5000 [00:47<2:35:27,  1.87s/it]
+iql:   0%|          | 25/5000 [00:49<2:35:41,  1.88s/it]
+iql:   1%|          | 26/5000 [00:51<2:34:54,  1.87s/it]
+iql:   1%|          | 27/5000 [00:53<2:34:40,  1.87s/it]
+iql:   1%|          | 28/5000 [00:54<2:34:48,  1.87s/it]

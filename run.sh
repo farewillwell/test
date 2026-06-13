@@ -34,12 +34,12 @@ ${PI_PYTHON} -u ours/iter.py \
   --libero-python "${LIBERO_PYTHON}" \
   --iters 4 \
   --gpus 4 \
-  --iql-batch-size 256 \
+  --iql-batch-size 64 \
   --awbc-batch-size 64 \
   --iql-encoder-name /data/aoss/heliqun/model/clip/clip-vit-base-patch32 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
-  --num-trials-per-task 1 \
+  --num-trials-per-task 50 \
   --iql-use-q-aug \
   --policy-config-name pi0_libero_awbc \
   > "iter-${task_id}-rank-qselect.log" 2>&1

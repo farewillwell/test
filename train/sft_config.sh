@@ -8,8 +8,7 @@ OPENPI_ROOT="${OPENPI_ROOT:-${PI0_ROOT}/openpi}"
 # 1) Data preparation: read HDF5 demos from HDF5_DIR and write LeRobot data to
 #    LEROBOT_DATA_DIR.
 HDF5_DIR="${HDF5_DIR:-/data/aoss/heliqun/dataset/libero-dataset/bytaskid/6}"
-LEROBOT_DATA_DIR="${LEROBOT_DATA_DIR:-${PI0_ROOT}/sft_runs/lerobot_data}"
-LEROBOT_DATA_DIR="${LEROBOT_DATA_DIR%/}"
+LEROBOT_DATA_DIR="/data/aoss/heliqun/dataset/pi-src/pi0/"
 
 # OpenPI/LeRobot internally addresses a local dataset as
 # "${HF_LEROBOT_HOME}/${REPO_ID}". Derive those two values from the single
@@ -23,11 +22,11 @@ ASSETS_BASE_DIR="${ASSETS_BASE_DIR:-${LEROBOT_DATA_DIR}/openpi_assets}"
 ASSET_ID="${ASSET_ID:-physical-intelligence/libero}"
 
 # 2) Training: read LEROBOT_DATA_DIR and save checkpoints under MODEL_DIR.
-MODEL_DIR="${MODEL_DIR:-${PI0_ROOT}/sft_runs/model}"
+MODEL_DIR="/data/aoss/heliqun/model/pisft/pi0"
 STEP_CHECKPOINT_DIR="${MODEL_DIR}/steps"
 FINAL_CHECKPOINT_DIR="${MODEL_DIR}/final"
 
-CONFIG_NAME="${CONFIG_NAME:-pi05_libero}"
+CONFIG_NAME="${CONFIG_NAME:-pi0_libero}"
 EXP_NAME="${EXP_NAME:-sft}"
 OPENPI_DATA_HOME="${OPENPI_DATA_HOME:-/data/aoss/heliqun/model/pi}"
 
@@ -63,7 +62,7 @@ CUDA_CACHE_MAXSIZE="${CUDA_CACHE_MAXSIZE:-2147483648}"
 JAX_ENABLE_COMPILATION_CACHE="${JAX_ENABLE_COMPILATION_CACHE:-true}"
 JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS="${JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS:-0}"
 
-LOG_DIR="${LOG_DIR:-${PI0_ROOT}/sft_runs/logs}"
+LOG_DIR="${LEROBOT_DATA_DIR}/logs"
 PREPARE_LOG_FILE="${PREPARE_LOG_FILE:-${LOG_DIR}/prepare.log}"
 TRAIN_LOG_FILE="${TRAIN_LOG_FILE:-${LOG_DIR}/train.log}"
 

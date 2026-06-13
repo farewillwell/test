@@ -65,19 +65,19 @@ def _task_mode(task_id: int) -> str:
 
 
 def get_iql_steps(iter_index: int, task_id: int) -> int:
-    base = 3000
-    iter_task_add = 2000
+    base = 4000
+    iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
-    return 1 # int(base + iter_task_add * num_tasks * iter_scale)
+    return  int(base + iter_task_add * num_tasks * iter_scale)
 
 
 def get_awbc_steps(iter_index: int, task_id: int) -> int:
     base = 3000
-    iter_task_add = 500
+    iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
-    return 1 # int(base + iter_task_add * num_tasks * iter_scale)
+    return  int(base + iter_task_add * num_tasks * iter_scale)
 
 def check_env_for_subprocess(env: dict[str, Any], *, log_path: Path) -> None:
     bad = {k: v for k, v in env.items() if v is None}
@@ -291,9 +291,7 @@ def libero_env(args: argparse.Namespace, data_root: Path) -> dict[str, str]:
 def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -> None:
     log_line(log_path, f"[cmd] {quote_cmd(cmd)}")
     log_line(log_path, f"[cwd] {cwd}")
-
     check_env_for_subprocess(env, log_path=log_path)
-
     with subprocess.Popen(
         [str(x) for x in cmd],
         cwd=str(cwd),
@@ -316,13 +314,11 @@ def run_cmd(cmd: list[Any], *, log_path: Path, cwd: Path, env: dict[str, str]) -
 
 def wait_for_port(host: str, port: int, proc: subprocess.Popen[Any], timeout: float, log_path: Path) -> None:
     connect_host = "127.0.0.1" if host in {"0.0.0.0", ""} else host
-    deadline = time.time() + timeout
+    deadline = time.time() + float(timeout)
     last_log_time = 0.0
-
     while time.time() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(f"Policy server exited early with code {proc.returncode}. See {log_path}")
-
         try:
             with socket.create_connection((connect_host, int(port)), timeout=2.0):
                 log_line(log_path, f"[server] ready at {connect_host}:{port}")

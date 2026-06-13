@@ -110,7 +110,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-dir", type=Path, required=True, help="Directory containing LIBERO .hdf5/.h5 files.")
     parser.add_argument("--repo-id", required=True, help="Local LeRobot repo id, e.g. heliqun/libero_goal_select_50.")
-    parser.add_argument("--fps", type=int, default=10)
+    parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--image-size", type=int, default=256)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--max-episodes", type=int, default=None, help="Optional smoke-test limit.")
@@ -544,7 +544,7 @@ def main() -> None:
         if not args.overwrite:
             raise FileExistsError(f"{output_path} already exists. Pass --overwrite to recreate it.")
         shutil.rmtree(output_path)
-
+    print(f"fps={args.fps}")
     dataset = LeRobotDataset.create(
         repo_id=args.repo_id,
         robot_type="libero",

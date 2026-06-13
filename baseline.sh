@@ -36,9 +36,10 @@ ${PI_PYTHON} -u ours/iter_baseline.py \
   --pi-python "${PI_PYTHON}" \
   --libero-python "${LIBERO_PYTHON}" \
   --iters 4 \
-  --gpus 2 \
+  --gpus 4 \
+  --sft-batch-size 64 \
   --task-id ${task_id} \
   --task-suite-name libero_goal \
-  --num-trials-per-task 1 \
+  --num-trials-per-task 50 \
   --policy-config-name pi0_libero \
   > "iter-${task_id}-baseline-sft.log" 2>&1

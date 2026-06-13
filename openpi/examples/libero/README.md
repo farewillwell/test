@@ -40,6 +40,7 @@ Terminal window 1:
 
 ```bash
 # Create virtual environment
+cd /data/huangdi/heliqun/pi0/openpi
 source examples/libero/libero_env/bin/activate
 export PYTHONPATH=$PYTHONPATH:/data/huangdi/heliqun/pi0/openpi/third_party/libero
 export LIBERO_CONFIG_PATH=/data/huangdi/heliqun/openvla-oft/openvla-oft/LIBERO/.libero
@@ -55,7 +56,7 @@ Terminal window 2:
 
 ```bash
 # Run the server
-MODEL_PATH=/data/huangdi/heliqun/pi0/sft_runs/model/final  bash test/test.sh
+MODEL_PATH=/data/aoss/heliqun/model/pisft/pi0/final  bash test/test.sh
 ```
 
 ## Results

@@ -40,7 +40,7 @@ from PIL import Image
 
 from Qselect.raw_collect_to_lerobot import convert_raw_collect_to_lerobot
 
-
+LIBERO_REPLAN_STEPS = int(os.environ['action_horizon'])
 STAGE_TRAIN_SFT = "train_sft"
 STAGE_COLLECT = "collect"
 STAGE_APPEND_SUCCESS_SFT = "append_success_sft"
@@ -52,6 +52,8 @@ VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 ASSET_ID = "physical-intelligence/libero"
 PROJECT_NAME = "openpi"
 FPS = 10
+COLLECT_RESIZE_SIZE = 224  # current collect.py raw npz image size
+
 
 QSELECT_HOST = "127.0.0.1"
 QSELECT_PORT = 8000
@@ -72,7 +74,7 @@ def _task_mode(task_id: int) -> str:
 
 def get_sft_steps(iter_index: int, task_id: int) -> int:
     base = 3000
-    iter_task_add = 2000
+    iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
     return int(base + iter_task_add * num_tasks * iter_scale)
@@ -99,8 +101,8 @@ def parse_args() -> argparse.Namespace:
 
     # Time scale. These are kept for CLI compatibility with ours/iter.py.
     # collect.py currently obtains action_horizon from the shell environment.
-    p.add_argument("--horizon", type=int, default=5)
-    p.add_argument("--replan-steps", type=int, default=5)
+    p.add_argument("--horizon", type=int, default=LIBERO_REPLAN_STEPS)
+    p.add_argument("--replan-steps", type=int, default=LIBERO_REPLAN_STEPS)
 
     # SFT.
     p.add_argument("--sft-batch-size", type=int, default=16)
@@ -196,6 +198,8 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
     env["PYTHONUNBUFFERED"] = "1"
     env["TOKENIZERS_PARALLELISM"] = env.get("TOKENIZERS_PARALLELISM", "false")
     env["WANDB_MODE"] = env.get("WANDB_MODE", "offline")
+    env["JAX_COMPILATION_CACHE_DIR"] = env.get("JAX_COMPILATION_CACHE_DIR")
+    env["CUDA_CACHE_PATH"] = env.get("CUDA_CACHE_PATH")
     env["CUDA_CACHE_MAXSIZE"] = env.get("CUDA_CACHE_MAXSIZE", "2147483648")
     env["JAX_ENABLE_COMPILATION_CACHE"] = env.get("JAX_ENABLE_COMPILATION_CACHE", "true")
     env["JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS"] = env.get("JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS", "0")
@@ -206,10 +210,12 @@ def base_env(args: argparse.Namespace) -> dict[str, str]:
 
 def libero_env(args: argparse.Namespace, data_root: Path) -> dict[str, str]:
     env = base_env(args)
-    if not env.get("LIBERO_CONFIG_PATH", ""):
+
+    if "LIBERO_CONFIG_PATH" not in env or not env["LIBERO_CONFIG_PATH"]:
         raise RuntimeError("LIBERO_CONFIG_PATH must be set in the shell environment.")
-    if not env.get("MUJOCO_GL", ""):
+    if "MUJOCO_GL" not in env or not env["MUJOCO_GL"]:
         raise RuntimeError("MUJOCO_GL must be set in the shell environment, e.g. export MUJOCO_GL=egl")
+
     env["HF_LEROBOT_HOME"] = str(data_root)
     third_party_libero = str(Path(args.openpi_root) / "third_party" / "libero")
     env["PYTHONPATH"] = third_party_libero + os.pathsep + env.get("PYTHONPATH", "")
@@ -326,6 +332,19 @@ def image_hwc_uint8(x: Any) -> np.ndarray:
             arr = arr * 255.0
         arr = np.clip(arr, 0, 255).astype(np.uint8)
     return np.ascontiguousarray(arr)
+
+
+def resize_image_hwc_uint8(x: Any, target_shape: tuple[int, int, int]) -> np.ndarray:
+    """Convert an image-like object to uint8 HWC and resize to target_shape if needed."""
+    arr = image_hwc_uint8(x)
+    target_shape = tuple(int(v) for v in target_shape)
+    if len(target_shape) != 3 or target_shape[-1] != 3:
+        raise ValueError(f"Expected target image shape (H, W, 3), got {target_shape}")
+    if tuple(arr.shape) == target_shape:
+        return arr
+    target_h, target_w, _ = target_shape
+    resized = Image.fromarray(arr).resize((target_w, target_h), Image.BILINEAR)
+    return np.ascontiguousarray(np.asarray(resized, dtype=np.uint8))
 
 
 def float_vec(x: Any, name: str) -> np.ndarray:
@@ -457,20 +476,35 @@ def infer_sft_shapes(sample: dict[str, Any]) -> tuple[tuple[int, int, int], tupl
     return image_shape, wrist_shape, state_dim, action_dim
 
 
-def add_sft_frame(dst: Any, sample: dict[str, Any], *, src_desc: str, frame_idx: int) -> None:
+def add_sft_frame(
+    dst: Any,
+    sample: dict[str, Any],
+    *,
+    src_desc: str,
+    frame_idx: int,
+    image_shape: tuple[int, int, int] | None = None,
+    wrist_shape: tuple[int, int, int] | None = None,
+) -> None:
     task = decode_task(require_key(sample, TASK_KEY)).strip()
     if not task:
         raise ValueError(f"Empty task at {src_desc} frame {frame_idx}")
+
+    image = image_hwc_uint8(require_key(sample, IMAGE_KEY))
+    wrist_image = image_hwc_uint8(require_key(sample, WRIST_IMAGE_KEY))
+    if image_shape is not None:
+        image = resize_image_hwc_uint8(image, image_shape)
+    if wrist_shape is not None:
+        wrist_image = resize_image_hwc_uint8(wrist_image, wrist_shape)
+
     dst.add_frame(
         {
-            "image": image_hwc_uint8(require_key(sample, IMAGE_KEY)),
-            "wrist_image": image_hwc_uint8(require_key(sample, WRIST_IMAGE_KEY)),
+            "image": image,
+            "wrist_image": wrist_image,
             "state": float_vec(require_key(sample, STATE_KEY), STATE_KEY).astype(np.float32),
             "actions": float_vec(require_key(sample, ACTION_KEY), ACTION_KEY).astype(np.float32),
             "task": task,
         }
     )
-
 
 def materialize_sft_pool(source_dirs: list[Path], output_dir: Path, *, overwrite: bool = True) -> dict[str, int]:
     """Merge success-only ordinary SFT LeRobot repos into one ordinary SFT repo."""
@@ -503,7 +537,14 @@ def materialize_sft_pool(source_dirs: list[Path], output_dir: Path, *, overwrite
                 if not indices:
                     continue
                 for idx in indices:
-                    add_sft_frame(dst, src[idx], src_desc=str(source_dir), frame_idx=idx)
+                    add_sft_frame(
+                        dst,
+                        src[idx],
+                        src_desc=str(source_dir),
+                        frame_idx=idx,
+                        image_shape=image_shape,
+                        wrist_shape=wrist_shape,
+                    )
                     total_frames += 1
                 dst.save_episode()
                 total_episodes += 1
@@ -525,8 +566,20 @@ def episode_is_success(src: Any, indices: list[int]) -> bool:
     return bool(max(flags))
 
 
-def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: bool = True) -> dict[str, int]:
-    """Extract only successful episodes from a converted collector LeRobot repo into ordinary SFT."""
+def extract_success_sft_repo(
+    collect_dir: Path,
+    output_dir: Path,
+    *,
+    overwrite: bool = True,
+    target_image_shape: tuple[int, int, int] | None = None,
+    target_wrist_shape: tuple[int, int, int] | None = None,
+) -> dict[str, int]:
+    """Extract successful episodes from a collector LeRobot repo into ordinary SFT.
+
+    The collector repo may use a different image resolution from the initial SFT
+    repo. When target_*_shape is provided, images are resized while writing the
+    success-only SFT repo so the next materialized SFT pool has a single schema.
+    """
     collect_dir = Path(collect_dir)
     assert_lerobot_repo_dir(collect_dir, name="collect-dir")
     src = open_lerobot_dataset(collect_dir)
@@ -534,7 +587,10 @@ def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: 
         raise RuntimeError(f"Collect dataset is empty: {collect_dir}")
 
     first_sample = src[0]
-    image_shape, wrist_shape, state_dim, action_dim = infer_sft_shapes(first_sample)
+    src_image_shape, src_wrist_shape, state_dim, action_dim = infer_sft_shapes(first_sample)
+    image_shape = tuple(target_image_shape) if target_image_shape is not None else src_image_shape
+    wrist_shape = tuple(target_wrist_shape) if target_wrist_shape is not None else src_wrist_shape
+
     dst = create_sft_output_dataset(
         output_dir,
         overwrite=overwrite,
@@ -558,7 +614,14 @@ def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: 
             if not episode_is_success(src, indices):
                 continue
             for idx in indices:
-                add_sft_frame(dst, src[idx], src_desc=str(collect_dir), frame_idx=idx)
+                add_sft_frame(
+                    dst,
+                    src[idx],
+                    src_desc=str(collect_dir),
+                    frame_idx=idx,
+                    image_shape=image_shape,
+                    wrist_shape=wrist_shape,
+                )
                 total_frames += 1
             dst.save_episode()
             total_success_episodes += 1
@@ -569,8 +632,11 @@ def extract_success_sft_repo(collect_dir: Path, output_dir: Path, *, overwrite: 
         "seen_episodes": int(total_seen_episodes),
         "success_episodes": int(total_success_episodes),
         "frames": int(total_frames),
+        "src_image_shape": list(src_image_shape),
+        "src_wrist_shape": list(src_wrist_shape),
+        "out_image_shape": list(image_shape),
+        "out_wrist_shape": list(wrist_shape),
     }
-
 
 def append_sft_source_record(args: argparse.Namespace, record: dict[str, Any]) -> None:
     pools = pool_paths(args)
@@ -877,11 +943,12 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
                     proc.wait(timeout=20)
 
     log_line(log_path, f"[convert] raw tmp -> LeRobot: {tmp_collect_dir} -> {final_collect_dir}")
+    log_line(log_path, f"[convert] collect raw image size expected={COLLECT_RESIZE_SIZE}")
     convert_summary = convert_raw_collect_to_lerobot(
         input_dir=tmp_collect_dir,
         output_dir=final_collect_dir,
         fps=FPS,
-        resize_size=224,
+        resize_size=COLLECT_RESIZE_SIZE,
         overwrite=bool(args.overwrite_repos),
         cleanup_input_on_success=True,
         log_fn=lambda msg: log_line(log_path, msg),
@@ -916,10 +983,23 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
     if not collect_dir.exists():
         raise FileNotFoundError(f"Collect data does not exist: {collect_dir}")
 
+    # Use the current SFT pool schema as the target schema. This keeps the
+    # baseline success-only pool mergeable even if collect.py/raw conversion
+    # uses a smaller image resolution such as 224.
+    existing_source_dirs = sft_pool_source_dirs(args)
+    target_sample = first_sample_from_sources(existing_source_dirs)
+    target_image_shape, target_wrist_shape, _, _ = infer_sft_shapes(target_sample)
+    log_line(
+        log_path,
+        f"[target_sft_shape] image={target_image_shape} wrist_image={target_wrist_shape}",
+    )
+
     stats = extract_success_sft_repo(
         collect_dir,
         p["collect_success_sft"],
         overwrite=bool(args.overwrite_repos),
+        target_image_shape=target_image_shape,
+        target_wrist_shape=target_wrist_shape,
     )
     log_line(log_path, f"[extract_success_sft_repo] output={p['collect_success_sft']} stats={stats}")
 
@@ -934,6 +1014,8 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
                 "collect_dir": str(collect_dir),
                 "success_episodes": int(stats["success_episodes"]),
                 "frames": int(stats["frames"]),
+                "image_shape": stats.get("out_image_shape"),
+                "wrist_shape": stats.get("out_wrist_shape"),
             },
         )
         appended = True
@@ -944,6 +1026,11 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
 
     source_dirs = sft_pool_source_dirs(args)
     log_line(log_path, f"[pool] sources now={json.dumps([str(x) for x in source_dirs], ensure_ascii=False)}")
+
+    if collect_dir.exists():
+        log_line(log_path, f"[cleanup] remove full collect repo: {collect_dir}")
+        shutil.rmtree(collect_dir)
+
     append_history(
         state,
         iter_index,
@@ -960,7 +1047,6 @@ def stage_append_success_sft(args: argparse.Namespace, state: dict[str, Any], p:
     state["iter_index"] = iter_index + 1
     state["next_stage"] = STAGE_FINISHED if state["iter_index"] >= int(args.iters) else STAGE_TRAIN_SFT
     return state
-
 
 STAGE_EXECUTORS = {
     STAGE_TRAIN_SFT: stage_train_sft,
