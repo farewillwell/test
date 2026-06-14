@@ -44,9 +44,9 @@ cd /data/huangdi/heliqun/pi0/openpi
 source examples/libero/libero_env/bin/activate
 export PYTHONPATH=$PYTHONPATH:/data/huangdi/heliqun/pi0/openpi/third_party/libero
 export LIBERO_CONFIG_PATH=/data/huangdi/heliqun/openvla-oft/openvla-oft/LIBERO/.libero
-
-# Run the simulation
 python examples/libero/main.py
+# Run the simulation
+
 
 # To run with glx for Mujoco instead (use this if you have egl errors):
 MUJOCO_GL=glx python examples/libero/main.py
@@ -56,7 +56,7 @@ Terminal window 2:
 
 ```bash
 # Run the server
-MODEL_PATH=/data/aoss/heliqun/model/pisft/pi0/final  bash test/test.sh
+MODEL_PATH=/data/aoss/heliqun/model/pisft/pi0-y/final  bash test/test.sh
 ```
 
 ## Results

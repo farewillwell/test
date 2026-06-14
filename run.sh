@@ -20,9 +20,9 @@ LIBERO_PYTHON=${OPENPI_ROOT}/examples/libero/libero_env/bin/python
 export PI0_CACHE_ROOT="${PI0_CACHE_ROOT:-${PI0_ROOT}/cache}"
 export JAX_COMPILATION_CACHE_DIR="${JAX_COMPILATION_CACHE_DIR:-${PI0_CACHE_ROOT}/jax}"
 export CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-${PI0_CACHE_ROOT}/cuda}"
-WORKSPACE=/data/aoss/heliqun/pi0-ours/goal-6
-SRC_DIR=/data/huangdi/heliqun/pi0/sft_runs/lerobot_data
-BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi0_base
+WORKSPACE=/data/aoss/heliqun/pi05-ours/goal-6
+SRC_DIR=/data/aoss/heliqun/dataset/pi-src/pi05
+BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi05_base
 unset LD_LIBRARY_PATH
 ${PI_PYTHON} -u ours/iter.py \
   --workspace "${WORKSPACE}" \
@@ -41,5 +41,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --task-suite-name libero_goal \
   --num-trials-per-task 50 \
   --iql-use-q-aug \
-  --policy-config-name pi0_libero_awbc \
-  > "iter-${task_id}-rank-qselect.log" 2>&1
+  --policy-config-name pi05_libero_awbc \
+  > "iter-${task_id}-rank-qselect5.log" 2>&1

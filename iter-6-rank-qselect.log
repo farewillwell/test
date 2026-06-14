@@ -25706,3 +25706,25 @@ Task: put the cream cheese in the bowl
 task6:  12%|█▏        | 6/50 [04:02<34:04, 46.46s/it][A2026-06-13 15:06:02,518 [INFO] 
 Task: put the cream cheese in the bowl
 2026-06-13 15:06:02,518 [INFO] Starting episode 7...
+2026-06-13 15:07:06,855 [INFO] Success: False
+2026-06-13 15:07:06,855 [INFO] # episodes completed so far: 7
+2026-06-13 15:07:06,855 [INFO] # successes: 3 (42.9%)
+2026-06-13 15:07:06,855 [INFO] Current task success rate: 0.429
+2026-06-13 15:07:06,855 [INFO] Current total success rate: 0.429
+2026-06-13 15:07:06,855 [INFO] Saved episodes=7 frames=1432
+
+
+task6:  14%|█▍        | 7/50 [05:06<37:29, 52.30s/it][A2026-06-13 15:07:06,855 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-13 15:07:06,855 [INFO] Starting episode 8...
+2026-06-13 15:07:25,382 [INFO] Success: True
+2026-06-13 15:07:25,383 [INFO] # episodes completed so far: 8
+2026-06-13 15:07:25,383 [INFO] # successes: 4 (50.0%)
+2026-06-13 15:07:25,383 [INFO] Current task success rate: 0.500
+2026-06-13 15:07:25,383 [INFO] Current total success rate: 0.500
+2026-06-13 15:07:25,383 [INFO] Saved episodes=8 frames=1510
+
+
+task6:  16%|█▌        | 8/50 [05:25<29:05, 41.55s/it][A2026-06-13 15:07:25,383 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-13 15:07:25,383 [INFO] Starting episode 9...
