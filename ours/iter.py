@@ -163,6 +163,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--save-success", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--save-failure", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--seed", type=int, default=7)
+    p.add_argument("--proposal-noise-scale", type=float, default=1.0)
+    p.add_argument(
+        "--proposal-noise-strategy",
+        default="base",
+        choices=("base", "hubu", "zhengjiao", "guocaiyang"),
+    )
     return p.parse_args()
 
 
@@ -739,6 +745,10 @@ def stage_collect(args: argparse.Namespace, state: dict[str, Any], p: dict[str, 
         str(args.seed),
         "--policy-config",
         str(args.policy_config_name),
+        "--noise-scale",
+        str(args.proposal_noise_scale),
+        "--noise-strategy",
+        str(args.proposal_noise_strategy),
     ]
 
     if mode == "qselect":

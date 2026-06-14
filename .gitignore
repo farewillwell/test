@@ -5,3 +5,4 @@ cache/
 *_runs/
 openpi/wandb/
 openpi/.venv/
+ours/Qselect/policy-vis-*/

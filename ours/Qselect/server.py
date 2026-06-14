@@ -22,6 +22,9 @@ In --sample-mode simple, this wrapper just delegates to OpenPI Policy.infer().
 For pi0 flow matching there is no separate greedy/random/first mode: a single
 normal inference call is the simple baseline.
 
+In --sample-mode random, this wrapper uses the same batched noise proposal path
+as qselect, but selects one candidate uniformly at random instead of scoring it.
+
 The collector / test env process should connect to this server just like it
 connects to scripts/serve_policy.py.
 
@@ -74,6 +77,130 @@ DEFAULT_NUM_STEPS = 10
 DEFAULT_NOISE_SCALE = 1.0
 DEFAULT_SCORE_HORIZON = 0
 DEFAULT_LOG_EVERY = 20
+def get_noise(
+    sample_rng: Any,
+    n: int,
+    action_horizon: int,
+    action_dim: int,
+    args: Args | Any,
+) -> jnp.ndarray:
+    """Generate JAX initial noises for pi0/pi0.5 flow proposal expansion.
+
+    Strategies:
+        base:
+            Original behavior. IID Gaussian noises, then multiplied by noise_scale.
+
+        hubu:
+            Antithetic / complementary noises. For every eps, also use -eps.
+            This gives paired opposite proposals.
+
+        zhengjiao:
+            Approximately orthogonal noise directions in flattened chunk space.
+            This increases directional coverage across candidates.
+
+        guocaiyang:
+            Oversample Gaussian noises, then greedily select farthest candidates.
+            This maximizes candidate diversity in noise space.
+
+    Returns:
+        noise: jnp.ndarray with shape [n, action_horizon, action_dim].
+    """
+    strategy = getattr(args, "noise_strategy", "base")
+    scale = float(getattr(args, "noise_scale", DEFAULT_NOISE_SCALE))
+
+    h = int(action_horizon)
+    d = int(action_dim)
+    dim = h * d
+
+    if n <= 0:
+        raise ValueError(f"num noise samples must be positive, got {n}")
+
+    # 1. 原始默认：保持你现在的行为。
+    if strategy == "base":
+        noise = jax.random.normal(
+            sample_rng,
+            (n, h, d),
+            dtype=jnp.float32,
+        )
+        return noise * scale
+
+    # 2. 互补噪声：eps 和 -eps 成对出现。
+    if strategy == "hubu":
+        half = (n + 1) // 2
+        eps = jax.random.normal(
+            sample_rng,
+            (half, h, d),
+            dtype=jnp.float32,
+        )
+        noise = jnp.concatenate([eps, -eps], axis=0)[:n]
+        return noise * scale
+
+    # 3. 正交噪声：flatten 后做近似正交方向，再采样高斯半径。
+    if strategy == "zhengjiao":
+        if n > dim:
+            raise ValueError(
+                f"zhengjiao requires n <= action_horizon * action_dim, "
+                f"got n={n}, action_horizon={h}, action_dim={d}, dim={dim}"
+            )
+
+        key_dir, key_radius = jax.random.split(sample_rng)
+
+        mat = jax.random.normal(
+            key_dir,
+            (dim, n),
+            dtype=jnp.float32,
+        )
+        q, _ = jnp.linalg.qr(mat)  # [dim, n], orthonormal columns
+
+        # 标准高斯在 dim 维空间里的半径约服从 sqrt(chi-square(dim))。
+        # 这样避免正交方向全是单位长度，导致噪声幅度过小。
+        radius = jnp.sqrt(
+            jax.random.chisquare(
+                key_radius,
+                df=dim,
+                shape=(n,),
+            ).astype(jnp.float32)
+        )
+
+        flat = q.T * radius[:, None]  # [n, dim]
+        noise = flat.reshape(n, h, d)
+        return noise * scale
+
+    # 4. 过采样后选最远：先采 M 个，再选出彼此最分散的 n 个。
+    if strategy == "guocaiyang":
+        # 这里不额外加 args.noise_oversample，保持你当前参数体系最小化。
+        # 默认过采样倍数设成 8，至少 32 个。
+        m = max(n * 8, 32)
+
+        pool = jax.random.normal(
+            sample_rng,
+            (m, h, d),
+            dtype=jnp.float32,
+        )
+
+        pool_np = np.asarray(pool)
+        flat = pool_np.reshape(m, -1)
+
+        # 从 norm 最大的点开始，确定性更强。
+        first = int(np.argmax(np.sum(flat * flat, axis=1)))
+        selected = [first]
+
+        min_dist = np.sum((flat - flat[first]) ** 2, axis=1)
+        for _ in range(1, n):
+            idx = int(np.argmax(min_dist))
+            selected.append(idx)
+            dist = np.sum((flat - flat[idx]) ** 2, axis=1)
+            min_dist = np.minimum(min_dist, dist)
+
+        selected_np = pool_np[np.asarray(selected, dtype=np.int64)]
+        noise = jnp.asarray(selected_np, dtype=jnp.float32)
+        return noise * scale
+
+    raise ValueError(
+        f"Unknown noise_strategy={strategy!r}. "
+        "Expected one of: base, hubu, zhengjiao, guocaiyang."
+    )
+
 @dataclasses.dataclass
 class Args:
     # Required / important.
@@ -81,7 +208,7 @@ class Args:
     critic_path: str = ""
 
     # Real experiment knobs.
-    sample_mode: str = "qselect"  # qselect | simple
+    sample_mode: str = "qselect"  # qselect | simple | random
     num_action_samples: int = 16
     seed: int = 0
 
@@ -90,6 +217,7 @@ class Args:
     port: int = DEFAULT_PORT
     num_steps: int = DEFAULT_NUM_STEPS
     noise_scale: float = DEFAULT_NOISE_SCALE
+    noise_strategy: str = "base"
     score_horizon: int = DEFAULT_SCORE_HORIZON
     selector_device: str = ""
     default_prompt: str = ""
@@ -103,13 +231,19 @@ def parse_args() -> Args:
     p.add_argument("--policy-dir", required=True)
     p.add_argument("--critic-path", default="")
 
-    p.add_argument("--sample-mode", default="qselect", choices=("qselect", "simple"))
+    p.add_argument("--sample-mode", default="qselect", choices=("qselect", "simple", "random"))
     p.add_argument("--num-action-samples", type=int, default=16)
     p.add_argument("--seed", type=int, default=0)
 
     # Keep these as escape hatches, but iter.py normally does not pass them.
     p.add_argument("--policy-config", default="")
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--noise-scale", type=float, default=DEFAULT_NOISE_SCALE)
+    p.add_argument(
+        "--noise-strategy",
+        default="base",
+        choices=("base", "hubu", "zhengjiao", "guocaiyang"),
+    )
 
     return Args(**vars(p.parse_args()))
 
@@ -206,6 +340,9 @@ class Pi0QSelectPolicy:
                     "sample_mode": args.sample_mode,
                     "critic_path": args.critic_path,
                     "score_horizon": int(args.score_horizon),
+                    "noise_strategy": args.noise_strategy,
+                    "noise_scale": float(args.noise_scale),
+                    "random_select": args.sample_mode == "random",
                 }
             }
         )
@@ -228,6 +365,7 @@ class Pi0QSelectPolicy:
             self.selector = None
 
         np.random.seed(args.seed)
+        self.random_selector = np.random.default_rng(args.seed)
         self.torch_generator = torch.Generator(device=self.pytorch_device if str(self.pytorch_device).startswith("cuda") else "cpu")
         self.torch_generator.manual_seed(args.seed)
         if not self.is_pytorch:
@@ -238,7 +376,7 @@ class Pi0QSelectPolicy:
 
         logging.info(
             "Pi0QSelectPolicy initialized: config=%s dir=%s horizon=%s action_dim=%s "
-            "num_samples=%s mode=%s pytorch=%s",
+            "num_samples=%s mode=%s pytorch=%s noise_strategy=%s noise_scale=%.3f",
             args.policy_config,
             args.policy_dir,
             self.action_horizon,
@@ -246,6 +384,8 @@ class Pi0QSelectPolicy:
             self.num_action_samples,
             args.sample_mode,
             self.is_pytorch,
+            args.noise_strategy,
+            float(args.noise_scale),
         )
 
     def _sample_batched_raw_actions(self, transformed_single: dict[str, Any]) -> tuple[Any, Any, float]:
@@ -265,7 +405,8 @@ class Pi0QSelectPolicy:
                 device=self.pytorch_device,
             )
             observation = _model.Observation.from_dict(transformed_batch)
-
+            if self.args.noise_strategy != "base":
+                raise NotImplementedError("torch not support noise strategy")
             noise = torch.randn(
                 (n, self.action_horizon, self.action_dim),
                 generator=self.torch_generator,
@@ -290,11 +431,13 @@ class Pi0QSelectPolicy:
         observation = _model.Observation.from_dict(transformed_batch)
 
         self.policy._rng, sample_rng = jax.random.split(self.policy._rng)
-        noise = jax.random.normal(
-            sample_rng,
-            (n, self.action_horizon, self.action_dim),
-            dtype=jnp.float32,
-        ) * float(self.args.noise_scale)
+        noise = get_noise(
+            sample_rng=sample_rng,
+            n=n,
+            action_horizon=self.action_horizon,
+            action_dim=self.action_dim,
+            args=self.args,
+        )
 
         sample_kwargs = dict(getattr(self.policy, "_sample_kwargs", {}) or {})
         sample_kwargs["noise"] = noise
@@ -339,6 +482,11 @@ class Pi0QSelectPolicy:
 
     def _select_candidate(self, obs: dict[str, Any], candidates: np.ndarray) -> tuple[int, np.ndarray]:
         mode = self.args.sample_mode
+
+        if mode == "random":
+            best_idx = int(self.random_selector.integers(0, int(candidates.shape[0])))
+            scores = np.zeros((int(candidates.shape[0]),), dtype=np.float32)
+            return best_idx, scores
 
         if mode != "qselect":
             raise ValueError(f"Unknown sample mode: {mode}")

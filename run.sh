@@ -42,4 +42,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --num-trials-per-task 50 \
   --iql-use-q-aug \
   --policy-config-name pi05_libero_awbc \
+  --proposal-noise-scale 2.0 \
   > "iter-${task_id}-rank-qselect5.log" 2>&1
