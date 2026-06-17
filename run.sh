@@ -43,4 +43,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --iql-use-q-aug \
   --policy-config-name pi05_libero_awbc \
   --proposal-noise-scale 1.5 \
+  --critic-encoder-mode oft_single_view \
   > "iter-${task_id}-rank-qselect5-ent.log" 2>&1
