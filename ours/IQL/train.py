@@ -60,6 +60,7 @@ class TrainArgs:
     repo_dirs: list[str]
     output_dir: str
     encoder_name: str = "openai/clip-vit-base-patch32"
+    critic_encoder_mode: str = "full_pi0"
 
     horizon: int = 5
     image_size: int = 224
@@ -105,6 +106,11 @@ def parse_args() -> TrainArgs:
     )
     p.add_argument("--output-dir", required=True)
     p.add_argument("--encoder-name", default="openai/clip-vit-base-patch32")
+    p.add_argument(
+        "--critic-encoder-mode",
+        default="full_pi0",
+        choices=("full_pi0", "oft_single_view"),
+    )
 
     p.add_argument("--horizon", type=int, default=5)
     p.add_argument("--image-size", type=int, default=224)
@@ -489,7 +495,7 @@ def build_model(args: TrainArgs, state_dim: int, action_dim: int) -> torch.nn.Mo
         q_layers=args.q_layers,
         dropout=args.dropout,
         q_l2_coef=args.q_l2_coef,
-
+        encoder_mode=args.critic_encoder_mode,
     )
 
 

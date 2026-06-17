@@ -397,7 +397,9 @@ def build_model_from_ckpt(args: Args, state_dim: int, action_dim: int, device: t
     q_layers = int(ckpt_args.get("q_layers", ckpt_args.get("fusion_layers", 2)))
     dropout = float(ckpt_args.get("dropout", 0.1))
     q_l2_coef = float(ckpt_args.get("q_l2_coef", 1e-4))
-
+    encoder_mode = str(
+        ckpt_args.get("critic_encoder_mode", ckpt_args.get("encoder_mode", "full_pi0"))
+    )
     # Use the LightIQLCritic compatibility signature from model.py.
     model = LightIQLCritic(
         encoder_name=encoder_name,
@@ -410,6 +412,7 @@ def build_model_from_ckpt(args: Args, state_dim: int, action_dim: int, device: t
         q_layers=q_layers,
         dropout=dropout,
         q_l2_coef=q_l2_coef,
+        encoder_mode=encoder_mode,
     )
 
     model.load_state_dict(ckpt.get("model", ckpt))

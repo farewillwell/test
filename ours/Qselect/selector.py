@@ -127,6 +127,7 @@ def _build_model_from_checkpoint(
     dropout = float(ckpt_args.get("dropout", 0.1))
     q_l2_coef = float(ckpt_args.get("q_l2_coef", 1e-4))
     encoder_amp = bool(ckpt_args.get("encoder_amp", True))
+    critic_encoder_mode = str(ckpt_args.get("critic_encoder_mode", "full_pi0"))
     model = LightIQLCritic(
         encoder_name=encoder_name,
         state_dim=state_dim,
@@ -140,6 +141,7 @@ def _build_model_from_checkpoint(
         dropout=dropout,
         q_l2_coef=q_l2_coef,
         encoder_amp=encoder_amp,
+        encoder_mode=critic_encoder_mode,
         rank_coef=float(ckpt_args.get("rank_coef", 0.5)),
         rank_margin=float(ckpt_args.get("rank_margin", 0.05)),
         rank_noise_std=float(ckpt_args.get("rank_noise_std", 0.05)),
@@ -194,7 +196,8 @@ class QSelector:
         print(
             f"[QSelector] critic_path={self.critic_path} "
             f"device={self.device} model_device={model_device} "
-            f"chunk_size={self.chunk_size} action_dim={self.action_dim}",
+            f"chunk_size={self.chunk_size} action_dim={self.action_dim} "
+            f"encoder_mode={getattr(self.model, 'encoder_mode', 'unknown')}",
             flush=True,
         )
     def _process_one_image(self, image: Image.Image) -> torch.Tensor:
