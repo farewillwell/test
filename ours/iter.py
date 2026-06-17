@@ -136,6 +136,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--iql-batch-size", type=int, default=64)
     p.add_argument("--iql-num-workers", type=int, default=4)
     p.add_argument("--iql-use-q-aug", action="store_true")
+    p.add_argument(
+        "--critic-encoder-mode",
+        default="full_pi0",
+        choices=("full_pi0", "oft_single_view"),
+        help=(
+            "IQL critic observation encoder mode. "
+            "full_pi0 uses multi-view images + proprio; "
+            "oft_single_view uses fixed main view base_0_rgb + text only."
+        ),
+    )
     # Label.
     p.add_argument("--label-batch-size", type=int, default=128)
     p.add_argument("--label-normalize-adv", action="store_true")
@@ -547,6 +557,9 @@ def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str
         "--encoder-name",
         args.iql_encoder_name,
 
+        "--critic-encoder-mode",
+        str(args.critic_encoder_mode),
+
         "--horizon",
         str(args.horizon),
 
@@ -590,6 +603,7 @@ def stage_train_iql(args: argparse.Namespace, state: dict[str, Any], p: dict[str
             "head_path": str(head),
             "iql_steps": int(iql_steps),
             "gpus": int(args.gpus),
+            "critic_encoder_mode": str(args.critic_encoder_mode),
         },
     )
     return state
@@ -931,6 +945,7 @@ def iter_train(args: argparse.Namespace) -> None:
     log_line(main_log(args), f"gpus={args.gpus}")
     log_line(main_log(args), f"use_q_select={args.use_q_select} num_action_samples={args.num_action_samples}")
     log_line(main_log(args), f"iql_use_q_aug={args.iql_use_q_aug}")
+    log_line(main_log(args), f"critic_encoder_mode={args.critic_encoder_mode}")
     log_line(main_log(args), f"horizon={args.horizon} replan_steps={args.replan_steps}")
 
     state = load_or_init_state(args)

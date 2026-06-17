@@ -45,6 +45,11 @@ import torch.nn.functional as F
 from transformers import CLIPModel
 
 
+# Fixed main camera for the OFT-like single-view critic.
+# Do not expose this as a CLI/config variable; single-view always means base_0_rgb.
+MAIN_VIEW_KEY = "base_0_rgb"
+
+
 def expectile_loss(diff: torch.Tensor, expectile: float = 0.7) -> torch.Tensor:
     weight = torch.where(diff > 0, expectile, 1.0 - expectile)
     return weight * diff.pow(2)
@@ -92,6 +97,7 @@ class Pi0ObservationEncoder(nn.Module):
         nhead: int = 8,
         dropout: float = 0.1,
         encoder_amp: bool = True,
+        encoder_mode: str = "full_pi0",
     ):
         super().__init__()
         self.encoder_name = encoder_name
@@ -99,6 +105,12 @@ class Pi0ObservationEncoder(nn.Module):
         self.d_model = int(d_model)
         self.view_keys = tuple(view_keys)
         self.encoder_amp = bool(encoder_amp)
+        self.encoder_mode = str(encoder_mode)
+        if self.encoder_mode not in ("full_pi0", "oft_single_view"):
+            raise ValueError(
+                f"Unknown encoder_mode={self.encoder_mode!r}. "
+                "Expected one of: full_pi0, oft_single_view."
+            )
 
         self.vl_encoder = CLIPModel.from_pretrained(encoder_name)
         for p in self.vl_encoder.parameters():
@@ -140,8 +152,16 @@ class Pi0ObservationEncoder(nn.Module):
             nn.LayerNorm(d_model),
         )
 
+        # full_pi0:
+        #   global CLIP image/text + spatial patch pooling + proprio state
+        #
+        # oft_single_view:
+        #   one main view + text only, matching the old OFT-style critic more
+        #   closely. The pi0 batch may still contain proprio state, but this mode
+        #   intentionally ignores it.
+        fusion_in_dim = d_model * 2 if self.encoder_mode == "oft_single_view" else d_model * 3
         self.fusion_gate = nn.Sequential(
-            nn.Linear(d_model * 3, d_model),
+            nn.Linear(fusion_in_dim, d_model),
             nn.Sigmoid(),
         )
 
@@ -173,6 +193,31 @@ class Pi0ObservationEncoder(nn.Module):
 
         images: Dict[str, torch.Tensor] = observation["image"]  # type: ignore[assignment]
         image_masks: Dict[str, torch.Tensor] = observation["image_mask"]  # type: ignore[assignment]
+
+        if self.encoder_mode == "oft_single_view":
+            key = MAIN_VIEW_KEY
+            if key not in images:
+                raise KeyError(
+                    f"MAIN_VIEW_KEY={key!r} not found in observation['image']. "
+                    f"available={tuple(images.keys())}"
+                )
+
+            img = images[key]
+            if img.ndim != 4:
+                raise ValueError(f"observation['image']['{key}'] must be [B,3,H,W], got {tuple(img.shape)}")
+            if img.shape[1] != 3:
+                raise ValueError(
+                    f"observation['image']['{key}'] must be channels-first [B,3,H,W]. "
+                    f"If your loader has [B,H,W,3], convert before model. got={tuple(img.shape)}"
+                )
+
+            if key in image_masks:
+                mask = image_masks[key].bool()
+            else:
+                mask = torch.ones(img.shape[0], device=img.device, dtype=torch.bool)
+
+            # Keep the downstream CLIP path unchanged by returning V=1.
+            return img.float().unsqueeze(1), mask.unsqueeze(1)
 
         available = [k for k in self.view_keys if k in images]
         if not available:
@@ -263,28 +308,33 @@ class Pi0ObservationEncoder(nn.Module):
         return pooled_image_feat.float(), text_feat.float(), patch_tokens.float()
 
     def forward(self, observation: Dict[str, object]) -> torch.Tensor:
-        required = ["state", "tokenized_prompt", "tokenized_prompt_mask"]
+        required = ["tokenized_prompt", "tokenized_prompt_mask"]
+        if self.encoder_mode == "full_pi0":
+            required.append("state")
         for key in required:
             if key not in observation:
                 raise KeyError(f"pi0 observation must contain observation['{key}']")
 
-        robot_state = observation["state"].float()  # type: ignore[union-attr]
-        if robot_state.ndim != 2:
-            raise ValueError(f"observation['state'] must be [B,S], got {tuple(robot_state.shape)}")
-        if robot_state.shape[-1] != self.robot_state_dim:
-            raise ValueError(
-                f"state dim mismatch: got {robot_state.shape[-1]}, expected {self.robot_state_dim}"
-            )
+        robot_state = None
+        if "state" in observation:
+            robot_state = observation["state"].float()  # type: ignore[union-attr]
+            if robot_state.ndim != 2:
+                raise ValueError(f"observation['state'] must be [B,S], got {tuple(robot_state.shape)}")
+            if robot_state.shape[-1] != self.robot_state_dim:
+                raise ValueError(
+                    f"state dim mismatch: got {robot_state.shape[-1]}, expected {self.robot_state_dim}"
+                )
 
         input_ids = observation["tokenized_prompt"].long()  # type: ignore[union-attr]
         attention_mask = observation["tokenized_prompt_mask"].long()  # type: ignore[union-attr]
 
         images_bvchw, image_masks_bv = self._select_images_and_masks(observation)
+        text_device = robot_state.device if robot_state is not None else images_bvchw.device
         image_feat, text_feat, patch_tokens = self._encode_clip_views(
             images_bvchw=images_bvchw,
             image_masks_bv=image_masks_bv,
-            input_ids=input_ids.to(robot_state.device),
-            attention_mask=attention_mask.to(robot_state.device),
+            input_ids=input_ids.to(text_device),
+            attention_mask=attention_mask.to(text_device),
         )
 
         image_feat = F.normalize(image_feat.float(), dim=-1)
@@ -300,10 +350,15 @@ class Pi0ObservationEncoder(nn.Module):
         )
         spatial_state = spatial_state.squeeze(1)
 
-        proprio_state = self.robot_state_proj(robot_state.float())
+        if self.encoder_mode == "oft_single_view":
+            gate = self.fusion_gate(torch.cat([global_state, spatial_state], dim=-1))
+            state_feat = global_state + gate * spatial_state
+        else:
+            assert robot_state is not None
+            proprio_state = self.robot_state_proj(robot_state.float())
+            gate = self.fusion_gate(torch.cat([global_state, spatial_state, proprio_state], dim=-1))
+            state_feat = global_state + gate * spatial_state + proprio_state
 
-        gate = self.fusion_gate(torch.cat([global_state, spatial_state, proprio_state], dim=-1))
-        state_feat = global_state + gate * spatial_state + proprio_state
         state_feat = state_feat + self.out_ffn(state_feat)
         return self.out_norm(state_feat)
 
@@ -483,6 +538,7 @@ class LightVLValueModel(nn.Module):
         fusion_layers: int = 2,
         dropout: float = 0.1,
         view_keys: Sequence[str] = ("base_0_rgb", "left_wrist_0_rgb", "right_wrist_0_rgb"),
+        encoder_mode: str = "full_pi0",
         q_l2_coef: float = 1e-4,
         encoder_amp: bool = True,
         rank_coef: float = 0.5,
@@ -503,6 +559,7 @@ class LightVLValueModel(nn.Module):
         self.fusion_layers = int(fusion_layers)
         self.dropout = float(dropout)
         self.view_keys = tuple(view_keys)
+        self.encoder_mode = str(encoder_mode)
         self.q_l2_coef = float(q_l2_coef)
         self.encoder_amp = bool(encoder_amp)
 
@@ -526,6 +583,7 @@ class LightVLValueModel(nn.Module):
             nhead=nhead,
             dropout=dropout,
             encoder_amp=encoder_amp,
+            encoder_mode=encoder_mode,
         )
         self.value_head = ValueHead(d_model, dropout=dropout)
         self.q_ensemble = QEnsemble(
@@ -891,6 +949,7 @@ class LightVLValueModel(nn.Module):
             "fusion_layers": self.fusion_layers,
             "dropout": self.dropout,
             "view_keys": self.view_keys,
+            "encoder_mode": self.encoder_mode,
             "q_l2_coef": self.q_l2_coef,
             "encoder_amp": self.encoder_amp,
             "rank_coef": self.rank_coef,
@@ -918,6 +977,7 @@ class LightVLValueModel(nn.Module):
             fusion_layers=ckpt["fusion_layers"],
             dropout=ckpt["dropout"],
             view_keys=tuple(ckpt.get("view_keys", ("base_0_rgb", "left_wrist_0_rgb", "right_wrist_0_rgb"))),
+            encoder_mode=ckpt.get("encoder_mode", "full_pi0"),
             q_l2_coef=ckpt.get("q_l2_coef", 1e-4),
             encoder_amp=ckpt.get("encoder_amp", True),
             rank_coef=ckpt.get("rank_coef", 0.5),
@@ -954,6 +1014,7 @@ class LightIQLCritic(LightVLValueModel):
         nhead: int = 8,
         q_l2_coef: float = 1e-4,
         encoder_amp: bool = True,
+        encoder_mode: str = "full_pi0",
         rank_coef: float = 0.5,
         rank_margin: float = 0.05,
         rank_noise_std: float = 0.05,
@@ -971,6 +1032,7 @@ class LightIQLCritic(LightVLValueModel):
             action_layers=action_layers,
             fusion_layers=q_layers,
             dropout=dropout,
+            encoder_mode=encoder_mode,
             q_l2_coef=q_l2_coef,
             encoder_amp=encoder_amp,
             rank_coef=rank_coef,
@@ -1006,5 +1068,6 @@ def load_light_vl_model_from_head(value_head_path: str, value_encoder_path: str 
         "chunk_size": model.chunk_size,
         "num_q": model.num_q,
         "d_model": model.d_model,
+        "encoder_mode": model.encoder_mode,
     }
     return model, meta
