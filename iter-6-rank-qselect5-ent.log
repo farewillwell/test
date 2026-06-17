@@ -37924,3 +37924,918 @@ Step 6100: grad_norm=0.0695, loss=0.0058, param_norm=1804.8218
 07:01:33.461 [I] Progress on: 6.16kit/7.50kit rate:1.3it/s remaining:17:31 elapsed:1:21:23 postfix:- (18469:tqdm_logging.py:145)
 07:01:43.992 [I] Progress on: 6.17kit/7.50kit rate:1.3it/s remaining:17:36 elapsed:1:21:34 postfix:- (18469:tqdm_logging.py:145)
 07:01:54.669 [I] Progress on: 6.18kit/7.50kit rate:1.3it/s remaining:17:20 elapsed:1:21:45 postfix:- (18469:tqdm_logging.py:145)
+07:02:04.855 [I] Progress on: 6.20kit/7.50kit rate:1.3it/s remaining:17:05 elapsed:1:21:55 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6200: grad_norm=0.0702, loss=0.0062, param_norm=1804.8730
+07:02:15.240 [I] Progress on: 6.21kit/7.50kit rate:1.3it/s remaining:17:07 elapsed:1:22:05 postfix:- (18469:tqdm_logging.py:145)
+07:02:25.351 [I] Progress on: 6.22kit/7.50kit rate:1.3it/s remaining:16:26 elapsed:1:22:15 postfix:- (18469:tqdm_logging.py:145)
+07:02:35.560 [I] Progress on: 6.23kit/7.50kit rate:1.3it/s remaining:16:31 elapsed:1:22:25 postfix:- (18469:tqdm_logging.py:145)
+07:02:45.736 [I] Progress on: 6.25kit/7.50kit rate:1.3it/s remaining:16:21 elapsed:1:22:36 postfix:- (18469:tqdm_logging.py:145)
+07:02:55.940 [I] Progress on: 6.26kit/7.50kit rate:1.3it/s remaining:16:22 elapsed:1:22:46 postfix:- (18469:tqdm_logging.py:145)
+07:03:06.068 [I] Progress on: 6.27kit/7.50kit rate:1.3it/s remaining:15:46 elapsed:1:22:56 postfix:- (18469:tqdm_logging.py:145)
+07:03:16.278 [I] Progress on: 6.29kit/7.50kit rate:1.3it/s remaining:15:50 elapsed:1:23:06 postfix:- (18469:tqdm_logging.py:145)
+07:03:26.473 [I] Progress on: 6.30kit/7.50kit rate:1.3it/s remaining:15:37 elapsed:1:23:16 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6300: grad_norm=0.0685, loss=0.0057, param_norm=1804.9269
+07:03:37.281 [I] Progress on: 6.31kit/7.50kit rate:1.3it/s remaining:15:35 elapsed:1:23:27 postfix:- (18469:tqdm_logging.py:145)
+07:03:47.472 [I] Progress on: 6.33kit/7.50kit rate:1.3it/s remaining:15:18 elapsed:1:23:37 postfix:- (18469:tqdm_logging.py:145)
+07:03:57.666 [I] Progress on: 6.34kit/7.50kit rate:1.3it/s remaining:15:08 elapsed:1:23:48 postfix:- (18469:tqdm_logging.py:145)
+07:04:07.822 [I] Progress on: 6.35kit/7.50kit rate:1.3it/s remaining:14:54 elapsed:1:23:58 postfix:- (18469:tqdm_logging.py:145)
+07:04:18.190 [I] Progress on: 6.36kit/7.50kit rate:1.2it/s remaining:15:19 elapsed:1:24:08 postfix:- (18469:tqdm_logging.py:145)
+07:04:28.352 [I] Progress on: 6.38kit/7.50kit rate:1.3it/s remaining:14:37 elapsed:1:24:18 postfix:- (18469:tqdm_logging.py:145)
+07:04:38.547 [I] Progress on: 6.39kit/7.50kit rate:1.3it/s remaining:14:35 elapsed:1:24:28 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6400: grad_norm=0.0792, loss=0.0066, param_norm=1804.9844
+07:04:48.759 [I] Progress on: 6.40kit/7.50kit rate:1.3it/s remaining:14:23 elapsed:1:24:39 postfix:- (18469:tqdm_logging.py:145)
+07:04:58.942 [I] Progress on: 6.42kit/7.50kit rate:1.3it/s remaining:14:10 elapsed:1:24:49 postfix:- (18469:tqdm_logging.py:145)
+07:05:09.668 [I] Progress on: 6.43kit/7.50kit rate:1.2it/s remaining:14:48 elapsed:1:25:00 postfix:- (18469:tqdm_logging.py:145)
+07:05:19.910 [I] Progress on: 6.44kit/7.50kit rate:1.3it/s remaining:14:00 elapsed:1:25:10 postfix:- (18469:tqdm_logging.py:145)
+07:05:30.048 [I] Progress on: 6.46kit/7.50kit rate:1.3it/s remaining:13:36 elapsed:1:25:20 postfix:- (18469:tqdm_logging.py:145)
+07:05:40.227 [I] Progress on: 6.47kit/7.50kit rate:1.3it/s remaining:13:25 elapsed:1:25:30 postfix:- (18469:tqdm_logging.py:145)
+07:05:50.374 [I] Progress on: 6.48kit/7.50kit rate:1.3it/s remaining:13:07 elapsed:1:25:40 postfix:- (18469:tqdm_logging.py:145)
+07:06:00.609 [I] Progress on: 6.49kit/7.50kit rate:1.3it/s remaining:13:18 elapsed:1:25:51 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6500: grad_norm=0.0696, loss=0.0059, param_norm=1805.0402
+07:06:10.812 [I] Progress on: 6.51kit/7.50kit rate:1.3it/s remaining:13:02 elapsed:1:26:01 postfix:- (18469:tqdm_logging.py:145)
+07:06:20.978 [I] Progress on: 6.52kit/7.50kit rate:1.3it/s remaining:12:46 elapsed:1:26:11 postfix:- (18469:tqdm_logging.py:145)
+07:06:31.125 [I] Progress on: 6.53kit/7.50kit rate:1.3it/s remaining:12:27 elapsed:1:26:21 postfix:- (18469:tqdm_logging.py:145)
+07:06:41.369 [I] Progress on: 6.55kit/7.50kit rate:1.3it/s remaining:12:38 elapsed:1:26:31 postfix:- (18469:tqdm_logging.py:145)
+07:06:52.049 [I] Progress on: 6.56kit/7.50kit rate:1.3it/s remaining:12:18 elapsed:1:26:42 postfix:- (18469:tqdm_logging.py:145)
+07:07:02.320 [I] Progress on: 6.57kit/7.50kit rate:1.2it/s remaining:12:22 elapsed:1:26:52 postfix:- (18469:tqdm_logging.py:145)
+07:07:12.450 [I] Progress on: 6.58kit/7.50kit rate:1.3it/s remaining:11:46 elapsed:1:27:02 postfix:- (18469:tqdm_logging.py:145)
+07:07:22.728 [I] Progress on: 6.60kit/7.50kit rate:1.2it/s remaining:12:02 elapsed:1:27:13 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6600: grad_norm=0.0694, loss=0.0063, param_norm=1805.0981
+07:07:32.865 [I] Progress on: 6.61kit/7.50kit rate:1.3it/s remaining:11:25 elapsed:1:27:23 postfix:- (18469:tqdm_logging.py:145)
+07:07:43.147 [I] Progress on: 6.62kit/7.50kit rate:1.3it/s remaining:11:39 elapsed:1:27:33 postfix:- (18469:tqdm_logging.py:145)
+07:07:53.270 [I] Progress on: 6.64kit/7.50kit rate:1.3it/s remaining:11:06 elapsed:1:27:43 postfix:- (18469:tqdm_logging.py:145)
+07:08:03.546 [I] Progress on: 6.65kit/7.50kit rate:1.3it/s remaining:11:17 elapsed:1:27:53 postfix:- (18469:tqdm_logging.py:145)
+07:08:13.662 [I] Progress on: 6.66kit/7.50kit rate:1.3it/s remaining:10:43 elapsed:1:28:04 postfix:- (18469:tqdm_logging.py:145)
+07:08:23.881 [I] Progress on: 6.68kit/7.50kit rate:1.3it/s remaining:10:46 elapsed:1:28:14 postfix:- (18469:tqdm_logging.py:145)
+07:08:34.600 [I] Progress on: 6.69kit/7.50kit rate:1.3it/s remaining:10:29 elapsed:1:28:24 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6700: grad_norm=0.0697, loss=0.0059, param_norm=1805.1581
+07:08:44.861 [I] Progress on: 6.70kit/7.50kit rate:1.3it/s remaining:10:31 elapsed:1:28:35 postfix:- (18469:tqdm_logging.py:145)
+07:08:55.016 [I] Progress on: 6.71kit/7.50kit rate:1.3it/s remaining:10:14 elapsed:1:28:45 postfix:- (18469:tqdm_logging.py:145)
+07:09:05.182 [I] Progress on: 6.73kit/7.50kit rate:1.3it/s remaining:10:03 elapsed:1:28:55 postfix:- (18469:tqdm_logging.py:145)
+07:09:15.322 [I] Progress on: 6.74kit/7.50kit rate:1.3it/s remaining:09:45 elapsed:1:29:05 postfix:- (18469:tqdm_logging.py:145)
+07:09:25.564 [I] Progress on: 6.75kit/7.50kit rate:1.3it/s remaining:09:52 elapsed:1:29:15 postfix:- (18469:tqdm_logging.py:145)
+07:09:35.703 [I] Progress on: 6.77kit/7.50kit rate:1.3it/s remaining:09:33 elapsed:1:29:26 postfix:- (18469:tqdm_logging.py:145)
+07:09:45.872 [I] Progress on: 6.78kit/7.50kit rate:1.3it/s remaining:09:21 elapsed:1:29:36 postfix:- (18469:tqdm_logging.py:145)
+07:09:56.009 [I] Progress on: 6.79kit/7.50kit rate:1.3it/s remaining:09:04 elapsed:1:29:46 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6800: grad_norm=0.0722, loss=0.0063, param_norm=1805.2212
+07:10:06.846 [I] Progress on: 6.81kit/7.50kit rate:1.1it/s remaining:10:08 elapsed:1:29:57 postfix:- (18469:tqdm_logging.py:145)
+07:10:16.953 [I] Progress on: 6.82kit/7.50kit rate:1.3it/s remaining:08:44 elapsed:1:30:07 postfix:- (18469:tqdm_logging.py:145)
+07:10:27.194 [I] Progress on: 6.83kit/7.50kit rate:1.3it/s remaining:08:44 elapsed:1:30:17 postfix:- (18469:tqdm_logging.py:145)
+07:10:37.374 [I] Progress on: 6.84kit/7.50kit rate:1.3it/s remaining:08:32 elapsed:1:30:27 postfix:- (18469:tqdm_logging.py:145)
+07:10:47.605 [I] Progress on: 6.86kit/7.50kit rate:1.3it/s remaining:08:31 elapsed:1:30:37 postfix:- (18469:tqdm_logging.py:145)
+07:10:57.710 [I] Progress on: 6.87kit/7.50kit rate:1.3it/s remaining:08:03 elapsed:1:30:48 postfix:- (18469:tqdm_logging.py:145)
+07:11:07.938 [I] Progress on: 6.88kit/7.50kit rate:1.3it/s remaining:08:03 elapsed:1:30:58 postfix:- (18469:tqdm_logging.py:145)
+07:11:18.133 [I] Progress on: 6.90kit/7.50kit rate:1.3it/s remaining:07:52 elapsed:1:31:08 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 6900: grad_norm=0.0675, loss=0.0060, param_norm=1805.2848
+07:11:28.365 [I] Progress on: 6.91kit/7.50kit rate:1.3it/s remaining:07:41 elapsed:1:31:18 postfix:- (18469:tqdm_logging.py:145)
+07:11:38.534 [I] Progress on: 6.92kit/7.50kit rate:1.3it/s remaining:07:30 elapsed:1:31:28 postfix:- (18469:tqdm_logging.py:145)
+07:11:49.269 [I] Progress on: 6.94kit/7.50kit rate:1.2it/s remaining:07:31 elapsed:1:31:39 postfix:- (18469:tqdm_logging.py:145)
+07:11:59.409 [I] Progress on: 6.95kit/7.50kit rate:1.3it/s remaining:07:06 elapsed:1:31:49 postfix:- (18469:tqdm_logging.py:145)
+07:12:09.642 [I] Progress on: 6.96kit/7.50kit rate:1.3it/s remaining:07:07 elapsed:1:32:00 postfix:- (18469:tqdm_logging.py:145)
+07:12:19.779 [I] Progress on: 6.97kit/7.50kit rate:1.3it/s remaining:06:49 elapsed:1:32:10 postfix:- (18469:tqdm_logging.py:145)
+07:12:29.962 [I] Progress on: 6.99kit/7.50kit rate:1.3it/s remaining:06:40 elapsed:1:32:20 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 7000: grad_norm=0.0744, loss=0.0066, param_norm=1805.3502
+07:12:40.187 [I] Progress on: 7.00kit/7.50kit rate:1.3it/s remaining:06:31 elapsed:1:32:30 postfix:- (18469:tqdm_logging.py:145)
+07:12:50.363 [I] Progress on: 7.01kit/7.50kit rate:1.3it/s remaining:06:26 elapsed:1:32:40 postfix:- (18469:tqdm_logging.py:145)
+07:13:00.501 [I] Progress on: 7.03kit/7.50kit rate:1.3it/s remaining:06:09 elapsed:1:32:50 postfix:- (18469:tqdm_logging.py:145)
+07:13:10.686 [I] Progress on: 7.04kit/7.50kit rate:1.3it/s remaining:06:00 elapsed:1:33:01 postfix:- (18469:tqdm_logging.py:145)
+07:13:20.838 [I] Progress on: 7.05kit/7.50kit rate:1.3it/s remaining:05:45 elapsed:1:33:11 postfix:- (18469:tqdm_logging.py:145)
+07:13:31.692 [I] Progress on: 7.07kit/7.50kit rate:1.2it/s remaining:05:48 elapsed:1:33:22 postfix:- (18469:tqdm_logging.py:145)
+07:13:41.806 [I] Progress on: 7.08kit/7.50kit rate:1.3it/s remaining:05:24 elapsed:1:33:32 postfix:- (18469:tqdm_logging.py:145)
+07:13:52.081 [I] Progress on: 7.09kit/7.50kit rate:1.3it/s remaining:05:25 elapsed:1:33:42 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 7100: grad_norm=0.0693, loss=0.0061, param_norm=1805.4176
+07:14:02.226 [I] Progress on: 7.11kit/7.50kit rate:1.3it/s remaining:05:04 elapsed:1:33:52 postfix:- (18469:tqdm_logging.py:145)
+07:14:12.482 [I] Progress on: 7.12kit/7.50kit rate:1.3it/s remaining:05:04 elapsed:1:34:02 postfix:- (18469:tqdm_logging.py:145)
+07:14:22.608 [I] Progress on: 7.13kit/7.50kit rate:1.3it/s remaining:04:44 elapsed:1:34:13 postfix:- (18469:tqdm_logging.py:145)
+07:14:32.857 [I] Progress on: 7.14kit/7.50kit rate:1.3it/s remaining:04:43 elapsed:1:34:23 postfix:- (18469:tqdm_logging.py:145)
+07:14:42.992 [I] Progress on: 7.16kit/7.50kit rate:1.3it/s remaining:04:26 elapsed:1:34:33 postfix:- (18469:tqdm_logging.py:145)
+07:14:53.246 [I] Progress on: 7.17kit/7.50kit rate:1.3it/s remaining:04:22 elapsed:1:34:43 postfix:- (18469:tqdm_logging.py:145)
+07:15:03.933 [I] Progress on: 7.18kit/7.50kit rate:1.1it/s remaining:04:43 elapsed:1:34:54 postfix:- (18469:tqdm_logging.py:145)
+07:15:14.169 [I] Progress on: 7.20kit/7.50kit rate:1.3it/s remaining:04:02 elapsed:1:35:04 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 7200: grad_norm=0.0687, loss=0.0063, param_norm=1805.4868
+07:15:24.303 [I] Progress on: 7.21kit/7.50kit rate:1.3it/s remaining:03:44 elapsed:1:35:14 postfix:- (18469:tqdm_logging.py:145)
+07:15:34.547 [I] Progress on: 7.22kit/7.50kit rate:1.3it/s remaining:03:40 elapsed:1:35:24 postfix:- (18469:tqdm_logging.py:145)
+07:15:44.684 [I] Progress on: 7.24kit/7.50kit rate:1.3it/s remaining:03:24 elapsed:1:35:35 postfix:- (18469:tqdm_logging.py:145)
+07:15:54.931 [I] Progress on: 7.25kit/7.50kit rate:1.3it/s remaining:03:20 elapsed:1:35:45 postfix:- (18469:tqdm_logging.py:145)
+07:16:05.067 [I] Progress on: 7.26kit/7.50kit rate:1.3it/s remaining:03:04 elapsed:1:35:55 postfix:- (18469:tqdm_logging.py:145)
+07:16:15.322 [I] Progress on: 7.27kit/7.50kit rate:1.3it/s remaining:02:59 elapsed:1:36:05 postfix:- (18469:tqdm_logging.py:145)
+07:16:25.437 [I] Progress on: 7.29kit/7.50kit rate:1.3it/s remaining:02:44 elapsed:1:36:15 postfix:- (18469:tqdm_logging.py:145)
+07:16:35.684 [I] Progress on: 7.30kit/7.50kit rate:1.3it/s remaining:02:38 elapsed:1:36:26 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 7300: grad_norm=0.0705, loss=0.0065, param_norm=1805.5577
+07:16:45.706 [I] Progress on: 7.31kit/7.50kit rate:1.2it/s remaining:02:37 elapsed:1:36:36 postfix:- (18469:tqdm_logging.py:145)
+07:16:55.832 [I] Progress on: 7.33kit/7.50kit rate:1.3it/s remaining:02:15 elapsed:1:36:46 postfix:- (18469:tqdm_logging.py:145)
+07:17:06.092 [I] Progress on: 7.34kit/7.50kit rate:1.3it/s remaining:02:09 elapsed:1:36:56 postfix:- (18469:tqdm_logging.py:145)
+07:17:16.209 [I] Progress on: 7.35kit/7.50kit rate:1.3it/s remaining:01:54 elapsed:1:37:06 postfix:- (18469:tqdm_logging.py:145)
+07:17:26.476 [I] Progress on: 7.36kit/7.50kit rate:1.3it/s remaining:01:48 elapsed:1:37:16 postfix:- (18469:tqdm_logging.py:145)
+07:17:36.590 [I] Progress on: 7.38kit/7.50kit rate:1.3it/s remaining:01:34 elapsed:1:37:26 postfix:- (18469:tqdm_logging.py:145)
+07:17:46.861 [I] Progress on: 7.39kit/7.50kit rate:1.3it/s remaining:01:27 elapsed:1:37:37 postfix:- (18469:tqdm_logging.py:145)
+
+
+Step 7400: grad_norm=0.0676, loss=0.0065, param_norm=1805.6323
+07:17:56.998 [I] Progress on: 7.40kit/7.50kit rate:1.3it/s remaining:01:14 elapsed:1:37:47 postfix:- (18469:tqdm_logging.py:145)
+07:18:07.288 [I] Progress on: 7.42kit/7.50kit rate:1.3it/s remaining:01:07 elapsed:1:37:57 postfix:- (18469:tqdm_logging.py:145)
+07:18:17.393 [I] Progress on: 7.43kit/7.50kit rate:1.3it/s remaining:00:54 elapsed:1:38:07 postfix:- (18469:tqdm_logging.py:145)
+07:18:27.437 [I] Progress on: 7.44kit/7.50kit rate:1.3it/s remaining:00:46 elapsed:1:38:17 postfix:- (18469:tqdm_logging.py:145)
+07:18:37.974 [I] Progress on: 7.45kit/7.50kit rate:1.3it/s remaining:00:36 elapsed:1:38:28 postfix:- (18469:tqdm_logging.py:145)
+07:18:48.299 [I] Progress on: 7.47kit/7.50kit rate:1.3it/s remaining:00:26 elapsed:1:38:38 postfix:- (18469:tqdm_logging.py:145)
+07:18:58.554 [I] Progress on: 7.48kit/7.50kit rate:1.3it/s remaining:00:15 elapsed:1:38:48 postfix:- (18469:tqdm_logging.py:145)
+07:19:08.683 [I] Progress on: 7.49kit/7.50kit rate:1.3it/s remaining:00:05 elapsed:1:38:59 postfix:- (18469:tqdm_logging.py:145)
+07:19:14.254 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (18469:checkpoint_manager.py:1987)
+07:19:14.255 [I] [process=0] Saving checkpoint at step 7499                                       (18469:checkpoint_manager.py:1408)
+07:19:14.255 [I] [process=0] Started async saving checkpoint to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499. (18469:async_checkpointer.py:439)
+07:19:14.592 [I] Using ThreadSafeKeyValueSignalingClient                                          (18469:signaling_client.py:332)
+07:19:14.603 [I] Transferring arrays to host memory with options: use_replica_parallel=True, enable_pinned_host_transfer=False (18469:replica_slices.py:341)
+07:19:14.717 [I] Creating tmp directory /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0 (18469:atomicity.py:144)
+07:19:15.008 [I] Wrote Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781680755005204426, 'commit_timestamp_nsecs': None, 'custom_metadata': {}}, json={"item_handlers": null, "metrics": {}, "performance_metrics": {}, "init_timestamp_nsecs": 1781680755005204426, "commit_timestamp_nsecs": null, "custom_metadata": {}} to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (18469:checkpoint.py:186)
+07:19:15.010 [I] Creating tmp directory /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 (18469:atomicity.py:144)
+07:19:15.010 [I] Creating tmp directory /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 (18469:atomicity.py:144)
+07:19:15.998 [I] [process=0] /jax/checkpoint/write/blocking_bytes_per_sec: 8.9 GiB/s (total bytes: 12.5 GiB) (time elapsed: a second) (per-host) (18469:base_pytree_checkpoint_handler.py:114)
+07:19:16.007 [I] [process=0][thread=async_save] Background save thread started.                   (18469:async_checkpointer.py:77)
+07:19:16.008 [I] Finished blocking save in 1.75 seconds. Continuing to save asynchronously to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499. (18469:async_checkpointer.py:548)
+07:19:16.009 [I] [process=0][thread=MainThread][step=7499] Starting CheckpointManager Save Finalize thread=save_finalize (18469:checkpoint_manager.py:1453)
+07:19:16.010 [I] [process=0][thread=save_finalize] Waiting for background save thread=async_save. (18469:async_checkpointer.py:258)
+07:19:16.010 [I] {'step': 7499, 'event_type': 'save', 'directory': '/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps', 'reached_preemption': False, 'preemption_received_at': None, 'synchronous': False, 'wait_for_prev_start_time': 1781680754.254966, 'wait_for_prev_duration_secs': 9.965896606445312e-05, 'checkpointer_blocking_start_time': 1781680754.2553732, 'checkpointer_blocking_duration_secs': 1.7538373470306396, 'get_old_steps_start_time': 1781680756.0092342, 'get_old_steps_duration_secs': 7.62939453125e-06, 'checkpoint_manager_blocking_start_time': 1781680754.2548053, 'checkpoint_manager_blocking_duration_secs': 1.7557294368743896} (18469:standard_logger.py:34)
+07:19:16.010 [I] [process=0][thread=MainThread][step=7499][wait_until_finished] Waiting for Save Finalize thread (save_finalize) to complete. (18469:checkpoint_manager.py:1998)
+07:19:16.011 [I] [process=0][thread=array_type_handler] Wrote 51 array_metadata.ArrayMetadata to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2/array_metadatas/process_0 (18469:array_metadata_store.py:198)
+07:20:13.329 [I] [process=0] /jax/checkpoint/write/bytes_per_sec: 217.8 MiB/s (total bytes: 12.5 GiB) (time elapsed: 58 seconds) (per-host) (18469:base_pytree_checkpoint_handler.py:114)
+07:20:13.329 [I] [process=0][thread=async_save] 4 Handler Commit operations completed.            (18469:async_checkpointer.py:87)
+07:20:13.369 [I] Read Metadata={'item_handlers': None, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781680755005204426, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} from /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (18469:checkpoint.py:226)
+07:20:13.369 [I] Renaming /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/assets.orbax-checkpoint-tmp-1 to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/assets (18469:atomicity.py:289)
+07:20:13.407 [I] Updated Metadata={'item_handlers': {'assets': 'openpi.training.checkpoints.CallbackHandler', 'params': 'orbax.checkpoint._src.handlers.pytree_checkpoint_handler.PyTreeCheckpointHandler'}, 'metrics': {}, 'performance_metrics': {}, 'init_timestamp_nsecs': 1781680755005204426, 'commit_timestamp_nsecs': None, 'custom_metadata': {}} to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/_CHECKPOINT_METADATA (18469:checkpoint.py:245)
+07:20:13.409 [I] [process=0][thread=async_save] Skipped cross-host ArrayMetadata validation because only one process is found: process_index=0. (18469:array_metadata_store.py:362)
+07:20:13.734 [I] Renaming /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/params.orbax-checkpoint-tmp-2 to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0/params (18469:atomicity.py:289)
+07:20:13.831 [I] Renaming /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499.orbax-checkpoint-tmp-0 to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499 (18469:atomicity.py:289)
+07:20:14.341 [I] [process=0][thread=async_save] Finished saving checkpoint (finalized tmp dir) to `/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499`. (18469:atomicity.py:573)
+07:20:14.341 [I] Finished asynchronous save (blocking + background) in 60.09 seconds to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499 (18469:async_checkpointer.py:412)
+07:20:14.342 [I] [process=0][thread=async_save] Background save thread done.                      (18469:async_checkpointer.py:143)
+07:20:14.342 [I] [process=0][thread=save_finalize] Done with waiting for background save thread=async_save. (18469:async_checkpointer.py:266)
+07:20:14.342 [I] [process=0][thread=save_finalize] No errors found in background save thread=async_save. (18469:async_checkpointer.py:276)
+07:20:14.342 [I] [process=0][thread=save_finalize][step=7499] CheckpointManager Save Finalize is syncing with other hosts... (18469:checkpoint_manager.py:2095)
+07:20:14.342 [I] [process=0][thread=save_finalize][step=7499] CheckpointManager Save Finalize is done on all hosts. (18469:checkpoint_manager.py:2110)
+07:20:14.342 [I] [process=0][thread=MainThread][step=7499][wait_until_finished] Done waiting for Save Finalize thread (save_finalize) running at step=7499. (18469:checkpoint_manager.py:2010)
+07:27:47.092 [I] Published checkpoint step /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/steps/7499 to /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/final (18469:checkpoints.py:122)
+07:27:47.093 [I] Progress on: 7.50kit/7.50kit rate:154.6s/it remaining:00:00 elapsed:1:47:37 postfix:- (18469:tqdm_logging.py:145)
+07:27:47.093 [I] Progress on: 7.50kit/7.50kit rate:154.6s/it remaining:00:00 elapsed:1:47:37 postfix:- (18469:tqdm_logging.py:145)
+07:27:47.093 [I] Waiting for checkpoint manager to finish                                         (18469:train.py:301)
+07:27:47.093 [I] [process=0][thread=MainThread][wait_until_finished] No Save Finalize thread to wait for. Returning. (18469:checkpoint_manager.py:1987)
+[2026-06-17 07:27:52] AWBC final checkpoint: /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/final
+[2026-06-17 07:27:52] [done] iter=3 stage=train_awbc next=collect
+[2026-06-17 07:27:52] [start] iter=3 stage=collect
+[2026-06-17 07:27:52] [server] /data/huangdi/heliqun/pi0/openpi/pi_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/server.py --policy-dir /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/final --sample-mode qselect --num-action-samples 16 --seed 7 --policy-config pi05_libero_awbc --noise-scale 1.5 --noise-strategy base --critic-path /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/iql/final.pt
+[2026-06-17 07:27:52] [collect_raw] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 50 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_videos --metrics-path /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-17 07:27:52] [collect_raw_dir] /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp
+[2026-06-17 07:27:52] [collect_final_dir] /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect
+[2026-06-17 07:27:52] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=0.0s
+[2026-06-17 07:28:22] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=30.0s
+[2026-06-17 07:28:52] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=60.0s
+[2026-06-17 07:29:22] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=90.0s
+[2026-06-17 07:29:52] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=120.1s
+[2026-06-17 07:30:22] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=150.1s
+[2026-06-17 07:30:52] [server] still waiting for 127.0.0.1:8000; server_pid=20001; elapsed=180.1s
+[2026-06-17 07:30:56] [server] ready at 127.0.0.1:8000
+[2026-06-17 07:30:56] [cmd] /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/bin/python -u /data/huangdi/heliqun/pi0/ours/Qselect/collect.py --task-suite-name libero_goal --task-id 6 --num-trials-per-task 50 --initial-state-offset 0 --seed 7 --repo-id collect_tmp --video-out-path /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_videos --metrics-path /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_metrics.jsonl --overwrite --save-videos --save-success --save-failure
+[2026-06-17 07:30:56] [cwd] /data/huangdi/heliqun/pi0/openpi
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+2026-06-17 07:31:05,425 [INFO] Args: Args(host='127.0.0.1', port=8000, resize_size=224, replan_steps=10, task_suite_name='libero_goal', task_id=6, num_steps_wait=10, num_trials_per_task=50, initial_state_offset=0, seed=7, max_steps_override=-1, repo_id='collect_tmp', overwrite=True, fps=10, image_writer_threads=10, image_writer_processes=5, save_success=True, save_failure=True, video_out_path='/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_videos', save_videos=True, metrics_path='/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/collect_metrics.jsonl')
+2026-06-17 07:31:05,425 [INFO] Connecting to policy server at 127.0.0.1:8000
+2026-06-17 07:31:05,425 [INFO] Waiting for server at ws://127.0.0.1:8000...
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2026-06-17 07:31:05,435 [INFO] Task suite: libero_goal, num_tasks=10, max_steps=300
+
+tasks:   0%|          | 0/10 [00:00<?, ?it/s]/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/numba/np/arraymath.py:3845: DeprecationWarning: `np.MachAr` is deprecated (NumPy 1.22).
+  @overload(np.MachAr)
+
+
+task6:   0%|          | 0/50 [00:00<?, ?it/s][A2026-06-17 07:31:09,217 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:31:09,217 [INFO] Starting episode 1...
+2026-06-17 07:31:31,483 [INFO] Success: True
+2026-06-17 07:31:31,484 [INFO] # episodes completed so far: 1
+2026-06-17 07:31:31,484 [INFO] # successes: 1 (100.0%)
+2026-06-17 07:31:31,484 [INFO] Current task success rate: 1.000
+2026-06-17 07:31:31,484 [INFO] Current total success rate: 1.000
+2026-06-17 07:31:31,484 [INFO] Saved episodes=1 frames=78
+
+
+task6:   2%|▏         | 1/50 [00:22<18:11, 22.27s/it][A2026-06-17 07:31:31,484 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:31:31,484 [INFO] Starting episode 2...
+2026-06-17 07:31:49,566 [INFO] Success: True
+2026-06-17 07:31:49,566 [INFO] # episodes completed so far: 2
+2026-06-17 07:31:49,566 [INFO] # successes: 2 (100.0%)
+2026-06-17 07:31:49,566 [INFO] Current task success rate: 1.000
+2026-06-17 07:31:49,566 [INFO] Current total success rate: 1.000
+2026-06-17 07:31:49,566 [INFO] Saved episodes=2 frames=156
+
+
+task6:   4%|▍         | 2/50 [00:40<15:50, 19.81s/it][A2026-06-17 07:31:49,566 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:31:49,566 [INFO] Starting episode 3...
+2026-06-17 07:32:52,981 [INFO] Success: False
+2026-06-17 07:32:52,981 [INFO] # episodes completed so far: 3
+2026-06-17 07:32:52,981 [INFO] # successes: 2 (66.7%)
+2026-06-17 07:32:52,981 [INFO] Current task success rate: 0.667
+2026-06-17 07:32:52,981 [INFO] Current total success rate: 0.667
+2026-06-17 07:32:52,981 [INFO] Saved episodes=3 frames=456
+
+
+task6:   6%|▌         | 3/50 [01:43<31:06, 39.72s/it][A2026-06-17 07:32:52,982 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:32:52,982 [INFO] Starting episode 4...
+2026-06-17 07:33:10,207 [INFO] Success: True
+2026-06-17 07:33:10,207 [INFO] # episodes completed so far: 4
+2026-06-17 07:33:10,207 [INFO] # successes: 3 (75.0%)
+2026-06-17 07:33:10,207 [INFO] Current task success rate: 0.750
+2026-06-17 07:33:10,207 [INFO] Current total success rate: 0.750
+2026-06-17 07:33:10,207 [INFO] Saved episodes=4 frames=526
+
+
+task6:   8%|▊         | 4/50 [02:00<23:38, 30.84s/it][A2026-06-17 07:33:10,208 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:33:10,208 [INFO] Starting episode 5...
+2026-06-17 07:33:28,490 [INFO] Success: True
+2026-06-17 07:33:28,490 [INFO] # episodes completed so far: 5
+2026-06-17 07:33:28,490 [INFO] # successes: 4 (80.0%)
+2026-06-17 07:33:28,490 [INFO] Current task success rate: 0.800
+2026-06-17 07:33:28,490 [INFO] Current total success rate: 0.800
+2026-06-17 07:33:28,490 [INFO] Saved episodes=5 frames=603
+
+
+task6:  10%|█         | 5/50 [02:19<19:43, 26.31s/it][A2026-06-17 07:33:28,490 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:33:28,490 [INFO] Starting episode 6...
+2026-06-17 07:34:32,202 [INFO] Success: False
+2026-06-17 07:34:32,202 [INFO] # episodes completed so far: 6
+2026-06-17 07:34:32,202 [INFO] # successes: 4 (66.7%)
+2026-06-17 07:34:32,202 [INFO] Current task success rate: 0.667
+2026-06-17 07:34:32,202 [INFO] Current total success rate: 0.667
+2026-06-17 07:34:32,202 [INFO] Saved episodes=6 frames=903
+
+
+task6:  12%|█▏        | 6/50 [03:22<28:37, 39.03s/it][A2026-06-17 07:34:32,202 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:34:32,202 [INFO] Starting episode 7...
+2026-06-17 07:35:35,518 [INFO] Success: False
+2026-06-17 07:35:35,518 [INFO] # episodes completed so far: 7
+2026-06-17 07:35:35,518 [INFO] # successes: 4 (57.1%)
+2026-06-17 07:35:35,518 [INFO] Current task success rate: 0.571
+2026-06-17 07:35:35,518 [INFO] Current total success rate: 0.571
+2026-06-17 07:35:35,518 [INFO] Saved episodes=7 frames=1203
+
+
+task6:  14%|█▍        | 7/50 [04:26<33:39, 46.97s/it][A2026-06-17 07:35:35,519 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:35:35,519 [INFO] Starting episode 8...
+2026-06-17 07:35:52,674 [INFO] Success: True
+2026-06-17 07:35:52,674 [INFO] # episodes completed so far: 8
+2026-06-17 07:35:52,674 [INFO] # successes: 5 (62.5%)
+2026-06-17 07:35:52,674 [INFO] Current task success rate: 0.625
+2026-06-17 07:35:52,674 [INFO] Current total success rate: 0.625
+2026-06-17 07:35:52,674 [INFO] Saved episodes=8 frames=1274
+
+
+task6:  16%|█▌        | 8/50 [04:43<26:14, 37.48s/it][A2026-06-17 07:35:52,674 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:35:52,674 [INFO] Starting episode 9...
+2026-06-17 07:36:10,295 [INFO] Success: True
+2026-06-17 07:36:10,295 [INFO] # episodes completed so far: 9
+2026-06-17 07:36:10,295 [INFO] # successes: 6 (66.7%)
+2026-06-17 07:36:10,295 [INFO] Current task success rate: 0.667
+2026-06-17 07:36:10,295 [INFO] Current total success rate: 0.667
+2026-06-17 07:36:10,295 [INFO] Saved episodes=9 frames=1347
+
+
+task6:  18%|█▊        | 9/50 [05:01<21:22, 31.27s/it][A2026-06-17 07:36:10,295 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:36:10,295 [INFO] Starting episode 10...
+2026-06-17 07:36:28,608 [INFO] Success: True
+2026-06-17 07:36:28,608 [INFO] # episodes completed so far: 10
+2026-06-17 07:36:28,608 [INFO] # successes: 7 (70.0%)
+2026-06-17 07:36:28,608 [INFO] Current task success rate: 0.700
+2026-06-17 07:36:28,608 [INFO] Current total success rate: 0.700
+2026-06-17 07:36:28,608 [INFO] Saved episodes=10 frames=1423
+
+
+task6:  20%|██        | 10/50 [05:19<18:10, 27.27s/it][A2026-06-17 07:36:28,608 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:36:28,608 [INFO] Starting episode 11...
+2026-06-17 07:36:47,648 [INFO] Success: True
+2026-06-17 07:36:47,649 [INFO] # episodes completed so far: 11
+2026-06-17 07:36:47,649 [INFO] # successes: 8 (72.7%)
+2026-06-17 07:36:47,649 [INFO] Current task success rate: 0.727
+2026-06-17 07:36:47,649 [INFO] Current total success rate: 0.727
+2026-06-17 07:36:47,649 [INFO] Saved episodes=11 frames=1502
+
+
+task6:  22%|██▏       | 11/50 [05:38<16:05, 24.75s/it][A2026-06-17 07:36:47,649 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:36:47,649 [INFO] Starting episode 12...
+2026-06-17 07:37:50,205 [INFO] Success: False
+2026-06-17 07:37:50,205 [INFO] # episodes completed so far: 12
+2026-06-17 07:37:50,205 [INFO] # successes: 8 (66.7%)
+2026-06-17 07:37:50,205 [INFO] Current task success rate: 0.667
+2026-06-17 07:37:50,205 [INFO] Current total success rate: 0.667
+2026-06-17 07:37:50,205 [INFO] Saved episodes=12 frames=1802
+
+
+task6:  24%|██▍       | 12/50 [06:40<22:57, 36.25s/it][A2026-06-17 07:37:50,206 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:37:50,206 [INFO] Starting episode 13...
+2026-06-17 07:38:08,920 [INFO] Success: True
+2026-06-17 07:38:08,920 [INFO] # episodes completed so far: 13
+2026-06-17 07:38:08,920 [INFO] # successes: 9 (69.2%)
+2026-06-17 07:38:08,920 [INFO] Current task success rate: 0.692
+2026-06-17 07:38:08,920 [INFO] Current total success rate: 0.692
+2026-06-17 07:38:08,920 [INFO] Saved episodes=13 frames=1880
+
+
+task6:  26%|██▌       | 13/50 [06:59<19:04, 30.94s/it][A2026-06-17 07:38:08,921 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:38:08,921 [INFO] Starting episode 14...
+2026-06-17 07:38:26,489 [INFO] Success: True
+2026-06-17 07:38:26,489 [INFO] # episodes completed so far: 14
+2026-06-17 07:38:26,489 [INFO] # successes: 10 (71.4%)
+2026-06-17 07:38:26,489 [INFO] Current task success rate: 0.714
+2026-06-17 07:38:26,489 [INFO] Current total success rate: 0.714
+2026-06-17 07:38:26,489 [INFO] Saved episodes=14 frames=1952
+
+
+task6:  28%|██▊       | 14/50 [07:17<16:08, 26.90s/it][A2026-06-17 07:38:26,489 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:38:26,489 [INFO] Starting episode 15...
+2026-06-17 07:38:45,483 [INFO] Success: True
+2026-06-17 07:38:45,484 [INFO] # episodes completed so far: 15
+2026-06-17 07:38:45,484 [INFO] # successes: 11 (73.3%)
+2026-06-17 07:38:45,484 [INFO] Current task success rate: 0.733
+2026-06-17 07:38:45,484 [INFO] Current total success rate: 0.733
+2026-06-17 07:38:45,484 [INFO] Saved episodes=15 frames=2033
+
+
+task6:  30%|███       | 15/50 [07:36<14:18, 24.52s/it][A2026-06-17 07:38:45,484 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:38:45,484 [INFO] Starting episode 16...
+2026-06-17 07:39:04,840 [INFO] Success: True
+2026-06-17 07:39:04,840 [INFO] # episodes completed so far: 16
+2026-06-17 07:39:04,840 [INFO] # successes: 12 (75.0%)
+2026-06-17 07:39:04,840 [INFO] Current task success rate: 0.750
+2026-06-17 07:39:04,840 [INFO] Current total success rate: 0.750
+2026-06-17 07:39:04,840 [INFO] Saved episodes=16 frames=2114
+
+
+task6:  32%|███▏      | 16/50 [07:55<13:00, 22.96s/it][A2026-06-17 07:39:04,840 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:39:04,840 [INFO] Starting episode 17...
+2026-06-17 07:39:22,693 [INFO] Success: True
+2026-06-17 07:39:22,693 [INFO] # episodes completed so far: 17
+2026-06-17 07:39:22,693 [INFO] # successes: 13 (76.5%)
+2026-06-17 07:39:22,693 [INFO] Current task success rate: 0.765
+2026-06-17 07:39:22,693 [INFO] Current total success rate: 0.765
+2026-06-17 07:39:22,693 [INFO] Saved episodes=17 frames=2188
+
+
+task6:  34%|███▍      | 17/50 [08:13<11:47, 21.43s/it][A2026-06-17 07:39:22,693 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:39:22,693 [INFO] Starting episode 18...
+2026-06-17 07:40:25,621 [INFO] Success: False
+2026-06-17 07:40:25,621 [INFO] # episodes completed so far: 18
+2026-06-17 07:40:25,621 [INFO] # successes: 13 (72.2%)
+2026-06-17 07:40:25,621 [INFO] Current task success rate: 0.722
+2026-06-17 07:40:25,621 [INFO] Current total success rate: 0.722
+2026-06-17 07:40:25,621 [INFO] Saved episodes=18 frames=2488
+
+
+task6:  36%|███▌      | 18/50 [09:16<18:04, 33.90s/it][A2026-06-17 07:40:25,621 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:40:25,621 [INFO] Starting episode 19...
+2026-06-17 07:41:27,861 [INFO] Success: False
+2026-06-17 07:41:27,861 [INFO] # episodes completed so far: 19
+2026-06-17 07:41:27,861 [INFO] # successes: 13 (68.4%)
+2026-06-17 07:41:27,861 [INFO] Current task success rate: 0.684
+2026-06-17 07:41:27,861 [INFO] Current total success rate: 0.684
+2026-06-17 07:41:27,861 [INFO] Saved episodes=19 frames=2788
+
+
+task6:  38%|███▊      | 19/50 [10:18<21:54, 42.41s/it][A2026-06-17 07:41:27,861 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:41:27,861 [INFO] Starting episode 20...
+2026-06-17 07:41:46,201 [INFO] Success: True
+2026-06-17 07:41:46,201 [INFO] # episodes completed so far: 20
+2026-06-17 07:41:46,201 [INFO] # successes: 14 (70.0%)
+2026-06-17 07:41:46,201 [INFO] Current task success rate: 0.700
+2026-06-17 07:41:46,201 [INFO] Current total success rate: 0.700
+2026-06-17 07:41:46,201 [INFO] Saved episodes=20 frames=2865
+
+
+task6:  40%|████      | 20/50 [10:36<17:35, 35.18s/it][A2026-06-17 07:41:46,202 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:41:46,202 [INFO] Starting episode 21...
+2026-06-17 07:42:04,172 [INFO] Success: True
+2026-06-17 07:42:04,173 [INFO] # episodes completed so far: 21
+2026-06-17 07:42:04,173 [INFO] # successes: 15 (71.4%)
+2026-06-17 07:42:04,173 [INFO] Current task success rate: 0.714
+2026-06-17 07:42:04,173 [INFO] Current total success rate: 0.714
+2026-06-17 07:42:04,173 [INFO] Saved episodes=21 frames=2940
+
+
+task6:  42%|████▏     | 21/50 [10:54<14:30, 30.02s/it][A2026-06-17 07:42:04,173 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:42:04,173 [INFO] Starting episode 22...
+2026-06-17 07:42:21,186 [INFO] Success: True
+2026-06-17 07:42:21,186 [INFO] # episodes completed so far: 22
+2026-06-17 07:42:21,186 [INFO] # successes: 16 (72.7%)
+2026-06-17 07:42:21,186 [INFO] Current task success rate: 0.727
+2026-06-17 07:42:21,186 [INFO] Current total success rate: 0.727
+2026-06-17 07:42:21,186 [INFO] Saved episodes=22 frames=3011
+
+
+task6:  44%|████▍     | 22/50 [11:11<12:11, 26.11s/it][A2026-06-17 07:42:21,186 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:42:21,186 [INFO] Starting episode 23...
+2026-06-17 07:42:41,489 [INFO] Success: True
+2026-06-17 07:42:41,490 [INFO] # episodes completed so far: 23
+2026-06-17 07:42:41,490 [INFO] # successes: 17 (73.9%)
+2026-06-17 07:42:41,490 [INFO] Current task success rate: 0.739
+2026-06-17 07:42:41,490 [INFO] Current total success rate: 0.739
+2026-06-17 07:42:41,490 [INFO] Saved episodes=23 frames=3098
+
+
+task6:  46%|████▌     | 23/50 [11:32<10:58, 24.37s/it][A2026-06-17 07:42:41,490 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:42:41,490 [INFO] Starting episode 24...
+2026-06-17 07:43:00,680 [INFO] Success: True
+2026-06-17 07:43:00,680 [INFO] # episodes completed so far: 24
+2026-06-17 07:43:00,680 [INFO] # successes: 18 (75.0%)
+2026-06-17 07:43:00,680 [INFO] Current task success rate: 0.750
+2026-06-17 07:43:00,681 [INFO] Current total success rate: 0.750
+2026-06-17 07:43:00,681 [INFO] Saved episodes=24 frames=3179
+
+
+task6:  48%|████▊     | 24/50 [11:51<09:53, 22.82s/it][A2026-06-17 07:43:00,681 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:43:00,681 [INFO] Starting episode 25...
+2026-06-17 07:43:17,864 [INFO] Success: True
+2026-06-17 07:43:17,865 [INFO] # episodes completed so far: 25
+2026-06-17 07:43:17,865 [INFO] # successes: 19 (76.0%)
+2026-06-17 07:43:17,865 [INFO] Current task success rate: 0.760
+2026-06-17 07:43:17,865 [INFO] Current total success rate: 0.760
+2026-06-17 07:43:17,865 [INFO] Saved episodes=25 frames=3251
+
+
+task6:  50%|█████     | 25/50 [12:08<08:48, 21.13s/it][A2026-06-17 07:43:17,865 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:43:17,865 [INFO] Starting episode 26...
+2026-06-17 07:43:35,475 [INFO] Success: True
+2026-06-17 07:43:35,476 [INFO] # episodes completed so far: 26
+2026-06-17 07:43:35,476 [INFO] # successes: 20 (76.9%)
+2026-06-17 07:43:35,476 [INFO] Current task success rate: 0.769
+2026-06-17 07:43:35,476 [INFO] Current total success rate: 0.769
+2026-06-17 07:43:35,476 [INFO] Saved episodes=26 frames=3325
+
+
+task6:  52%|█████▏    | 26/50 [12:26<08:01, 20.07s/it][A2026-06-17 07:43:35,476 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:43:35,476 [INFO] Starting episode 27...
+2026-06-17 07:43:55,184 [INFO] Success: True
+2026-06-17 07:43:55,184 [INFO] # episodes completed so far: 27
+2026-06-17 07:43:55,184 [INFO] # successes: 21 (77.8%)
+2026-06-17 07:43:55,184 [INFO] Current task success rate: 0.778
+2026-06-17 07:43:55,184 [INFO] Current total success rate: 0.778
+2026-06-17 07:43:55,184 [INFO] Saved episodes=27 frames=3409
+
+
+task6:  54%|█████▍    | 27/50 [12:45<07:39, 19.96s/it][A2026-06-17 07:43:55,184 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:43:55,184 [INFO] Starting episode 28...
+2026-06-17 07:44:12,683 [INFO] Success: True
+2026-06-17 07:44:12,684 [INFO] # episodes completed so far: 28
+2026-06-17 07:44:12,684 [INFO] # successes: 22 (78.6%)
+2026-06-17 07:44:12,684 [INFO] Current task success rate: 0.786
+2026-06-17 07:44:12,684 [INFO] Current total success rate: 0.786
+2026-06-17 07:44:12,684 [INFO] Saved episodes=28 frames=3482
+
+
+task6:  56%|█████▌    | 28/50 [13:03<07:02, 19.22s/it][A2026-06-17 07:44:12,684 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:44:12,684 [INFO] Starting episode 29...
+2026-06-17 07:45:13,993 [INFO] Success: False
+2026-06-17 07:45:13,993 [INFO] # episodes completed so far: 29
+2026-06-17 07:45:13,993 [INFO] # successes: 22 (75.9%)
+2026-06-17 07:45:13,993 [INFO] Current task success rate: 0.759
+2026-06-17 07:45:13,993 [INFO] Current total success rate: 0.759
+2026-06-17 07:45:13,993 [INFO] Saved episodes=29 frames=3782
+
+
+task6:  58%|█████▊    | 29/50 [14:04<11:08, 31.85s/it][A2026-06-17 07:45:13,993 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:45:13,993 [INFO] Starting episode 30...
+2026-06-17 07:45:32,535 [INFO] Success: True
+2026-06-17 07:45:32,535 [INFO] # episodes completed so far: 30
+2026-06-17 07:45:32,535 [INFO] # successes: 23 (76.7%)
+2026-06-17 07:45:32,535 [INFO] Current task success rate: 0.767
+2026-06-17 07:45:32,535 [INFO] Current total success rate: 0.767
+2026-06-17 07:45:32,535 [INFO] Saved episodes=30 frames=3860
+
+
+task6:  60%|██████    | 30/50 [14:23<09:17, 27.86s/it][A2026-06-17 07:45:32,535 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:45:32,535 [INFO] Starting episode 31...
+2026-06-17 07:45:50,418 [INFO] Success: True
+2026-06-17 07:45:50,418 [INFO] # episodes completed so far: 31
+2026-06-17 07:45:50,419 [INFO] # successes: 24 (77.4%)
+2026-06-17 07:45:50,419 [INFO] Current task success rate: 0.774
+2026-06-17 07:45:50,419 [INFO] Current total success rate: 0.774
+2026-06-17 07:45:50,419 [INFO] Saved episodes=31 frames=3934
+
+
+task6:  62%|██████▏   | 31/50 [14:41<07:52, 24.87s/it][A2026-06-17 07:45:50,419 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:45:50,419 [INFO] Starting episode 32...
+2026-06-17 07:46:10,853 [INFO] Success: True
+2026-06-17 07:46:10,853 [INFO] # episodes completed so far: 32
+2026-06-17 07:46:10,853 [INFO] # successes: 25 (78.1%)
+2026-06-17 07:46:10,853 [INFO] Current task success rate: 0.781
+2026-06-17 07:46:10,853 [INFO] Current total success rate: 0.781
+2026-06-17 07:46:10,853 [INFO] Saved episodes=32 frames=4022
+
+
+task6:  64%|██████▍   | 32/50 [15:01<07:03, 23.54s/it][A2026-06-17 07:46:10,853 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:46:10,853 [INFO] Starting episode 33...
+2026-06-17 07:46:29,102 [INFO] Success: True
+2026-06-17 07:46:29,102 [INFO] # episodes completed so far: 33
+2026-06-17 07:46:29,102 [INFO] # successes: 26 (78.8%)
+2026-06-17 07:46:29,102 [INFO] Current task success rate: 0.788
+2026-06-17 07:46:29,102 [INFO] Current total success rate: 0.788
+2026-06-17 07:46:29,102 [INFO] Saved episodes=33 frames=4098
+
+
+task6:  66%|██████▌   | 33/50 [15:19<06:13, 21.95s/it][A2026-06-17 07:46:29,102 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:46:29,102 [INFO] Starting episode 34...
+2026-06-17 07:46:47,859 [INFO] Success: True
+2026-06-17 07:46:47,859 [INFO] # episodes completed so far: 34
+2026-06-17 07:46:47,859 [INFO] # successes: 27 (79.4%)
+2026-06-17 07:46:47,859 [INFO] Current task success rate: 0.794
+2026-06-17 07:46:47,859 [INFO] Current total success rate: 0.794
+2026-06-17 07:46:47,859 [INFO] Saved episodes=34 frames=4177
+
+
+task6:  68%|██████▊   | 34/50 [15:38<05:35, 20.99s/it][A2026-06-17 07:46:47,859 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:46:47,859 [INFO] Starting episode 35...
+2026-06-17 07:47:06,008 [INFO] Success: True
+2026-06-17 07:47:06,008 [INFO] # episodes completed so far: 35
+2026-06-17 07:47:06,008 [INFO] # successes: 28 (80.0%)
+2026-06-17 07:47:06,008 [INFO] Current task success rate: 0.800
+2026-06-17 07:47:06,008 [INFO] Current total success rate: 0.800
+2026-06-17 07:47:06,008 [INFO] Saved episodes=35 frames=4252
+
+
+task6:  70%|███████   | 35/50 [15:56<05:02, 20.14s/it][A2026-06-17 07:47:06,008 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:47:06,008 [INFO] Starting episode 36...
+2026-06-17 07:48:08,198 [INFO] Success: False
+2026-06-17 07:48:08,198 [INFO] # episodes completed so far: 36
+2026-06-17 07:48:08,198 [INFO] # successes: 28 (77.8%)
+2026-06-17 07:48:08,198 [INFO] Current task success rate: 0.778
+2026-06-17 07:48:08,198 [INFO] Current total success rate: 0.778
+2026-06-17 07:48:08,198 [INFO] Saved episodes=36 frames=4552
+
+
+task6:  72%|███████▏  | 36/50 [16:58<07:38, 32.75s/it][A2026-06-17 07:48:08,198 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:48:08,198 [INFO] Starting episode 37...
+2026-06-17 07:48:25,947 [INFO] Success: True
+2026-06-17 07:48:25,947 [INFO] # episodes completed so far: 37
+2026-06-17 07:48:25,947 [INFO] # successes: 29 (78.4%)
+2026-06-17 07:48:25,947 [INFO] Current task success rate: 0.784
+2026-06-17 07:48:25,947 [INFO] Current total success rate: 0.784
+2026-06-17 07:48:25,947 [INFO] Saved episodes=37 frames=4626
+
+
+task6:  74%|███████▍  | 37/50 [17:16<06:07, 28.25s/it][A2026-06-17 07:48:25,947 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:48:25,947 [INFO] Starting episode 38...
+2026-06-17 07:49:28,018 [INFO] Success: False
+2026-06-17 07:49:28,019 [INFO] # episodes completed so far: 38
+2026-06-17 07:49:28,019 [INFO] # successes: 29 (76.3%)
+2026-06-17 07:49:28,019 [INFO] Current task success rate: 0.763
+2026-06-17 07:49:28,019 [INFO] Current total success rate: 0.763
+2026-06-17 07:49:28,019 [INFO] Saved episodes=38 frames=4926
+
+
+task6:  76%|███████▌  | 38/50 [18:18<07:40, 38.40s/it][A2026-06-17 07:49:28,019 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:49:28,019 [INFO] Starting episode 39...
+2026-06-17 07:49:46,417 [INFO] Success: True
+2026-06-17 07:49:46,417 [INFO] # episodes completed so far: 39
+2026-06-17 07:49:46,417 [INFO] # successes: 30 (76.9%)
+2026-06-17 07:49:46,417 [INFO] Current task success rate: 0.769
+2026-06-17 07:49:46,417 [INFO] Current total success rate: 0.769
+2026-06-17 07:49:46,417 [INFO] Saved episodes=39 frames=5002
+
+
+task6:  78%|███████▊  | 39/50 [18:37<05:56, 32.40s/it][A2026-06-17 07:49:46,417 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:49:46,417 [INFO] Starting episode 40...
+2026-06-17 07:50:50,525 [INFO] Success: False
+2026-06-17 07:50:50,525 [INFO] # episodes completed so far: 40
+2026-06-17 07:50:50,525 [INFO] # successes: 30 (75.0%)
+2026-06-17 07:50:50,525 [INFO] Current task success rate: 0.750
+2026-06-17 07:50:50,525 [INFO] Current total success rate: 0.750
+2026-06-17 07:50:50,525 [INFO] Saved episodes=40 frames=5302
+
+
+task6:  80%|████████  | 40/50 [19:41<06:59, 41.91s/it][A2026-06-17 07:50:50,525 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:50:50,525 [INFO] Starting episode 41...
+2026-06-17 07:51:50,627 [INFO] Success: False
+2026-06-17 07:51:50,627 [INFO] # episodes completed so far: 41
+2026-06-17 07:51:50,628 [INFO] # successes: 30 (73.2%)
+2026-06-17 07:51:50,628 [INFO] Current task success rate: 0.732
+2026-06-17 07:51:50,628 [INFO] Current total success rate: 0.732
+2026-06-17 07:51:50,628 [INFO] Saved episodes=41 frames=5602
+
+
+task6:  82%|████████▏ | 41/50 [20:41<07:06, 47.37s/it][A2026-06-17 07:51:50,628 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:51:50,628 [INFO] Starting episode 42...
+2026-06-17 07:52:56,347 [INFO] Success: False
+2026-06-17 07:52:56,347 [INFO] # episodes completed so far: 42
+2026-06-17 07:52:56,347 [INFO] # successes: 30 (71.4%)
+2026-06-17 07:52:56,347 [INFO] Current task success rate: 0.714
+2026-06-17 07:52:56,347 [INFO] Current total success rate: 0.714
+2026-06-17 07:52:56,347 [INFO] Saved episodes=42 frames=5902
+
+
+task6:  84%|████████▍ | 42/50 [21:47<07:02, 52.87s/it][A2026-06-17 07:52:56,347 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:52:56,348 [INFO] Starting episode 43...
+2026-06-17 07:53:14,778 [INFO] Success: True
+2026-06-17 07:53:14,778 [INFO] # episodes completed so far: 43
+2026-06-17 07:53:14,778 [INFO] # successes: 31 (72.1%)
+2026-06-17 07:53:14,778 [INFO] Current task success rate: 0.721
+2026-06-17 07:53:14,779 [INFO] Current total success rate: 0.721
+2026-06-17 07:53:14,779 [INFO] Saved episodes=43 frames=5978
+
+
+task6:  86%|████████▌ | 43/50 [22:05<04:57, 42.54s/it][A2026-06-17 07:53:14,779 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:53:14,779 [INFO] Starting episode 44...
+2026-06-17 07:53:32,603 [INFO] Success: True
+2026-06-17 07:53:32,603 [INFO] # episodes completed so far: 44
+2026-06-17 07:53:32,603 [INFO] # successes: 32 (72.7%)
+2026-06-17 07:53:32,603 [INFO] Current task success rate: 0.727
+2026-06-17 07:53:32,603 [INFO] Current total success rate: 0.727
+2026-06-17 07:53:32,603 [INFO] Saved episodes=44 frames=6049
+
+
+task6:  88%|████████▊ | 44/50 [22:23<03:30, 35.13s/it][A2026-06-17 07:53:32,604 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:53:32,604 [INFO] Starting episode 45...
+2026-06-17 07:54:37,771 [INFO] Success: False
+2026-06-17 07:54:37,771 [INFO] # episodes completed so far: 45
+2026-06-17 07:54:37,771 [INFO] # successes: 32 (71.1%)
+2026-06-17 07:54:37,771 [INFO] Current task success rate: 0.711
+2026-06-17 07:54:37,771 [INFO] Current total success rate: 0.711
+2026-06-17 07:54:37,771 [INFO] Saved episodes=45 frames=6349
+
+
+task6:  90%|█████████ | 45/50 [23:28<03:40, 44.14s/it][A2026-06-17 07:54:37,772 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:54:37,772 [INFO] Starting episode 46...
+2026-06-17 07:55:40,420 [INFO] Success: False
+2026-06-17 07:55:40,420 [INFO] # episodes completed so far: 46
+2026-06-17 07:55:40,420 [INFO] # successes: 32 (69.6%)
+2026-06-17 07:55:40,420 [INFO] Current task success rate: 0.696
+2026-06-17 07:55:40,420 [INFO] Current total success rate: 0.696
+2026-06-17 07:55:40,420 [INFO] Saved episodes=46 frames=6649
+
+
+task6:  92%|█████████▏| 46/50 [24:31<03:18, 49.69s/it][A2026-06-17 07:55:40,420 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:55:40,420 [INFO] Starting episode 47...
+2026-06-17 07:55:58,678 [INFO] Success: True
+2026-06-17 07:55:58,678 [INFO] # episodes completed so far: 47
+2026-06-17 07:55:58,678 [INFO] # successes: 33 (70.2%)
+2026-06-17 07:55:58,678 [INFO] Current task success rate: 0.702
+2026-06-17 07:55:58,678 [INFO] Current total success rate: 0.702
+2026-06-17 07:55:58,678 [INFO] Saved episodes=47 frames=6723
+
+
+task6:  94%|█████████▍| 47/50 [24:49<02:00, 40.26s/it][A2026-06-17 07:55:58,678 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:55:58,678 [INFO] Starting episode 48...
+2026-06-17 07:56:15,983 [INFO] Success: True
+2026-06-17 07:56:15,984 [INFO] # episodes completed so far: 48
+2026-06-17 07:56:15,984 [INFO] # successes: 34 (70.8%)
+2026-06-17 07:56:15,984 [INFO] Current task success rate: 0.708
+2026-06-17 07:56:15,984 [INFO] Current total success rate: 0.708
+2026-06-17 07:56:15,984 [INFO] Saved episodes=48 frames=6793
+
+
+task6:  96%|█████████▌| 48/50 [25:06<01:06, 33.37s/it][A2026-06-17 07:56:15,984 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:56:15,984 [INFO] Starting episode 49...
+2026-06-17 07:57:20,095 [INFO] Success: False
+2026-06-17 07:57:20,096 [INFO] # episodes completed so far: 49
+2026-06-17 07:57:20,096 [INFO] # successes: 34 (69.4%)
+2026-06-17 07:57:20,096 [INFO] Current task success rate: 0.694
+2026-06-17 07:57:20,096 [INFO] Current total success rate: 0.694
+2026-06-17 07:57:20,096 [INFO] Saved episodes=49 frames=7093
+
+
+task6:  98%|█████████▊| 49/50 [26:10<00:42, 42.60s/it][A2026-06-17 07:57:20,096 [INFO] 
+Task: put the cream cheese in the bowl
+2026-06-17 07:57:20,096 [INFO] Starting episode 50...
+2026-06-17 07:58:23,466 [INFO] Success: False
+2026-06-17 07:58:23,466 [INFO] # episodes completed so far: 50
+2026-06-17 07:58:23,466 [INFO] # successes: 34 (68.0%)
+2026-06-17 07:58:23,466 [INFO] Current task success rate: 0.680
+2026-06-17 07:58:23,466 [INFO] Current total success rate: 0.680
+2026-06-17 07:58:23,466 [INFO] Saved episodes=50 frames=7393
+
+
+task6: 100%|██████████| 50/50 [27:14<00:00, 48.83s/it][A
+
+                                                      [A
+tasks:  70%|███████   | 7/10 [27:17<11:41, 233.90s/it]
+tasks: 100%|██████████| 10/10 [27:17<00:00, 163.73s/it]
+2026-06-17 07:58:23,467 [INFO] Saved tmp dataset to: /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp
+2026-06-17 07:58:23,467 [INFO] Total episodes=50 successes=34 success_rate=0.680
+2026-06-17 07:58:23,467 [INFO] Saved episodes=50 frames=7393
+Exception ignored in: <function MjRenderContext.__del__ at 0x7fbc74fe9c10>
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+    self.gl_ctx.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: 2026-06-17 07:58:23,582 [INFO] Failed to load library ( 'libGLU.so.0' ): libGLU.so.0: cannot open shared object file: No such file or directory
+EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fbc6159bb40>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fbc5c06a340>,
+	),
+	result = 0
+)
+Exception ignored in: <function EGLGLContext.__del__ at 0x7fbc74fe9a60>
+Traceback (most recent call last):
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+    self.free()
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/data/huangdi/heliqun/pi0/openpi/examples/libero/libero_env/lib/python3.8/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x7fbc6159bb40>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x7fbc5c06a340>,
+	),
+	result = 0
+)
+[2026-06-17 07:58:25] [convert] raw tmp -> LeRobot: /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp -> /data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect
+[2026-06-17 07:58:26] [raw_to_lerobot] input_dir=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp
+[2026-06-17 07:58:26] [raw_to_lerobot] output_dir=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect
+[2026-06-17 07:58:26] [raw_to_lerobot] repo_id=collect
+[2026-06-17 07:58:26] [raw_to_lerobot] discovered_episodes=50
+[2026-06-17 07:58:26] [raw_to_lerobot] create root=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect repo_id=collect
+Map:   0%|          | 0/78 [00:00<?, ? examples/s]Map:  82%|████████▏ | 64/78 [00:00<00:00, 625.44 examples/s]Map: 100%|██████████| 78/78 [00:00<00:00, 468.18 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 24.43ba/s]
+Map:   0%|          | 0/78 [00:00<?, ? examples/s]Map:  92%|█████████▏| 72/78 [00:00<00:00, 706.22 examples/s]Map: 100%|██████████| 78/78 [00:00<00:00, 593.62 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.15ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 75/300 [00:00<00:00, 732.37 examples/s]Map:  62%|██████▏   | 185/300 [00:00<00:00, 729.59 examples/s]Map:  98%|█████████▊| 294/300 [00:00<00:00, 725.45 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 634.85 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 42.12ba/s]
+Map:   0%|          | 0/70 [00:00<?, ? examples/s]Map: 100%|██████████| 70/70 [00:00<00:00, 657.30 examples/s]Map: 100%|██████████| 70/70 [00:00<00:00, 644.68 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 44.59ba/s]
+Map:   0%|          | 0/77 [00:00<?, ? examples/s]Map:  96%|█████████▌| 74/77 [00:00<00:00, 730.00 examples/s]Map: 100%|██████████| 77/77 [00:00<00:00, 682.51 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.72ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 75/300 [00:00<00:00, 733.77 examples/s]Map:  51%|█████     | 153/300 [00:00<00:00, 754.35 examples/s]Map:  88%|████████▊ | 264/300 [00:00<00:00, 742.02 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 669.23 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 39.55ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  26%|██▋       | 79/300 [00:00<00:00, 778.35 examples/s]Map:  65%|██████▌   | 195/300 [00:00<00:00, 771.42 examples/s]Map:  91%|█████████ | 273/300 [00:00<00:00, 772.81 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 724.11 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 44.56ba/s]
+Map:   0%|          | 0/71 [00:00<?, ? examples/s]Map: 100%|██████████| 71/71 [00:00<00:00, 709.01 examples/s]Map: 100%|██████████| 71/71 [00:00<00:00, 697.16 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 60.61ba/s]
+Map:   0%|          | 0/73 [00:00<?, ? examples/s]Map: 100%|██████████| 73/73 [00:00<00:00, 723.11 examples/s]Map: 100%|██████████| 73/73 [00:00<00:00, 708.55 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 61.13ba/s]
+Map:   0%|          | 0/76 [00:00<?, ? examples/s]Map:  96%|█████████▌| 73/76 [00:00<00:00, 717.95 examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 651.48 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 53.99ba/s]
+Map:   0%|          | 0/79 [00:00<?, ? examples/s]Map:  96%|█████████▌| 76/79 [00:00<00:00, 744.68 examples/s]Map: 100%|██████████| 79/79 [00:00<00:00, 691.47 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 47.79ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  23%|██▎       | 70/300 [00:00<00:00, 692.64 examples/s]Map:  57%|█████▋    | 171/300 [00:00<00:00, 672.91 examples/s]Map:  80%|███████▉  | 239/300 [00:00<00:00, 671.95 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 622.30 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 42.30ba/s]
+Map:   0%|          | 0/78 [00:00<?, ? examples/s]Map:  90%|████████▉ | 70/78 [00:00<00:00, 684.20 examples/s]Map: 100%|██████████| 78/78 [00:00<00:00, 651.27 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.85ba/s]
+Map:   0%|          | 0/72 [00:00<?, ? examples/s]Map: 100%|██████████| 72/72 [00:00<00:00, 698.81 examples/s]Map: 100%|██████████| 72/72 [00:00<00:00, 685.09 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 50.12ba/s]
+Map:   0%|          | 0/81 [00:00<?, ? examples/s]Map:  83%|████████▎ | 67/81 [00:00<00:00, 654.23 examples/s]Map: 100%|██████████| 81/81 [00:00<00:00, 622.37 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.41ba/s]
+Map:   0%|          | 0/81 [00:00<?, ? examples/s]Map:  94%|█████████▍| 76/81 [00:00<00:00, 746.30 examples/s]Map: 100%|██████████| 81/81 [00:00<00:00, 703.73 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 51.04ba/s]
+Map:   0%|          | 0/74 [00:00<?, ? examples/s]Map:  96%|█████████▌| 71/74 [00:00<00:00, 699.61 examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 661.04 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 58.34ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 75/300 [00:00<00:00, 732.30 examples/s]Map:  50%|█████     | 150/300 [00:00<00:00, 734.96 examples/s]Map:  75%|███████▌  | 225/300 [00:00<00:00, 738.60 examples/s]Map: 100%|█████████▉| 299/300 [00:00<00:00, 736.96 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 646.85 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 42.68ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▍       | 74/300 [00:00<00:00, 731.12 examples/s]Map:  49%|████▉     | 148/300 [00:00<00:00, 733.46 examples/s]Map:  74%|███████▍  | 223/300 [00:00<00:00, 735.76 examples/s]Map: 100%|█████████▉| 299/300 [00:00<00:00, 742.32 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 697.30 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 44.36ba/s]
+Map:   0%|          | 0/77 [00:00<?, ? examples/s]Map:  90%|████████▉ | 69/77 [00:00<00:00, 679.80 examples/s]Map: 100%|██████████| 77/77 [00:00<00:00, 642.75 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 56.20ba/s]
+Map:   0%|          | 0/75 [00:00<?, ? examples/s]Map:  97%|█████████▋| 73/75 [00:00<00:00, 715.36 examples/s]Map: 100%|██████████| 75/75 [00:00<00:00, 675.01 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 57.18ba/s]
+Map:   0%|          | 0/71 [00:00<?, ? examples/s]Map: 100%|██████████| 71/71 [00:00<00:00, 699.90 examples/s]Map: 100%|██████████| 71/71 [00:00<00:00, 685.87 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 61.42ba/s]
+Map:   0%|          | 0/87 [00:00<?, ? examples/s]Map:  89%|████████▊ | 77/87 [00:00<00:00, 754.62 examples/s]Map: 100%|██████████| 87/87 [00:00<00:00, 715.88 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.54ba/s]
+Map:   0%|          | 0/81 [00:00<?, ? examples/s]Map:  91%|█████████▏| 74/81 [00:00<00:00, 723.75 examples/s]Map: 100%|██████████| 81/81 [00:00<00:00, 675.72 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 52.45ba/s]
+Map:   0%|          | 0/72 [00:00<?, ? examples/s]Map:  79%|███████▉  | 57/72 [00:00<00:00, 552.74 examples/s]Map: 100%|██████████| 72/72 [00:00<00:00, 509.82 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 53.95ba/s]
+Map:   0%|          | 0/74 [00:00<?, ? examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 714.39 examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 700.07 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 57.96ba/s]
+Map:   0%|          | 0/84 [00:00<?, ? examples/s]Map:  92%|█████████▏| 77/84 [00:00<00:00, 748.30 examples/s]Map: 100%|██████████| 84/84 [00:00<00:00, 709.15 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 30.32ba/s]
+Map:   0%|          | 0/73 [00:00<?, ? examples/s]Map: 100%|██████████| 73/73 [00:00<00:00, 687.83 examples/s]Map: 100%|██████████| 73/73 [00:00<00:00, 674.34 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 37.23ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 76/300 [00:00<00:00, 744.31 examples/s]Map:  51%|█████     | 152/300 [00:00<00:00, 745.54 examples/s]Map:  88%|████████▊ | 263/300 [00:00<00:00, 739.36 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 640.45 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 45.59ba/s]
+Map:   0%|          | 0/78 [00:00<?, ? examples/s]Map:  94%|█████████▎| 73/78 [00:00<00:00, 707.67 examples/s]Map: 100%|██████████| 78/78 [00:00<00:00, 669.29 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 54.32ba/s]
+Map:   0%|          | 0/74 [00:00<?, ? examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 710.54 examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 696.37 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 59.52ba/s]
+Map:   0%|          | 0/88 [00:00<?, ? examples/s]Map:  85%|████████▌ | 75/88 [00:00<00:00, 739.80 examples/s]Map: 100%|██████████| 88/88 [00:00<00:00, 667.53 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 42.94ba/s]
+Map:   0%|          | 0/76 [00:00<?, ? examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 734.33 examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 719.85 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 49.85ba/s]
+Map:   0%|          | 0/79 [00:00<?, ? examples/s]Map: 100%|██████████| 79/79 [00:00<00:00, 781.42 examples/s]Map: 100%|██████████| 79/79 [00:00<00:00, 734.02 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 56.18ba/s]
+Map:   0%|          | 0/75 [00:00<?, ? examples/s]Map: 100%|██████████| 75/75 [00:00<00:00, 738.00 examples/s]Map: 100%|██████████| 75/75 [00:00<00:00, 665.01 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 61.36ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  26%|██▌       | 77/300 [00:00<00:00, 751.01 examples/s]Map:  62%|██████▏   | 186/300 [00:00<00:00, 722.12 examples/s]Map:  98%|█████████▊| 295/300 [00:00<00:00, 720.05 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 638.49 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 46.67ba/s]
+Map:   0%|          | 0/74 [00:00<?, ? examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 714.92 examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 701.20 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 59.66ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  26%|██▌       | 77/300 [00:00<00:00, 753.76 examples/s]Map:  51%|█████     | 153/300 [00:00<00:00, 756.61 examples/s]Map:  77%|███████▋  | 230/300 [00:00<00:00, 759.14 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 701.57 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 45.31ba/s]
+Map:   0%|          | 0/76 [00:00<?, ? examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 745.13 examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 701.45 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 57.18ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  24%|██▍       | 73/300 [00:00<00:00, 719.10 examples/s]Map:  49%|████▉     | 147/300 [00:00<00:00, 727.81 examples/s]Map:  74%|███████▎  | 221/300 [00:00<00:00, 728.23 examples/s]Map: 100%|█████████▉| 299/300 [00:00<00:00, 742.22 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 665.05 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 42.72ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 75/300 [00:00<00:00, 736.79 examples/s]Map:  51%|█████     | 152/300 [00:00<00:00, 751.94 examples/s]Map:  86%|████████▌ | 257/300 [00:00<00:00, 718.66 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 688.39 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 46.09ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  24%|██▎       | 71/300 [00:00<00:00, 699.70 examples/s]Map:  49%|████▊     | 146/300 [00:00<00:00, 725.85 examples/s]Map:  74%|███████▎  | 221/300 [00:00<00:00, 732.97 examples/s]Map:  99%|█████████▊| 296/300 [00:00<00:00, 736.20 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 673.60 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 41.98ba/s]
+Map:   0%|          | 0/76 [00:00<?, ? examples/s]Map:  84%|████████▍ | 64/76 [00:00<00:00, 622.23 examples/s]Map: 100%|██████████| 76/76 [00:00<00:00, 604.57 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 53.80ba/s]
+Map:   0%|          | 0/71 [00:00<?, ? examples/s]Map: 100%|██████████| 71/71 [00:00<00:00, 701.16 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 64.24ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▍       | 74/300 [00:00<00:00, 729.17 examples/s]Map:  50%|█████     | 150/300 [00:00<00:00, 737.18 examples/s]Map:  75%|███████▌  | 226/300 [00:00<00:00, 743.20 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 674.79 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 40.12ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 75/300 [00:00<00:00, 741.81 examples/s]Map:  50%|█████     | 151/300 [00:00<00:00, 749.44 examples/s]Map:  76%|███████▌  | 227/300 [00:00<00:00, 749.49 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 707.39 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 45.40ba/s]
+Map:   0%|          | 0/74 [00:00<?, ? examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 711.94 examples/s]Map: 100%|██████████| 74/74 [00:00<00:00, 697.82 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 57.41ba/s]
+Map:   0%|          | 0/70 [00:00<?, ? examples/s]Map: 100%|██████████| 70/70 [00:00<00:00, 717.57 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 1/1 [00:00<00:00, 62.65ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  26%|██▌       | 78/300 [00:00<00:00, 766.85 examples/s]Map:  52%|█████▏    | 155/300 [00:00<00:00, 760.48 examples/s]Map:  90%|█████████ | 271/300 [00:00<00:00, 764.38 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 699.98 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 44.01ba/s]
+Map:   0%|          | 0/300 [00:00<?, ? examples/s]Map:  25%|██▌       | 76/300 [00:00<00:00, 743.23 examples/s]Map:  51%|█████     | 152/300 [00:00<00:00, 745.00 examples/s]Map:  76%|███████▌  | 228/300 [00:00<00:00, 747.96 examples/s]Map: 100%|██████████| 300/300 [00:00<00:00, 707.04 examples/s]
+Creating parquet from Arrow format:   0%|          | 0/3 [00:00<?, ?ba/s]Creating parquet from Arrow format: 100%|██████████| 3/3 [00:00<00:00, 44.73ba/s]
+[2026-06-17 07:59:22] [raw_to_lerobot] summary={"input_dir": "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp", "output_dir": "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect", "repo_id": "collect", "num_input_episodes": 50, "num_output_episodes": 50, "num_output_frames": 7393, "success_episodes": 34, "failure_episodes": 16, "skipped_episodes": 0, "fps": 10, "resize_size": 224, "cleanup_input_on_success": true}
+[2026-06-17 07:59:22] [raw_to_lerobot] removed input_dir=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp
+[2026-06-17 07:59:22] [convert_summary] {"input_dir": "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect_tmp", "output_dir": "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect", "repo_id": "collect", "num_input_episodes": 50, "num_output_episodes": 50, "num_output_frames": 7393, "success_episodes": 34, "failure_episodes": 16, "skipped_episodes": 0, "fps": 10, "resize_size": 224, "cleanup_input_on_success": true}
+[2026-06-17 07:59:22] [done] iter=3 stage=collect next=append_pool
+[2026-06-17 07:59:22] [start] iter=3 stage=append_pool
+[2026-06-17 07:59:23] [append_pool] virtual sources now=["/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/pool/raw", "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter0/data/collect", "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter1/data/collect", "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter2/data/collect", "/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/data/collect"]
+[2026-06-17 07:59:23] [done] iter=3 stage=append_pool next=finished
+[2026-06-17 07:59:23] [finished]

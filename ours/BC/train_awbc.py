@@ -213,7 +213,7 @@ def main() -> None:
         norm_cmd = [
             str(python_bin),
             "-u",
-            str(pi0_root / "train" / "compute_norm_stats_custom.py"),
+            str(pi0_root / "ours/BC" / "compute_norm_stats_custom.py"),
             "--repo-id",
             repo_id,
             "--asset-id",
