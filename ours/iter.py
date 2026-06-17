@@ -73,7 +73,7 @@ def get_iql_steps(iter_index: int, task_id: int) -> int:
 
 
 def get_awbc_steps(iter_index: int, task_id: int) -> int:
-    base = 3000
+    base = 3500
     iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10

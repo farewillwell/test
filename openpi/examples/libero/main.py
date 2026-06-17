@@ -43,7 +43,7 @@ class Args:
     #################################################################################################################
     video_out_path: str = "data/libero/videos"  # Path to save videos
 
-    seed: int = 7  # Random Seed (for reproducibility)
+    seed: int = 0  # Random Seed (for reproducibility)
 
 
 def eval_libero(args: Args) -> None:

@@ -20,7 +20,7 @@ LIBERO_PYTHON=${OPENPI_ROOT}/examples/libero/libero_env/bin/python
 export PI0_CACHE_ROOT="${PI0_CACHE_ROOT:-${PI0_ROOT}/cache}"
 export JAX_COMPILATION_CACHE_DIR="${JAX_COMPILATION_CACHE_DIR:-${PI0_CACHE_ROOT}/jax}"
 export CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-${PI0_CACHE_ROOT}/cuda}"
-WORKSPACE=/data/aoss/heliqun/pi05-ours/goal-6
+WORKSPACE=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6
 SRC_DIR=/data/aoss/heliqun/dataset/pi-src/pi05
 BASE_MODEL=/data/aoss/heliqun/model/pi/openpi-assets/checkpoints/pi05_base
 unset LD_LIBRARY_PATH
@@ -42,5 +42,5 @@ ${PI_PYTHON} -u ours/iter.py \
   --num-trials-per-task 50 \
   --iql-use-q-aug \
   --policy-config-name pi05_libero_awbc \
-  --proposal-noise-scale 2.0 \
-  > "iter-${task_id}-rank-qselect5.log" 2>&1
+  --proposal-noise-scale 1.5 \
+  > "iter-${task_id}-rank-qselect5-ent.log" 2>&1
