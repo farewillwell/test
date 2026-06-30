@@ -52,9 +52,9 @@ STAGE_FINISHED = "finished"
 STAGES = (STAGE_TRAIN_IQL, STAGE_LABEL, STAGE_TRAIN_AWBC, STAGE_COLLECT, STAGE_APPEND_POOL)
 VALID_STAGES = set(STAGES) | {STAGE_FINISHED}
 LIBERO_REPLAN_STEPS = int(os.environ['action_horizon'])
-STEP_REWARD = -1.0
+STEP_REWARD = -0.1
 SUCCESS_TERMINAL_REWARD = 10.0
-FAILURE_TERMINAL_REWARD = -100.0
+FAILURE_TERMINAL_REWARD = -10.0
 QSELECT_HOST = "127.0.0.1"
 QSELECT_PORT = 8000
 QSELECT_SERVER_WAIT_TIMEOUT = 900.0
@@ -65,18 +65,23 @@ def _task_mode(task_id: int) -> str:
 
 
 def get_iql_steps(iter_index: int, task_id: int) -> int:
-    base = 2000
-    iter_task_add = 1500
-    iter_scale = max(int(iter_index) + 1, 1)
     num_tasks = 1 if int(task_id) >= 0 else 10
-    return  int(base + iter_task_add * num_tasks * iter_scale)
+
+    if num_tasks == 1:
+        # single-task LIBERO:
+        # iter0 数据极少，critic 不要训太久；后续 pool 变大后再递增。
+        return [800, 2000, 3500, 5000][min(int(iter_index), 3)]
+
+    # multi-task:
+    # 数据量约按任务数放大，但不要 10 倍线性爆炸太狠。
+    return [4000, 10000, 15000, 20000][min(int(iter_index), 3)]
 
 
 def get_awbc_steps(iter_index: int, task_id: int) -> int:
-    base = 2000
-    iter_task_add = 1500
+    base = 500
+    iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
-    num_tasks = 1 if int(task_id) >= 0 else 10
+    num_tasks = 1 if int(task_id) >= 0 else 5
     return  int(base + iter_task_add * num_tasks * iter_scale)
 
 def check_env_for_subprocess(env: dict[str, Any], *, log_path: Path) -> None:

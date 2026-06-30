@@ -56,7 +56,8 @@ Terminal window 2:
 
 ```bash
 # Run the server
-MODEL_PATH=/data/aoss/heliqun/pi05-ours-ent1.5/goal-6/iter3/awbc_model/final  bash test/test.sh
+cd /data/huangdi/heliqun/pi0
+MODEL_PATH=/data/aoss/heliqun/pi05-ours-ent1.5-single/goal-6/iter3/awbc_model/final  bash test/test.sh
 ```
 
 ## Results

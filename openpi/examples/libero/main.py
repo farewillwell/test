@@ -34,7 +34,7 @@ class Args:
     task_suite_name: str = (
         "libero_goal"  # Task suite. Options: libero_spatial, libero_object, libero_goal, libero_10, libero_90
     )
-    task_id :int = 6
+    task_id :int = -1
     num_steps_wait: int = 10  # Number of steps to wait for objects to stabilize i n sim
     num_trials_per_task: int = 50  # Number of rollouts per task
 

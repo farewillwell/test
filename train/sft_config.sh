@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Minimal shared config for data preparation and SFT training.
-
+task_suite=10
 SFT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PI0_ROOT="${PI0_ROOT:-$(cd "${SFT_SCRIPT_DIR}/.." && pwd)}"
 OPENPI_ROOT="${OPENPI_ROOT:-${PI0_ROOT}/openpi}"
 
 # 1) Data preparation: read HDF5 demos from HDF5_DIR and write LeRobot data to
 #    LEROBOT_DATA_DIR.
-HDF5_DIR="${HDF5_DIR:-/data/aoss/heliqun/dataset/libero-dataset/bytaskid/6}"
-LEROBOT_DATA_DIR="/data/aoss/heliqun/dataset/pi-src/pi05"
+HDF5_DIR="/data/aoss/heliqun/dataset/libero-dataset/libero_${task_suite}_select_50"
+LEROBOT_DATA_DIR="/data/aoss/heliqun/dataset/pi-src/libero-${task_suite}"
 
 # OpenPI/LeRobot internally addresses a local dataset as
 # "${HF_LEROBOT_HOME}/${REPO_ID}". Derive those two values from the single

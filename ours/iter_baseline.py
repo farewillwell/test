@@ -73,11 +73,12 @@ def _task_mode(task_id: int) -> str:
 
 
 def get_sft_steps(iter_index: int, task_id: int) -> int:
-    base = 3000
+    base = 500
     iter_task_add = 1000
     iter_scale = max(int(iter_index) + 1, 1)
-    num_tasks = 1 if int(task_id) >= 0 else 10
-    return int(base + iter_task_add * num_tasks * iter_scale)
+    num_tasks = 1 if int(task_id) >= 0 else 5
+    return  int(base + iter_task_add * num_tasks * iter_scale)
+
 
 
 def parse_args() -> argparse.Namespace:
